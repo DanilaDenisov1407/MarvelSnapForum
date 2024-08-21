@@ -1,11 +1,3 @@
-Чтобы добавить шрифты в стиле Marvel, вам нужно подключить шрифт, который выглядит как логотип Marvel, например, "Bebas Neue". Вот как вы можете это сделать:
-
-1. **Подключите шрифт через Google Fonts.**
-2. **Обновите CSS для использования этого шрифта.**
-
-Вот обновленный код:
-
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -152,4 +144,29 @@
     <button class="accordion">Остальное</button>
     <div class="panel">
         <ul>
-            <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap (Май 202
+            <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap (Май 2024)</a></li>
+            <li><a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a></li>
+            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-05-01" target="_blank">Эффективность Альбомов для прокачки</a></li>
+            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-2-06-29" target="_blank">Эффективность Альбомов для прокачки 2</a></li>
+            <li><a href="https://telegra.ph/Marvel-Snap---Alyansy-07-15" target="_blank">Marvel Snap - Альянсы</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const accordions = document.querySelectorAll('.accordion');
+
+        accordions.forEach(acc => {
+            acc.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
