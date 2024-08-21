@@ -1,9 +1,19 @@
+Чтобы добавить шрифты в стиле Marvel, вам нужно подключить шрифт, который выглядит как логотип Marvel, например, "Bebas Neue". Вот как вы можете это сделать:
+
+1. **Подключите шрифт через Google Fonts.**
+2. **Обновите CSS для использования этого шрифта.**
+
+Вот обновленный код:
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvel Snap Forum Wiki</title>
+    <!-- Подключение шрифта Bebas Neue -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -14,6 +24,7 @@
         }
 
         h1 {
+            font-family: 'Bebas Neue', sans-serif; /* Шрифт для заголовков */
             text-align: center;
             color: #FFFFFF;
             margin-bottom: 40px;
@@ -105,13 +116,13 @@
     <button class="accordion">Мнения игроков о карте</button>
     <div class="panel">
         <ul>
-            <li><a href="https://telegra.ph/Obzor-na-Valentinu-ot-uchastnikov-Kлана-FAK-05-05" target="_blank">Обзор на Валентину от участников клана FAK</a></li>
+            <li><a href="https://telegra.ph/Obzor-na-Valentinu-ot-uchastnikov-Klana-FAK-05-05" target="_blank">Обзор на Валентину от участников клана FAK</a></li>
             <li><a href="https://telegra.ph/Nuzhny-li-vam-Blink-i-Noktyurn-Otvechaet-KOMPETITIV-klan-FAK-05-12" target="_blank">Нужны ли вам Блинк и Ноктюрн</a></li>
             <li><a href="https://telegra.ph/Nuzhen-li-vam-Sejdzh-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-05-20" target="_blank">Нужен ли вам Сейдж</a></li>
             <li><a href="https://telegra.ph/Nuzhna-li-vam-Namora-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-05-27" target="_blank">Нужна ли вам Намора</a></li>
             <li><a href="https://telegra.ph/Nuzhna-li-vam-Saskvoch-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-03" target="_blank">Нужна ли вам Сасквоч</a></li>
             <li><a href="https://telegra.ph/Nuzhna-li-vam-Tena-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-10" target="_blank">Нужна ли вам Тена</a></li>
-            <li><a href="https://telegra.ph/Nuzhna-li-vam-Sersi-Otvechaet-KOMPЕТITIV-klan-FAK-i-Drugie-Top-igroki-06-18" target="_blank">Нужна ли вам Серси</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Sersi-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-18" target="_blank">Нужна ли вам Серси</a></li>
             <li><a href="https://telegra.ph/Nuzhna-li-vam-Makkari-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-25" target="_blank">Нужна ли вам Маккари</a></li>
             <li><a href="https://telegra.ph/Nuzhna-li-vam-Fastos-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-07-01" target="_blank">Нужна ли вам Фастос</a></li>
             <li><a href="https://telegra.ph/Nuzhen-li-vam-Arishem-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-07-09" target="_blank">Нужен ли вам Арисхем</a></li>
@@ -141,29 +152,4 @@
     <button class="accordion">Остальное</button>
     <div class="panel">
         <ul>
-            <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap (Май 2024)</a></li>
-            <li><a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a></li>
-            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-05-01" target="_blank">Эффективность Альбомов для прокачки</a></li>
-            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-2-06-29" target="_blank">Эффективность Альбомов для прокачки 2</a></li>
-            <li><a href="https://telegra.ph/Marvel-Snap---Alyansy-07-15" target="_blank">Marvel Snap - Альянсы</a></li>
-        </ul>
-    </div>
-
-    <script>
-        const accordions = document.querySelectorAll('.accordion');
-
-        accordions.forEach(acc => {
-            acc.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const panel = this.nextElementSibling;
-                if (panel.style.maxHeight) {
-                    panel.style.maxHeight = null;
-                } else {
-                    panel.style.maxHeight = panel.scrollHeight + 'px';
-                }
-            });
-        });
-    </script>
-
-</body>
-</html>
+            <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap (Май 202
