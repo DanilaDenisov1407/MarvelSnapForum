@@ -3,48 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marvel Snap Forum Wiki</title>
+    <title>Моя Wiki-страница с Превью</title>
     <style>
+        /* Основной стиль страницы */
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 20px;
             padding: 0;
-            background-color: #9656db;
+            color: #333;
         }
+
+        /* Стиль заголовка */
         h1 {
             text-align: center;
+            padding: 20px;
+            background-color: #3498db;
+            color: white;
         }
-        h2 {
-            color: #2c3e50;
-        }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
+
+        /* Стиль элементов списка */
         ul li {
-            background: #fff;
+            background-color: rgba(255, 255, 255, 0.8);
             margin-bottom: 10px;
             padding: 15px;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
         }
-        a {
-            color: #af83de;
+
+        /* Стиль изображения превью */
+        ul li img {
+            width: 100px; /* Ширина превью */
+            height: auto;
+            margin-right: 15px;
+            border-radius: 5px;
+        }
+
+        /* Стиль ссылки */
+        ul li a {
+            color: #3498db;
             text-decoration: none;
+            font-size: 16px;
         }
-        a:hover {
+
+        ul li a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h1>Marvel Snap Forum Wiki</h1>
+    <h1>Моя Wiki-страница с Превью</h1>
     
-    <h2>Ссылки на статьи</h2>
+    <h2>Ссылки на статьи с Превью</h2>
     <ul>
-        <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap МАЙ 2024</a></li>
-        <li><a href="https://telegra.ph/Card-Preview---Red-Guardian-04-15" target="_blank">Превью карты - Красный страж</a></li>
-        <li><a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a></li>
+        <!-- Пример элемента списка с превью -->
+        <li>
+            <img src="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" alt="Превью 1">
+            <a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap МАЙ 2024</a>
+        </li>
+        <li>
+            <img src="https://example.com/preview2.jpg" alt="Превью 2">
+            <a href="https://example.com/article2" target="_blank">Статья 2</a>
+        </li>
+        <li>
+            <img src="https://example.com/preview3.jpg" alt="Превью 3">
+            <a href="https://example.com/article3" target="_blank">Статья 3</a>
+        </li>
     </ul>
 </body>
 </html>
