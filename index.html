@@ -5,100 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvel Snap Forum Wiki</title>
     <style>
-        /* Основной стиль страницы */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #8F21CE; 
-            margin: 20px;
-            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
             color: #333;
         }
 
-        /* Стиль заголовка */
         h1 {
             text-align: center;
-            padding: 30px;
-            background-color: #A104FB;
-            color: black;
+            color: #2c3e50;
+            margin-bottom: 40px;
         }
 
-        /* Стиль элементов списка */
-        ul li {
-            background-color: rgba(255, 255, 255, 0.8);
+        .accordion {
+            background-color: #3498db;
+            color: #fff;
+            cursor: pointer;
+            padding: 15px 20px;
+            width: 100%;
+            border: none;
+            outline: none;
+            text-align: left;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
             margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        /* Стиль изображения превью */
-        ul li img {
-            width: 50px; /* Ширина превью */
-            height: auto;
-            margin-right: 15px;
             border-radius: 5px;
         }
 
-        /* Стиль ссылки */
-        ul li a {
-            color: #121112;
+        .accordion:hover,
+        .active {
+            background-color: #2980b9;
+        }
+
+        .accordion:after {
+            content: '\002B';
+            font-size: 20px;
+            float: right;
+            transition: transform 0.3s ease;
+        }
+
+        .active:after {
+            transform: rotate(45deg);
+        }
+
+        .panel {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: #ecf0f1;
+            border-radius: 0 0 5px 5px;
+            margin-bottom: 10px;
+        }
+
+        .panel ul {
+            list-style-type: none;
+            padding: 15px 0;
+            margin: 0;
+        }
+
+        .panel ul li {
+            padding: 10px 0;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .panel ul li:last-child {
+            border-bottom: none;
+        }
+
+        .panel ul li a {
             text-decoration: none;
-            font-size: 16px;
+            color: #2980b9;
+            font-weight: bold;
+            transition: color 0.3s ease;
         }
 
-        ul li a:hover {
-            text-decoration: underline;
+        .panel ul li a:hover {
+            color: #1abc9c;
+        }
+
+        @media (max-width: 600px) {
+            .accordion {
+                font-size: 16px;
+            }
+
+            .panel ul li a {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
+
     <h1>Marvel Snap Forum Wiki</h1>
-    
-    <h2>Ссылки на статьи с Превью</h2>
-    <ul>
-        <!-- Пример элемента списка с превью -->
-        <li>
-            <img src="https://github.com/DanilaDenisov1407/MarvelSnapForumWiKi/blob/main/112112.jpg" alt="">
-            <a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap МАЙ 2024</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Card-Preview---Red-Guardian-04-15" target="_blank">Превью карты - Красный страж</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-        <li>
-            <img src="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/0/06/Avengers_Tesseract2012.png/revision/latest?cb=20170220131242" alt="">
-            <a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a>
-        </li>
-    </ul>
+
+    <!-- Раздел: Мнения игроков о карте -->
+    <button class="accordion">Мнения игроков о карте</button>
+    <div class="panel">
+        <ul>
+            <li><a href="https://telegra.ph/Nuzhny-li-vam-Blink-i-Noktyurn-Otvechaet-KOMPETITIV-klan-FAK-05-12" target="_blank">Нужны ли вам Блинк и Ноктюрн</a></li>
+            <li><a href="https://telegra.ph/Nuzhen-li-vam-Sejdzh-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-05-20" target="_blank">Нужен ли вам Сейдж</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Namora-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-05-27" target="_blank">Нужна ли вам Намора</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Saskvoch-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-03" target="_blank">Нужна ли вам Сасквоч</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Tena-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-10" target="_blank">Нужна ли вам Тена</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Sersi-Otvechaet-KOMPЕТITIV-klan-FAK-i-Drugie-Top-igroki-06-18" target="_blank">Нужна ли вам Серси</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Makkari-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-06-25" target="_blank">Нужна ли вам Маккари</a></li>
+            <li><a href="https://telegra.ph/Nuzhna-li-vam-Fastos-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-07-01" target="_blank">Нужна ли вам Фастос</a></li>
+            <li><a href="https://telegra.ph/Nuzhen-li-vam-Arishem-Otvechaet-KOMPETITIV-klan-FAK-i-Drugie-Top-igroki-07-09" target="_blank">Нужен ли вам Арисхем</a></li>
+        </ul>
+    </div>
+
+    <!-- Раздел: Превью Карт -->
+    <button class="accordion">Превью Карт</button>
+    <div class="panel">
+        <ul>
+            <li><a href="https://telegra.ph/Card-Preview---Red-Guardian-04-15" target="_blank">Red Guardian - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Valentina--prevyu-karty-04-30" target="_blank">Валентина - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Blink--prevyu-karty-05-06" target="_blank">Блинк - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Saskvach--prevyu-karty-05-28" target="_blank">Сасквоч - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Gilgamesh--prevyu-karty-06-04" target="_blank">Гильгамеш - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Sersi--prevyu-karty-06-11" target="_blank">Серси - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Fastos--prevyu-karty-06-26" target="_blank">Фастос - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Arishem--prevyu-karty-07-02" target="_blank">Арисхем - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Gvenpul-prevyu-karty-07-09" target="_blank">Гвенпул - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Podrazhatelnica--prevyu-karty-07-23" target="_blank">Подражательница - Превью карты</a></li>
+            <li><a href="https://telegra.ph/Skorost--prevyu-karty-08-20" target="_blank">Скорость - Превью карты</a></li>
+        </ul>
+    </div>
+
+    <!-- Раздел: Остальное -->
+    <button class="accordion">Остальное</button>
+    <div class="panel">
+        <ul>
+            <li><a href="https://telegra.ph/Novyj-sezon-v-Marvel-Snap-MAJ-2024-04-11" target="_blank">Новый сезон в Marvel Snap (Май 2024)</a></li>
+            <li><a href="https://telegra.ph/Podkrutka-v-Marvel-Snap-04-18" target="_blank">Подкрутка в Marvel Snap</a></li>
+            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-05-01" target="_blank">Эффективность Альбомов для прокачки</a></li>
+            <li><a href="https://telegra.ph/Obzor-na-Valentinu-ot-uchastnikov-Kлана-FAK-05-05" target="_blank">Обзор на Валентину от участников клана FAK</a></li>
+            <li><a href="https://telegra.ph/Noktyurn-05-07" target="_blank">Ноктюрн</a></li>
+            <li><a href="https://telegra.ph/EHffektivnost-Albomov-dlya-prokachki-2-06-29" target="_blank">Эффективность Альбомов для прокачки 2</a></li>
+            <li><a href="https://telegra.ph/Marvel-Snap---Alyansy-07-15" target="_blank">Marvel Snap - Альянсы</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const accordions = document.querySelectorAll('.accordion');
+
+        accordions.forEach(acc => {
+            acc.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
