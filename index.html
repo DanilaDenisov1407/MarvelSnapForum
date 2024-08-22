@@ -129,7 +129,7 @@
     <script>
         const accordionSections = {
             "opinion-section": ["nuzh", "stoit", "obzor"],
-            "preview-section": ["re", "noktyurn"],
+            "preview-section": ["prevyu", "noktyurn", "preview"],
             "other-section": []
         };
 
@@ -141,9 +141,12 @@
             .then(data => {
                 data.forEach(item => {
                     let section;
-                    if (item.url.includes(accordionSections["opinion-section"])) {
+
+                    const titleLowerCase = item.title.toLowerCase();
+
+                    if (accordionSections["opinion-section"].some(keyword => titleLowerCase.includes(keyword))) {
                         section = document.getElementById('opinion-section').querySelector('ul');
-                    } else if (item.url.includes(accordionSections["preview-section"])) {
+                    } else if (accordionSections["preview-section"].some(keyword => titleLowerCase.includes(keyword))) {
                         section = document.getElementById('preview-section').querySelector('ul');
                     } else {
                         section = document.getElementById('other-section').querySelector('ul');
