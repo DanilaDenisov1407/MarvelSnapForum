@@ -129,7 +129,7 @@
     <script>
         const accordionSections = {
             "opinion-section": ["Нужн"],
-            "preview-section": ["Прев"],
+            "preview-section": ["рев"],
             "other-section": []
         };
 
@@ -141,30 +141,35 @@
             .then(data => {
                 data.forEach(item => {
                     let section;
+                    let added = false;
 
-                    const titleLowerCase = item.title.toLowerCase();
-
-                    if (accordionSections["opinion-section"].some(keyword => titleLowerCase.includes(keyword))) {
+                    // Проверка по заголовку статьи
+                    if (accordionSections["opinion-section"].some(term => item.title.includes(term))) {
                         section = document.getElementById('opinion-section').querySelector('ul');
-                    } else if (accordionSections["preview-section"].some(keyword => titleLowerCase.includes(keyword))) {
+                        added = true;
+                    } else if (accordionSections["preview-section"].some(term => item.title.includes(term))) {
                         section = document.getElementById('preview-section').querySelector('ul');
+                        added = true;
                     } else {
                         section = document.getElementById('other-section').querySelector('ul');
                     }
 
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = item.url;
-                    a.textContent = item.title;
-                    a.target = '_blank';
+                    // Добавление элемента только в соответствующий раздел
+                    if (added || accordionSections["other-section"].length > 0) {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = item.url;
+                        a.textContent = item.title;
+                        a.target = '_blank';
 
-                    const dateSpan = document.createElement('span');
-                    dateSpan.classList.add('date');
-                    dateSpan.textContent = item.date;
+                        const dateSpan = document.createElement('span');
+                        dateSpan.classList.add('date');
+                        dateSpan.textContent = item.date;
 
-                    li.appendChild(a);
-                    li.appendChild(dateSpan);
-                    section.appendChild(li);
+                        li.appendChild(a);
+                        li.appendChild(dateSpan);
+                        section.appendChild(li);
+                    }
                 });
             });
 
