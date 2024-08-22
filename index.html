@@ -152,10 +152,11 @@
                         added = true;
                     } else {
                         section = document.getElementById('other-section').querySelector('ul');
+                        added = true; // Важно, чтобы элементы всегда добавлялись в "Остальное", если не попали ни в одну из других секций
                     }
 
-                    // Добавление элемента только в соответствующий раздел
-                    if (added || accordionSections["other-section"].length > 0) {
+                    // Добавление элемента в соответствующий раздел
+                    if (section) {
                         const li = document.createElement('li');
                         const a = document.createElement('a');
                         a.href = item.url;
