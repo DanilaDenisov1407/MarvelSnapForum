@@ -131,22 +131,18 @@
             "other": ""
         };
 
-        // URL вашего веб-приложения Google Apps Script
         const scriptURL = 'https://script.google.com/macros/s/AKfycbz69n-cSYZOaI8zSlPk1Yq5PG84vhvyIvCO4d6SNNOX3PeTp4-zL7sdAx9niIavnq_rKw/exec';
 
-        let dataLoaded = false;
-        let sectionData = {};
-
-        function loadData() {
+        function loadData(section) {
             return fetch(scriptURL)
                 .then(response => response.json())
                 .then(data => {
-                    sectionData = {
-                        opinion: data.filter(item => item.url.includes(accordionSections["opinion"])),
-                        preview: data.filter(item => item.url.includes(accordionSections["preview"])),
-                        other: data.filter(item => !item.url.includes(accordionSections["opinion"]) && !item.url.includes(accordionSections["preview"]))
-                    };
-                    dataLoaded = true;
+                    return data.filter(item => {
+                        if (section === "other") {
+                            return !item.url.includes(accordionSections["opinion"]) && !item.url.includes(accordionSections["preview"]);
+                        }
+                        return item.url.includes(accordionSections[section]);
+                    });
                 });
         }
 
@@ -179,18 +175,13 @@
                 const section = this.getAttribute('data-section');
                 const panel = this.nextElementSibling;
 
-                if (!dataLoaded) {
-                    loadData().then(() => {
-                        populateSection(section, sectionData[section]);
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    loadData(section).then(data => {
+                        populateSection(section, data);
                         panel.style.maxHeight = panel.scrollHeight + 'px';
                     });
-                } else {
-                    populateSection(section, sectionData[section]);
-                    if (panel.style.maxHeight) {
-                        panel.style.maxHeight = null;
-                    } else {
-                        panel.style.maxHeight = panel.scrollHeight + 'px';
-                    }
                 }
             });
         });
