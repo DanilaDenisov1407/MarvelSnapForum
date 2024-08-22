@@ -108,75 +108,93 @@
 
     <h1>Marvel Snap Forum Wiki</h1>
 
-    <!-- Раздел: Мнения игроков о карте -->
-    <button class="accordion">Мнения игроков о карте</button>
+    <!-- Разделы -->
+    <button class="accordion" data-section="opinion">Мнения игроков о карте</button>
     <div class="panel" id="opinion-section">
         <ul></ul>
     </div>
 
-    <!-- Раздел: Превью Карт -->
-    <button class="accordion">Превью Карт</button>
+    <button class="accordion" data-section="preview">Превью Карт</button>
     <div class="panel" id="preview-section">
         <ul></ul>
     </div>
 
-    <!-- Раздел: Остальное -->
-    <button class="accordion">Остальное</button>
+    <button class="accordion" data-section="other">Остальное</button>
     <div class="panel" id="other-section">
         <ul></ul>
     </div>
 
     <script>
         const accordionSections = {
-            "opinion-section": "Nuzhna-li-vam",
-            "preview-section": "-prevyu-karty",
-            "other-section": ""
+            "opinion": "Nuzhna-li-vam",
+            "preview": "-prevyu-karty",
+            "other": ""
         };
 
         // URL вашего веб-приложения Google Apps Script
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbz69n-cSYZOaI8zSlPk1Yq5PG84vhvyIvCO4d6SNNOX3PeTp4-zL7sdAx9niIavnq_rKw/exec';
+        const scriptURL = 'ВАШ_СКРИПТ_URL';
 
-        fetch(scriptURL)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(item => {
-                    let section;
-                    if (item.url.includes(accordionSections["opinion-section"])) {
-                        section = document.getElementById('opinion-section').querySelector('ul');
-                    } else if (item.url.includes(accordionSections["preview-section"])) {
-                        section = document.getElementById('preview-section').querySelector('ul');
-                    } else {
-                        section = document.getElementById('other-section').querySelector('ul');
-                    }
+        let dataLoaded = false;
+        let sectionData = {};
 
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = item.url;
-                    a.textContent = item.title;
-                    a.target = '_blank';
-
-                    const dateSpan = document.createElement('span');
-                    dateSpan.classList.add('date');
-                    dateSpan.textContent = item.date;
-
-                    li.appendChild(a);
-                    li.appendChild(dateSpan);
-                    section.appendChild(li);
+        function loadData() {
+            return fetch(scriptURL)
+                .then(response => response.json())
+                .then(data => {
+                    sectionData = {
+                        opinion: data.filter(item => item.url.includes(accordionSections["opinion"])),
+                        preview: data.filter(item => item.url.includes(accordionSections["preview"])),
+                        other: data.filter(item => !item.url.includes(accordionSections["opinion"]) && !item.url.includes(accordionSections["preview"]))
+                    };
+                    dataLoaded = true;
                 });
+        }
+
+        function populateSection(section, data) {
+            const ul = document.getElementById(section + '-section').querySelector('ul');
+            ul.innerHTML = '';
+
+            data.forEach(item => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = item.url;
+                a.textContent = item.title;
+                a.target = '_blank';
+
+                const dateSpan = document.createElement('span');
+                dateSpan.classList.add('date');
+                dateSpan.textContent = item.date;
+
+                li.appendChild(a);
+                li.appendChild(dateSpan);
+                ul.appendChild(li);
             });
+        }
 
         const accordions = document.querySelectorAll('.accordion');
+
         accordions.forEach(acc => {
             acc.addEventListener('click', function() {
                 this.classList.toggle('active');
+                const section = this.getAttribute('data-section');
                 const panel = this.nextElementSibling;
-                if (panel.style.maxHeight) {
-                    panel.style.maxHeight = null;
+
+                if (!dataLoaded) {
+                    loadData().then(() => {
+                        populateSection(section, sectionData[section]);
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                    });
                 } else {
-                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                    populateSection(section, sectionData[section]);
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                    }
                 }
             });
         });
+
     </script>
 
 </body>
