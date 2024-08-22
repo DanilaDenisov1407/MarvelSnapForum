@@ -6,7 +6,7 @@
     <title>Marvel Snap Forum Wiki</title>
     <style>
         body {
-            font-family: 'Bangers', sans-serif;
+            font-family: 'Bebas Neue', sans-serif;
             background-color: #500D4B;
             margin: 0;
             padding: 20px;
@@ -29,7 +29,7 @@
             outline: none;
             text-align: left;
             font-size: 18px;
-            transition: background-color 0.1s ease;
+            transition: background-color 0.3s ease;
             margin-bottom: 10px;
             border-radius: 5px;
         }
@@ -43,7 +43,7 @@
             content: '\002B';
             font-size: 20px;
             float: right;
-            transition: transform 0.1s ease;
+            transition: transform 0.3s ease;
         }
 
         .active:after {
@@ -54,7 +54,7 @@
             padding: 0 20px;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.1s ease;
+            transition: max-height 0.3s ease;
             background-color: #ecf0f1;
             border-radius: 0 0 5px 5px;
             margin-bottom: 10px;
@@ -79,11 +79,18 @@
             text-decoration: none;
             color: #2980b9;
             font-weight: bold;
-            transition: color 0.1s ease;
+            transition: color 0.3s ease;
         }
 
         .panel ul li a:hover {
             color: #1abc9c;
+        }
+
+        .panel ul li .date {
+            font-size: 14px;
+            color: #757171;
+            display: block;
+            margin-top: 5px;
         }
 
         @media (max-width: 600px) {
@@ -103,25 +110,62 @@
 
     <!-- Раздел: Мнения игроков о карте -->
     <button class="accordion">Мнения игроков о карте</button>
-    <div class="panel" id="opinion-panel">
+    <div class="panel" id="opinion-section">
         <ul></ul>
     </div>
 
     <!-- Раздел: Превью Карт -->
     <button class="accordion">Превью Карт</button>
-    <div class="panel" id="preview-panel">
+    <div class="panel" id="preview-section">
         <ul></ul>
     </div>
 
     <!-- Раздел: Остальное -->
     <button class="accordion">Остальное</button>
-    <div class="panel" id="other-panel">
+    <div class="panel" id="other-section">
         <ul></ul>
     </div>
 
     <script>
-        const accordions = document.querySelectorAll('.accordion');
+        const accordionSections = {
+            "opinion-section": "Nuzhn",
+            "preview-section": "prevyu",
+            "other-section": ""
+        };
 
+        // URL вашего веб-приложения Google Apps Script
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz69n-cSYZOaI8zSlPk1Yq5PG84vhvyIvCO4d6SNNOX3PeTp4-zL7sdAx9niIavnq_rKw/exec';
+
+        fetch(scriptURL)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    let section;
+                    if (item.url.includes(accordionSections["opinion-section"])) {
+                        section = document.getElementById('opinion-section').querySelector('ul');
+                    } else if (item.url.includes(accordionSections["preview-section"])) {
+                        section = document.getElementById('preview-section').querySelector('ul');
+                    } else {
+                        section = document.getElementById('other-section').querySelector('ul');
+                    }
+
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = item.url;
+                    a.textContent = item.title;
+                    a.target = '_blank';
+
+                    const dateSpan = document.createElement('span');
+                    dateSpan.classList.add('date');
+                    dateSpan.textContent = item.date;
+
+                    li.appendChild(a);
+                    li.appendChild(dateSpan);
+                    section.appendChild(li);
+                });
+            });
+
+        const accordions = document.querySelectorAll('.accordion');
         accordions.forEach(acc => {
             acc.addEventListener('click', function() {
                 this.classList.toggle('active');
@@ -133,42 +177,6 @@
                 }
             });
         });
-
-        function loadArticles() {
-            fetch('https://docs.google.com/spreadsheets/d/1YDE7UHUtDsli15BnS8bqAcv_uTuVHncBCbddRY8rr8s/gviz/tq?tqx=out:json')
-                .then(res => res.text())
-                .then(text => {
-                    const json = JSON.parse(text.substr(47).slice(0, -2));
-                    const rows = json.table.rows;
-
-                    const opinionPanel = document.getElementById('opinion-panel').querySelector('ul');
-                    const previewPanel = document.getElementById('preview-panel').querySelector('ul');
-                    const otherPanel = document.getElementById('other-panel').querySelector('ul');
-
-                    rows.forEach(row => {
-                        const url = row.c[0].v;
-                        const title = row.c[1].v;
-                        const date = row.c[2].v;
-
-                        let li = document.createElement('li');
-                        let a = document.createElement('a');
-                        a.href = url;
-                        a.target = '_blank';
-                        a.innerText = `${title} - ${date}`;
-                        li.appendChild(a);
-
-                        if (url.includes('Nuzh') || url.includes('Stoit') || url.includes('Obzor')) {
-                            opinionPanel.appendChild(li);
-                        } else if (url.includes('prevyu') || url.includes('Prevyu') || url.includes('Noktyurn') || url.includes('Preview')) {
-                            previewPanel.appendChild(li);
-                        } else {
-                            otherPanel.appendChild(li);
-                        }
-                    });
-                });
-        }
-
-        loadArticles();
     </script>
 
 </body>
