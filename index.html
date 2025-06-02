@@ -123,17 +123,17 @@
         }, 100);
       });
 
-// После окончания прокрутки всех слотов
-const first = results[0];
-const isWin = results.every(card => card.name === first.name); // Или сравнение по .img
+        // После окончания прокрутки всех слотов
+        const first = results[0];
+        const isWin = results.every(card => card.name === first.name); // Или сравнение по .img
 
-if (isWin) {
-    resultMessage.innerHTML = '🎉 Победа!';
-    resultMessage.style.color = 'lightgreen';
-} else {
-    resultMessage.innerHTML = '😅 Попробуй ещё раз';
-    resultMessage.style.color = 'gold';
-}
+        if (isWin) {
+            resultMessage.innerHTML = '🎉 Победа!';
+            resultMessage.style.color = 'lightgreen';
+        } else {
+            resultMessage.innerHTML = '😅 Попробуй ещё раз';
+            resultMessage.style.color = 'gold';
+        }
 
     // Инициализация
     ['reel1', 'reel2', 'reel3'].forEach(fillReel);
