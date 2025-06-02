@@ -71,6 +71,49 @@
       font-weight: bold;
       margin-top: 20px;
     }
+
+    /* Анимация коробки */
+    .box-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 250px;
+      position: relative;
+    }
+
+    .box {
+      width: 180px;
+      height: 180px;
+      background: url('https://i.imgur.com/Nz7xbQy.png') no-repeat center/contain; /* Картинка закрытой коробки */
+      cursor: pointer;
+      transition: transform 0.6s ease;
+      user-select: none;
+    }
+
+    .box.opening {
+      animation: boxOpen 1s forwards;
+    }
+
+    @keyframes boxOpen {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.2) rotate(10deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .card-reveal {
+      width: 180px;
+      height: 180px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px 3px gold;
+      margin-top: 20px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      user-select: none;
+    }
+
+    .card-reveal.visible {
+      opacity: 1;
+    }
   </style>
 
   <!-- Yandex.Metrika counter -->
@@ -98,7 +141,7 @@
     <h1>Marvel Snap Рулетка</h1>
 
     <button id="btn-slot">Однорукий бандит</button>
-    <button id="btn-pack" disabled>Открыть пак (скоро)</button>
+    <button id="btn-pack">Открыть пак</button>
   </div>
 
   <script>
@@ -109,10 +152,10 @@
       'https://game-assets.snap.fan/card_variant_images/Death_01-716aa9ff3fc9b3edc4b3a7ef74543bfd85bf583a47dcc43f3a4fa7145ff182ae.webp?width=350&quality=80'
     ];
 
+    // Показываем слот-машину (твой предыдущий код)
     function showSlotMachine() {
       const main = document.getElementById('main-content');
 
-      // Заменяем содержимое страницы на слот-машину
       main.innerHTML = `
         <h1>Marvel Snap Рулетка — Однорукий бандит</h1>
         <div class="slot-machine">
@@ -127,7 +170,6 @@
 
       const reels = ['reel1', 'reel2', 'reel3'];
 
-      // Начальное заполнение
       reels.forEach(id => {
         const reel = document.getElementById(id);
         for (let i = 0; i < 20; i++) {
@@ -138,7 +180,7 @@
       });
 
       function spin() {
-        ym(102209710, 'reachGoal', 'spin'); // фиксируем попытку
+        ym(102209710, 'reachGoal', 'spin');
 
         document.getElementById("result").textContent = '';
         const speeds = [1000, 1500, 2000];
@@ -173,7 +215,7 @@
         setTimeout(() => {
           const win = stopImages.every(img => img === stopImages[0]);
           if (win) {
-            ym(102209710, 'reachGoal', 'jackpot'); // фиксируем джекпот
+            ym(102209710, 'reachGoal', 'jackpot');
             document.getElementById("result").textContent = "🎉 Победа! Все совпали!";
           } else {
             document.getElementById("result").textContent = "😅 Попробуй ещё раз";
@@ -183,13 +225,56 @@
 
       document.getElementById('spin-btn').addEventListener('click', spin);
       document.getElementById('back-btn').addEventListener('click', () => {
-        location.reload(); // проще всего перезагрузить, чтобы вернуть стартовую страницу с кнопками
+        location.reload();
+      });
+    }
+
+    // Показываем экран открытия пака с анимацией
+    function showPackOpen() {
+      const main = document.getElementById('main-content');
+
+      main.innerHTML = `
+        <h1>Marvel Snap — Открыть пак</h1>
+        <div class="box-container">
+          <div class="box" id="box"></div>
+        </div>
+        <img id="card" class="card-reveal" alt="Открытая карта" />
+        <button id="back-btn" style="background-color: gray; margin-top: 30px;">Назад</button>
+      `;
+
+      const box = document.getElementById('box');
+      const card = document.getElementById('card');
+      let opened = false;
+
+      function openBox() {
+        if (opened) return;
+        opened = true;
+
+        box.classList.add('opening');
+
+        // Анимация длится 1с, после показываем карту
+        setTimeout(() => {
+          box.style.display = 'none';
+
+          // Случайная карта из images
+          const randomCard = images[Math.floor(Math.random() * images.length)];
+          card.src = randomCard;
+          card.classList.add('visible');
+
+          ym(102209710, 'reachGoal', 'pack_open'); // фиксируем открытие пака
+        }, 1000);
+      }
+
+      box.addEventListener('click', openBox);
+
+      document.getElementById('back-btn').addEventListener('click', () => {
+        location.reload();
       });
     }
 
     document.getElementById('btn-slot').addEventListener('click', showSlotMachine);
+    document.getElementById('btn-pack').addEventListener('click', showPackOpen);
 
-    // btn-pack пока не работает, потому disabled
   </script>
 </body>
 </html>
