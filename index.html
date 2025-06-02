@@ -1,124 +1,128 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Marvel Snap Рулетка</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background-color: #0d0d0d;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
+      background-color: #111;
+      color: #fff;
+      font-family: sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 30px;
     }
 
-    h2 {
-      font-size: 2em;
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    .slot-machine {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
       margin-bottom: 20px;
     }
 
-    #roulette-container {
-      margin-top: 30px;
-    }
-
-    #slot {
-      width: 350px;
-      height: 500px;
+    .slot {
+      width: 120px;
+      height: 180px;
       overflow: hidden;
-      margin: 0 auto;
-      border: 4px solid #fff;
+      border: 3px solid white;
       border-radius: 12px;
+      background-color: #222;
       position: relative;
-      background-color: #1a1a1a;
     }
 
-    #reel {
+    .reel {
+      display: flex;
+      flex-direction: column;
       position: absolute;
       top: 0;
-      transition: top 2s cubic-bezier(0.25, 1, 0.5, 1);
+      width: 100%;
+      animation-timing-function: ease-in-out;
     }
 
-    #reel img {
+    .reel img {
       width: 100%;
-      display: block;
+      height: auto;
     }
 
     button {
-      margin-top: 25px;
-      padding: 12px 30px;
+      padding: 10px 20px;
       font-size: 18px;
-      border: none;
       border-radius: 8px;
-      background-color: #ff3c00;
+      border: none;
+      background-color: red;
       color: white;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #ff5c33;
+      margin-bottom: 20px;
     }
 
     #result {
-      margin-top: 20px;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
+  <h1>Marvel Snap Рулетка</h1>
 
-  <h2>Marvel Snap Рулетка</h2>
-
-  <div id="roulette-container">
-    <div id="slot">
-      <div id="reel">
-        <img src="https://game-assets.snap.fan/card_variant_images/Abomination_01-c9057c83d655b16e0adfec6798ddc0254ac91012eb464c7bea10aeaf4cb7a0c3.webp?width=350&quality=80">
-        <img src="https://game-assets.snap.fan/card_variant_images/AbsorbingMan_01-b87a6d66cb81ee65859cb041b7a1223208c3bfc7ec01a6e94204be736780f7a1.webp?width=350&quality=80">
-        <img src="https://game-assets.snap.fan/card_variant_images/BlueMarvel_01-f4e46540c2fc04be6ec5113ec5ddbf7edfac0640787956c8d2b43f5f5d6096b7.webp?width=350&quality=80">
-        <img src="https://game-assets.snap.fan/card_variant_images/Death_01-716aa9ff3fc9b3edc4b3a7ef74543bfd85bf583a47dcc43f3a4fa7145ff182ae.webp?width=350&quality=80">
-      </div>
-    </div>
-
-    <button id="spinBtn">Крутить</button>
-    <div id="result"></div>
+  <div class="slot-machine">
+    <div class="slot"><div class="reel" id="reel1"></div></div>
+    <div class="slot"><div class="reel" id="reel2"></div></div>
+    <div class="slot"><div class="reel" id="reel3"></div></div>
   </div>
 
+  <button onclick="spin()">Крутить</button>
+  <div id="result"></div>
+
   <script>
-    document.getElementById('spinBtn').addEventListener('click', function () {
-      const reel = document.getElementById('reel');
-      const result = document.getElementById('result');
-      const imageCount = 4;
-      const imageHeight = 500;
-      const spins = 5;
+    const images = [
+      'https://game-assets.snap.fan/card_variant_images/Abomination_01-c9057c83d655b16e0adfec6798ddc0254ac91012eb464c7bea10aeaf4cb7a0c3.webp?width=350&quality=80',
+      'https://game-assets.snap.fan/card_variant_images/AbsorbingMan_01-b87a6d66cb81ee65859cb041b7a1223208c3bfc7ec01a6e94204be736780f7a1.webp?width=350&quality=80',
+      'https://game-assets.snap.fan/card_variant_images/BlueMarvel_01-f4e46540c2fc04be6ec5113ec5ddbf7edfac0640787956c8d2b43f5f5d6096b7.webp?width=350&quality=80',
+      'https://game-assets.snap.fan/card_variant_images/Death_01-716aa9ff3fc9b3edc4b3a7ef74543bfd85bf583a47dcc43f3a4fa7145ff182ae.webp?width=350&quality=80'
+    ];
 
-      const winningIndex = Math.floor(Math.random() * imageCount);
-      const isWin = Math.random() < 0.02;
+    function createReel(id) {
+      const reel = document.getElementById(id);
+      reel.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const img = document.createElement('img');
+        img.src = images[Math.floor(Math.random() * images.length)];
+        reel.appendChild(img);
+      }
+    }
 
-      const finalIndex = isWin ? winningIndex : Math.floor(Math.random() * imageCount);
-      const finalTop = -((imageCount * spins + finalIndex) * imageHeight);
+    function spin() {
+      document.getElementById("result").textContent = '';
 
-      reel.style.transition = 'top 2s cubic-bezier(0.25, 1, 0.5, 1)';
-      reel.style.top = finalTop + 'px';
+      const reels = ['reel1', 'reel2', 'reel3'];
+      const results = [];
 
-      result.textContent = '';
+      reels.forEach((id, index) => {
+        createReel(id);
+        const reel = document.getElementById(id);
+        const duration = 1000 + index * 500;
+        const finalIndex = Math.floor(Math.random() * images.length);
+        results.push(finalIndex);
+
+        const offset = -finalIndex * 180;
+        reel.style.transition = `transform ${duration}ms ease-out`;
+        reel.style.transform = `translateY(${offset}px)`;
+      });
 
       setTimeout(() => {
-        if (isWin) {
-          result.innerHTML = '🎉 <span style="color:#00ffcc;">Поздравляем! Вы выиграли карту!</span>';
-        } else {
-          result.innerHTML = '😢 <span style="color:#ffcc00;">Попробуй ещё раз</span>';
-        }
+        const win = results.every(val => val === results[0]);
+        document.getElementById("result").textContent = win
+          ? "🎉 Победа! Все совпали!"
+          : "😅 Попробуй ещё раз";
+      }, 2000);
+    }
 
-        // Сброс прокрутки
-        setTimeout(() => {
-          reel.style.transition = 'none';
-          reel.style.top = -(finalIndex * imageHeight) + 'px';
-        }, 1000);
-      }, 2200);
-    });
+    // Инициализация
+    ['reel1', 'reel2', 'reel3'].forEach(createReel);
   </script>
-
 </body>
 </html>
