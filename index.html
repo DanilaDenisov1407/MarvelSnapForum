@@ -123,16 +123,14 @@
         }, 100);
       });
 
-        function checkWin() {
-      const win = results.every(card => card.name === results[0].name);
-      const resultMessage = document.getElementById("result");
-      if (win) {
-        resultMessage.innerHTML = "🎉 Победа!";
-        resultMessage.style.color = "lightgreen";
-      } else {
-        resultMessage.innerHTML = "😅 Попробуй ещё раз";
-        resultMessage.style.color = "gold";
-      }
+      // Проверка победы после всех анимаций
+      setTimeout(() => {
+        const win = results.every(val => val === results[0]);
+        document.getElementById("result").textContent = win
+          ? "🎉 Победа! Все совпали!"
+          : "😅 Попробуй ещё раз";
+      }, Math.max(...speeds) + 200);
+    }
 
     // Инициализация
     ['reel1', 'reel2', 'reel3'].forEach(fillReel);
