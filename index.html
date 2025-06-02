@@ -87,53 +87,60 @@
       'https://game-assets.snap.fan/card_variant_images/Death_01-716aa9ff3fc9b3edc4b3a7ef74543bfd85bf583a47dcc43f3a4fa7145ff182ae.webp?width=350&quality=80'
     ];
 
-    function fillReel(id) {
+    const reels = ['reel1', 'reel2', 'reel3'];
+
+    function spin() {
+      document.getElementById("result").textContent = '';
+
+      const speeds = [1000, 1500, 2000];
+      const stopImages = [];
+
+      reels.forEach((id, index) => {
+        const reel = document.getElementById(id);
+        reel.innerHTML = '';
+
+        const randomImage = images[Math.floor(Math.random() * images.length)];
+        stopImages.push(randomImage);
+
+        // создаём массив из случайных изображений + целевое в конце
+        for (let i = 0; i < 19; i++) {
+          const img = document.createElement('img');
+          img.src = images[Math.floor(Math.random() * images.length)];
+          reel.appendChild(img);
+        }
+
+        // последняя — та, на которой "остановится"
+        const finalImg = document.createElement('img');
+        finalImg.src = randomImage;
+        reel.appendChild(finalImg);
+
+        // Сброс стиля перед анимацией
+        reel.style.transition = 'none';
+        reel.style.transform = 'translateY(0px)';
+
+        setTimeout(() => {
+          reel.style.transition = `transform ${speeds[index]}ms ease-out`;
+          reel.style.transform = `translateY(${-180 * 19}px)`; // прокрутка к последнему изображению
+        }, 100);
+      });
+
+      setTimeout(() => {
+        const win = stopImages.every(img => img === stopImages[0]);
+        document.getElementById("result").textContent = win
+          ? "🎉 Победа! Все совпали!"
+          : "😅 Попробуй ещё раз";
+      }, Math.max(...speeds) + 300);
+    }
+
+    // начальное заполнение
+    reels.forEach(id => {
       const reel = document.getElementById(id);
-      reel.innerHTML = '';
       for (let i = 0; i < 20; i++) {
         const img = document.createElement('img');
         img.src = images[Math.floor(Math.random() * images.length)];
         reel.appendChild(img);
       }
-    }
-
-    function spin() {
-      document.getElementById("result").textContent = '';
-
-      const speeds = [1000, 1500, 2000]; // reel1 быстрее, reel3 медленнее
-      const results = [];
-      const reels = ['reel1', 'reel2', 'reel3'];
-
-      reels.forEach((id, index) => {
-        fillReel(id);
-        const reel = document.getElementById(id);
-        const finalIndex = Math.floor(Math.random() * images.length);
-        results.push(finalIndex);
-
-        const stopIndex = 10 + finalIndex; // Прокрутка вниз и стоп на нужной картинке
-        const offset = -stopIndex * 180;
-
-        reel.style.transition = 'none';
-        reel.style.transform = 'translateY(0px)';
-
-        // задержка перед запуском
-        setTimeout(() => {
-          reel.style.transition = `transform ${speeds[index]}ms ease-out`;
-          reel.style.transform = `translateY(${offset}px)`;
-        }, 100);
-      });
-
-      // Проверка победы после всех анимаций
-      setTimeout(() => {
-        const win = results.every(val => val === results[0]);
-        document.getElementById("result").textContent = win
-          ? "🎉 Победа! Все совпали!"
-          : "😅 Попробуй ещё раз";
-      }, Math.max(...speeds) + 200);
-    }
-
-    // Инициализация
-    ['reel1', 'reel2', 'reel3'].forEach(fillReel);
+    });
   </script>
 </body>
 </html>
