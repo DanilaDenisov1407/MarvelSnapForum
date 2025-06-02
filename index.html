@@ -1,209 +1,124 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marvel Snap Forum Wiki</title>
-    <style>
-        body {
-            font-family: 'Bebas Neue', sans-serif;
-            background-color: #500D4B;
-            margin: 0;
-            padding: 20px;
-            color: #FFFFFF;
-        }
+  <meta charset="UTF-8">
+  <title>Marvel Snap Рулетка</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
 
-        h1 {
-            text-align: center;
-            color: #FFFFFF;
-            margin-bottom: 40px;
-        }
+    h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
 
-        .accordion {
-            background-color: #3498db;
-            color: #fff;
-            cursor: pointer;
-            padding: 15px 20px;
-            width: 100%;
-            border: none;
-            outline: none;
-            text-align: left;
-            font-size: 18px;
-            transition: background-color 0.3s ease;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
+    #roulette-container {
+      margin-top: 30px;
+    }
 
-        .accordion:hover,
-        .active {
-            background-color: #6E0393;
-        }
+    #slot {
+      width: 350px;
+      height: 500px;
+      overflow: hidden;
+      margin: 0 auto;
+      border: 4px solid #fff;
+      border-radius: 12px;
+      position: relative;
+      background-color: #1a1a1a;
+    }
 
-        .accordion:after {
-            content: '\002B';
-            font-size: 20px;
-            float: right;
-            transition: transform 0.3s ease;
-        }
+    #reel {
+      position: absolute;
+      top: 0;
+      transition: top 2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .active:after {
-            transform: rotate(45deg);
-        }
+    #reel img {
+      width: 100%;
+      display: block;
+    }
 
-        .panel {
-            padding: 0 20px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background-color: #ecf0f1;
-            border-radius: 0 0 5px 5px;
-            margin-bottom: 10px;
-        }
+    button {
+      margin-top: 25px;
+      padding: 12px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff3c00;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
 
-        .panel ul {
-            list-style-type: none;
-            padding: 15px 0;
-            margin: 0;
-        }
+    button:hover {
+      background-color: #ff5c33;
+    }
 
-        .panel ul li {
-            padding: 10px 0;
-            border-bottom: 1px solid #757171;
-        }
-
-        .panel ul li:last-child {
-            border-bottom: none;
-        }
-
-        .panel ul li a {
-            text-decoration: none;
-            color: #2980b9;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-
-        .panel ul li a:hover {
-            color: #1abc9c;
-        }
-
-        .panel ul li .date {
-            font-size: 14px;
-            color: #757171;
-            display: block;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 600px) {
-            .accordion {
-                font-size: 16px;
-            }
-
-            .panel ul li a {
-                font-size: 14px;
-            }
-        }
-    </style>
-    <!-- Yandex.Metrika counter -->
-<script type="text/javascript" >
-   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-   m[i].l=1*new Date();
-   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-
-   ym(102209710, "init", {
-        clickmap:true,
-        trackLinks:true,
-        accurateTrackBounce:true,
-        webvisor:true
-   });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/102209710" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
+    #result {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Marvel Snap Forum Wiki</h1>
+  <h2>Marvel Snap Рулетка</h2>
 
-    <!-- Раздел: Мнения игроков о карте -->
-    <button class="accordion">Мнения игроков о карте</button>
-    <div class="panel" id="opinion-section">
-        <ul></ul>
+  <div id="roulette-container">
+    <div id="slot">
+      <div id="reel">
+        <img src="https://game-assets.snap.fan/card_variant_images/Abomination_01-c9057c83d655b16e0adfec6798ddc0254ac91012eb464c7bea10aeaf4cb7a0c3.webp?width=350&quality=80">
+        <img src="https://game-assets.snap.fan/card_variant_images/AbsorbingMan_01-b87a6d66cb81ee65859cb041b7a1223208c3bfc7ec01a6e94204be736780f7a1.webp?width=350&quality=80">
+        <img src="https://game-assets.snap.fan/card_variant_images/BlueMarvel_01-f4e46540c2fc04be6ec5113ec5ddbf7edfac0640787956c8d2b43f5f5d6096b7.webp?width=350&quality=80">
+        <img src="https://game-assets.snap.fan/card_variant_images/Death_01-716aa9ff3fc9b3edc4b3a7ef74543bfd85bf583a47dcc43f3a4fa7145ff182ae.webp?width=350&quality=80">
+      </div>
     </div>
 
-    <!-- Раздел: Превью Карт -->
-    <button class="accordion">Превью Карт</button>
-    <div class="panel" id="preview-section">
-        <ul></ul>
-    </div>
+    <button id="spinBtn">Крутить</button>
+    <div id="result"></div>
+  </div>
 
-    <!-- Раздел: Остальное -->
-    <button class="accordion">Остальное</button>
-    <div class="panel" id="other-section">
-        <ul></ul>
-    </div>
+  <script>
+    document.getElementById('spinBtn').addEventListener('click', function () {
+      const reel = document.getElementById('reel');
+      const result = document.getElementById('result');
+      const imageCount = 4;
+      const imageHeight = 500;
+      const spins = 5;
 
-    <script>
-        const accordionSections = {
-            "opinion-section": ["Нуж"],
-            "preview-section": ["рев"],
-            "other-section": []
-        };
+      const winningIndex = Math.floor(Math.random() * imageCount);
+      const isWin = Math.random() < 0.02;
 
-        // URL вашего веб-приложения Google Apps Script
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbz69n-cSYZOaI8zSlPk1Yq5PG84vhvyIvCO4d6SNNOX3PeTp4-zL7sdAx9niIavnq_rKw/exec';
+      const finalIndex = isWin ? winningIndex : Math.floor(Math.random() * imageCount);
+      const finalTop = -((imageCount * spins + finalIndex) * imageHeight);
 
-        fetch(scriptURL)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(item => {
-                    let section;
-                    let added = false;
+      reel.style.transition = 'top 2s cubic-bezier(0.25, 1, 0.5, 1)';
+      reel.style.top = finalTop + 'px';
 
-                    // Проверка по заголовку статьи
-                    if (accordionSections["opinion-section"].some(term => item.title.includes(term))) {
-                        section = document.getElementById('opinion-section').querySelector('ul');
-                        added = true;
-                    } else if (accordionSections["preview-section"].some(term => item.title.includes(term))) {
-                        section = document.getElementById('preview-section').querySelector('ul');
-                        added = true;
-                    } else {
-                        section = document.getElementById('other-section').querySelector('ul');
-                        added = true; // Важно, чтобы элементы всегда добавлялись в "Остальное", если не попали ни в одну из других секций
-                    }
+      result.textContent = '';
 
-                    // Добавление элемента в соответствующий раздел
-                    if (section) {
-                        const li = document.createElement('li');
-                        const a = document.createElement('a');
-                        a.href = item.url;
-                        a.textContent = item.title;
-                        a.target = '_blank';
+      setTimeout(() => {
+        if (isWin) {
+          result.innerHTML = '🎉 <span style="color:#00ffcc;">Поздравляем! Вы выиграли карту!</span>';
+        } else {
+          result.innerHTML = '😢 <span style="color:#ffcc00;">Попробуй ещё раз</span>';
+        }
 
-                        const dateSpan = document.createElement('span');
-                        dateSpan.classList.add('date');
-                        dateSpan.textContent = item.date;
-
-                        li.appendChild(a);
-                        li.appendChild(dateSpan);
-                        section.appendChild(li);
-                    }
-                });
-            });
-
-        const accordions = document.querySelectorAll('.accordion');
-        accordions.forEach(acc => {
-            acc.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const panel = this.nextElementSibling;
-                if (panel.style.maxHeight) {
-                    panel.style.maxHeight = null;
-                } else {
-                    panel.style.maxHeight = panel.scrollHeight + 'px';
-                }
-            });
-        });
-    </script>
+        // Сброс прокрутки
+        setTimeout(() => {
+          reel.style.transition = 'none';
+          reel.style.top = -(finalIndex * imageHeight) + 'px';
+        }, 1000);
+      }, 2200);
+    });
+  </script>
 
 </body>
 </html>
