@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Marvel Snap Казино</title>
   <style>
     body {
@@ -10,36 +10,43 @@
       color: #fff;
       font-family: sans-serif;
       text-align: center;
-      padding: 30px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
     }
 
     #balance {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
+      gap: 15px;
       margin-bottom: 20px;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     #balance img {
-      height: 24px;
+      height: 20px;
       vertical-align: middle;
       margin-right: 5px;
     }
 
     .slot-machine {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
+      gap: 10px;
       margin-bottom: 20px;
     }
 
     .slot {
-      width: 120px;
-      height: 180px;
+      width: 100px;
+      height: 150px;
       overflow: hidden;
-      border: 3px solid white;
-      border-radius: 12px;
+      border: 2px solid white;
+      border-radius: 10px;
       background-color: #222;
       position: relative;
     }
@@ -55,25 +62,33 @@
 
     .reel img {
       width: 100%;
-      height: 180px;
+      height: 150px;
       object-fit: cover;
       display: block;
     }
 
     button {
-      padding: 12px 24px;
-      font-size: 18px;
+      padding: 10px 20px;
+      font-size: 16px;
       border-radius: 10px;
       border: none;
       background-color: red;
       color: white;
       cursor: pointer;
-      margin: 10px;
-      min-width: 180px;
-      height: 50px;
+      margin: 8px;
+      min-width: 160px;
+    }
+
+    .box-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      height: 200px;
     }
 
     .card-reveal {
+      position: absolute;
       width: 180px;
       height: 180px;
       border-radius: 12px;
@@ -87,11 +102,26 @@
       transform: scale(1);
       opacity: 1;
     }
+
+    @media (max-width: 480px) {
+      .slot {
+        width: 90px;
+        height: 135px;
+      }
+
+      .reel img {
+        height: 135px;
+      }
+
+      .card-reveal {
+        width: 150px;
+        height: 150px;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Marvel Snap Казино</h1>
-
   <div id="balance">
     <div><img src="https://i.imgur.com/ePwPOVJ.png"> <span id="coins">100</span></div>
     <div><img src="https://i.imgur.com/St51NdG.png"> <span id="gold">50</span></div>
@@ -106,7 +136,7 @@
   </div>
 
   <script>
-    let images = []; // { name: "Character", image: "url" }
+    let images = []; // { name: "Captain America", image: "..." }
     let balance = { coins: 100, gold: 50, tokens: 10 };
 
     function updateBalanceUI() {
@@ -160,8 +190,6 @@
       `;
 
       const reels = ['reel1', 'reel2', 'reel3'];
-      const slotPool = getRandomItems(images, 12);
-      let selected = [];
 
       document.getElementById('spin-btn').onclick = () => {
         if (balance.tokens < 10) {
@@ -172,7 +200,8 @@
         balance.tokens -= 10;
         updateBalanceUI();
 
-        selected = [];
+        const slotPool = getRandomItems(images, 12);
+        const selected = [];
         reels.forEach((id, index) => {
           const reel = document.getElementById(id);
           reel.innerHTML = '';
@@ -182,15 +211,15 @@
             img.src = item.image;
             reel.appendChild(img);
           }
+
           const final = slotPool[Math.floor(Math.random() * slotPool.length)];
           const img = document.createElement('img');
           img.src = final.image;
-          selected.push(final);
           reel.appendChild(img);
+          selected.push(final);
 
           reel.style.transition = 'none';
           reel.style.transform = 'translateY(0px)';
-
           setTimeout(() => {
             reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
             reel.style.transform = `translateY(${-180 * 19}px)`;
@@ -201,7 +230,6 @@
           const names = selected.map(c => c.name);
           const imgs = selected.map(c => c.image);
           const allSameName = names.every(n => n === names[0]);
-
           let reward = 0;
           let msg = "😅 Попробуй ещё раз";
 
@@ -212,20 +240,20 @@
               msg = "🎉 Джекпот! +300 токенов!";
             } else if (uniqueImgs.length === 2) {
               reward = 150;
-              msg = "🃏 2 совпали, все — один герой! +150 токенов!";
+              msg = "🃏 2 совпали (один герой)! +150 токенов!";
             } else if (uniqueImgs.length === 3) {
               reward = 50;
-              msg = "🎨 Все варианты разные, но герой один! +50 токенов!";
+              msg = "🎨 Все варианты разные (один герой)! +50 токенов!";
             }
           }
 
           balance.tokens += reward;
-          document.getElementById("result").textContent = msg;
+          document.getElementById('result').textContent = msg;
           updateBalanceUI();
         }, 2000);
       };
     }
-        function showPackOpen() {
+    function showPackOpen() {
       const main = document.getElementById('main-content');
 
       if (balance.gold < 50 || balance.tokens < 10) {
@@ -240,7 +268,7 @@
       main.innerHTML = `
         <h2>Открытие пака</h2>
         <div class="box-container">
-          <div class="box" id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/yWRnQH7.jpeg') center/contain no-repeat;"></div>
+          <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/yWRnQH7.jpeg') center/contain no-repeat;"></div>
           <img id="card" class="card-reveal" />
         </div>
         <div id="pack-buttons">
@@ -262,9 +290,7 @@
         again.textContent = "Открыть ещё";
         again.onclick = showPackOpen;
 
-        const openBtn = document.getElementById('open-pack-btn');
-        openBtn.remove();
-
+        document.getElementById('open-pack-btn').remove();
         document.getElementById('pack-buttons').prepend(again);
       };
     }
