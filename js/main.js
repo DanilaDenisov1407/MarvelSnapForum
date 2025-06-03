@@ -17,25 +17,32 @@ window.addFunds = function () {
   updateBalanceUI();
 };
 
-fetch('data/cards.json')
-  .then(res => res.json())
-  .then(data => {
-    const cards = data.success?.cards || [];
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('data/cards.json')
+    .then(res => res.json())
+    .then(data => {
+      const cards = data.success?.cards || [];
 
-    cards.forEach(card => {
-      const name = card.name;
-      const sketcher = card.sketcher || '';
-      (card.variants || []).forEach(v => {
-        const url = v.art;
-        if (url && url.includes('http')) {
-          images.push({ name, sketcher, image: url });
-        }
+      cards.forEach(card => {
+        const name = card.name;
+        const sketcher = card.sketcher || '';
+        (card.variants || []).forEach(v => {
+          const url = v.art;
+          if (url && url.includes('http')) {
+            images.push({ name, sketcher, image: url });
+          }
+        });
       });
+
+      document.getElementById('btn-slot').onclick = () =>
+        showSlotMachine(images, balance, updateBalanceUI);
+
+      document.getElementById('btn-pack').onclick = () =>
+        showPackOpen(images, balance, updateBalanceUI);
+
+      updateBalanceUI();
+    })
+    .catch(err => {
+      console.error("Ошибка загрузки cards.json:", err);
     });
-
-    document.getElementById('btn-slot').onclick = () =>
-      showSlotMachine(images, balance, updateBalanceUI);
-
-    document.getElementById('btn-pack').onclick = () =>
-      showPackOpen(images, balance, updateBalanceUI, false);
-  });
+});
