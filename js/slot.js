@@ -29,21 +29,23 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     updateBalanceUI();
 
     const slotPool = getRandomItems(images, 12);
+    const finalImages = [];
 
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
 
-      for (let i = 0; i < 19; i++) {
-        const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        const img = new Image();
-        img.src = item.image;
-        img.onerror = () => img.remove();
-        reel.appendChild(img);
+      // Имитация "ленты"
+      for (let i = 0; i < 18; i++) {
+        const fakeImg = new Image();
+        fakeImg.src = slotPool[Math.floor(Math.random() * slotPool.length)].image;
+        fakeImg.onerror = () => fakeImg.remove();
+        reel.appendChild(fakeImg);
       }
 
+      // Финальная карта
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      reel.dataset.final = JSON.stringify(final);
+      finalImages.push(final);
 
       const finalImg = new Image();
       finalImg.src = final.image;
@@ -52,29 +54,21 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
+
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-180 * 19}px)`;
+        reel.style.transform = `translateY(${-180 * 18}px)`;
       }, 100);
     });
 
     setTimeout(() => {
-      const selected = [];
-      reels.forEach(id => {
-        const reel = document.getElementById(id);
-        try {
-          const data = JSON.parse(reel.dataset.final);
-          if (data && data.image) selected.push(data);
-        } catch {}
-      });
-
-      if (selected.length < 3) {
+      if (finalImages.length < 3) {
         document.getElementById("result").textContent = "Ошибка загрузки результатов.";
         return;
       }
 
-      const names = selected.map(c => c.name);
-      const sketchers = selected.map(c => (c.sketcher || '').trim());
+      const names = finalImages.map(c => c.name);
+      const sketchers = finalImages.map(c => (c.sketcher || '').trim());
 
       const sameName = names.every(n => n === names[0]);
       const allSameSketcher = sketchers.length === 3 && sketchers.every(s => s === sketchers[0]);
