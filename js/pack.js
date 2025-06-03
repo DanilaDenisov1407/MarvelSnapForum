@@ -22,7 +22,7 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
       balance.tokens += 2000;
       updateBalanceUI();
 
-      // ❗️После пополнения — не открываем пак, а просто показываем кнопку "Открыть ещё"
+      // Показываем кнопку "Открыть ещё", но не запускаем автооткрытие
       main.innerHTML = `
         <h2>Готов к открытию!</h2>
         <div class="box-container">
@@ -35,7 +35,8 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
         </div>
       `;
 
-      document.getElementById('open-next').onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
+      document.getElementById('open-next').onclick = () =>
+        showPackOpen(images, balance, updateBalanceUI, true);
     };
 
     return;
@@ -67,17 +68,22 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
     if (random && random.image) {
       card.src = random.image;
       card.classList.add('visible');
-    } else {
-      card.remove();
-    }
 
-    const againBtn = document.createElement('button');
-    againBtn.textContent = "Открыть ещё";
-    againBtn.onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
+      // 💡 Защита от битых ссылок
+      card.onerror = () => {
+        console.warn("❌ Битое изображение:", random.image);
+        card.remove();
+      };
+    } else {
+      card.remove(); // если данных нет
+    }
 
     const btnContainer = document.getElementById('pack-buttons');
 
     if (balance.gold >= 50 && balance.tokens >= 10) {
+      const againBtn = document.createElement('button');
+      againBtn.textContent = "Открыть ещё";
+      againBtn.onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
       btnContainer.prepend(againBtn);
     } else {
       const topupBtn = document.createElement('button');
@@ -88,15 +94,14 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
         balance.tokens += 2000;
         updateBalanceUI();
 
-        // Показываем кнопку "Открыть ещё", но НЕ автооткрываем
+        // После пополнения — показать "Открыть ещё" вручную
         const openNext = document.createElement('button');
         openNext.textContent = "Открыть ещё";
         openNext.onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
 
         btnContainer.innerHTML = '';
         btnContainer.appendChild(openNext);
-        btnContainer.appendChild(document.createElement('br'));
-        btnContainer.appendChild(document.createTextNode(' '));
+
         const backBtn = document.createElement('button');
         backBtn.textContent = "Назад";
         backBtn.onclick = () => location.reload();
