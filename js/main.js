@@ -1,18 +1,16 @@
-import { showPackOpen } from './pack.js';Add commentMore actions
+import { showSlotMachine } from './slot.js';
+import { showPackOpen } from './packs.js';
 
 export let images = [];
-export let balance = { coins: 100, gold: 50, tokens: 10 };
 export let balance = { coins: 100, gold: 100, tokens: 100 };
 
 export function updateBalanceUI() {
   document.getElementById('coins').textContent = balance.coins;
-@@ -11,21 +11,24 @@ export function updateBalanceUI() {
+  document.getElementById('gold').textContent = balance.gold;
+  document.getElementById('tokens').textContent = balance.tokens;
 }
 
 window.addFunds = function () {
-  balance.coins += 2000;
-  balance.gold += 2000;
-  balance.tokens += 2000;
   balance.coins += 1000;
   balance.gold += 1000;
   balance.tokens += 1000;
@@ -29,9 +27,15 @@ fetch('data/cards.json')
       const sketcher = card.sketcher || '';
       (card.variants || []).forEach(v => {
         const url = v.art;
-        if (url && url.includes('http') && !url.includes('None') && !url.includes('Not Available')) {
-          images.push({ name: card.name, image: url });
+        if (url && url.includes('http')) {
           images.push({ name, sketcher, image: url });
         }
       });
     });
+
+    document.getElementById('btn-slot').onclick = () =>
+      showSlotMachine(images, balance, updateBalanceUI);
+
+    document.getElementById('btn-pack').onclick = () =>
+      showPackOpen(images, balance, updateBalanceUI, false);
+  });
