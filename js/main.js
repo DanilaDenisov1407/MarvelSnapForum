@@ -24,11 +24,15 @@ fetch('data/cards.json')
     cards.forEach(card => {
       (card.variants || []).forEach(v => {
         const url = v.art;
-        if (url && !url.includes("None") && !url.includes("Not Available")) {
+        if (url && url.includes('http') && !url.includes('None') && !url.includes('Not Available')) {
           images.push({ name: card.name, image: url });
         }
       });
     });
-    document.getElementById('btn-slot').onclick = () => showSlotMachine(images, balance, updateBalanceUI);
-    document.getElementById('btn-pack').onclick = () => showPackOpen(images, balance, updateBalanceUI);
+
+    document.getElementById('btn-slot').onclick = () =>
+      showSlotMachine(images, balance, updateBalanceUI);
+
+    document.getElementById('btn-pack').onclick = () =>
+      showPackOpen(images, balance, updateBalanceUI, false);
   });
