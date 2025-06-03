@@ -8,7 +8,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       <div class="slot"><div class="reel" id="reel3"></div></div>
     </div>
     <button id="spin-btn">Крутить</button>
-    <div id="result"></div>
+    <div id="result" style="margin-top: 15px; font-weight: bold;"></div>
     <button onclick="location.reload()">Назад</button>
   `;
 
@@ -37,48 +37,44 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
 
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        if (item && item.image) {
-          const img = document.createElement('img');
-          img.src = item.image;
-          img.onerror = () => img.remove();
-          reel.appendChild(img);
-        }
+        const img = document.createElement('img');
+        img.src = item.image;
+        img.onerror = () => img.remove();
+        reel.appendChild(img);
       }
 
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      if (final && final.image) {
-        const img = document.createElement('img');
-        img.src = final.image;
-        img.onerror = () => {
-          img.remove();
-          final.__skip = true;
-        };
-        reel.appendChild(img);
-        reel.dataset.final = JSON.stringify(final);
-      }
+      reel.dataset.final = JSON.stringify(final);
+
+      const finalImg = document.createElement('img');
+      finalImg.src = final.image;
+      finalImg.onerror = () => finalImg.remove();
+      reel.appendChild(finalImg);
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-150 * 19}px)`;
+        reel.style.transform = `translateY(${-180 * 19}px)`;
       }, 100);
     });
 
     setTimeout(() => {
-      selected.length = 0;
+      const selected = [];
       reels.forEach(id => {
-        const reel = document.getElementById(id);
-        try {
-          const final = JSON.parse(reel.dataset.final);
-          if (!final.__skip) selected.push(final);
-        } catch (e) {
-          console.warn('⚠️ Не удалось прочитать финальную карту');
+        const data = document.getElementById(id).dataset.final;
+        if (data) {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed && parsed.image) {
+              selected.push(parsed);
+            }
+          } catch (e) {}
         }
       });
 
       if (selected.length < 3) {
-        document.getElementById("result").textContent = "Ошибка при загрузке финальных карт.";
+        document.getElementById("result").textContent = "Ошибка загрузки результатов.";
         return;
       }
 
@@ -104,7 +100,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       } else if (sameName && uniqueSketchers.length === 3) {
         reward = 100;
         msg = "🔥 Один герой, разные стили! +100 токенов!";
-      } else if (!sameName && allSameSketcher) {
+      } else if (!sameName && allSameSketcher && sketchers[0] && sketchers[0].length > 3) {
         reward = 50;
         msg = "🎨 Один художник! +50 токенов!";
       }
@@ -112,6 +108,6 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       balance.tokens += reward;
       document.getElementById('result').textContent = msg;
       updateBalanceUI();
-    }, 2000);
+    }, 2200); // подстраховка на длительность анимации
   };
 }
