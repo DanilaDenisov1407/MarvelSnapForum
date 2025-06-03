@@ -17,7 +17,6 @@ export function showPackOpen(images, balance, updateBalanceUI) {
       <img id="card" class="card-reveal" />
     </div>
     <div id="pack-buttons">
-      <button id="open-pack-btn">Открыть</button>
       <button onclick="location.reload()">Назад</button>
     </div>
   `;
@@ -25,7 +24,7 @@ export function showPackOpen(images, balance, updateBalanceUI) {
   const box = document.getElementById('box');
   const card = document.getElementById('card');
 
-  document.getElementById('open-pack-btn').onclick = () => {
+  function openBox() {
     box.remove();
     const random = images[Math.floor(Math.random() * images.length)];
     card.src = random.image;
@@ -34,8 +33,9 @@ export function showPackOpen(images, balance, updateBalanceUI) {
     const again = document.createElement('button');
     again.textContent = "Открыть ещё";
     again.onclick = () => showPackOpen(images, balance, updateBalanceUI);
-
-    document.getElementById('open-pack-btn').remove();
     document.getElementById('pack-buttons').prepend(again);
-  };
+  }
+
+  // Сразу открыть без дополнительного нажатия
+  setTimeout(openBox, 500);
 }
