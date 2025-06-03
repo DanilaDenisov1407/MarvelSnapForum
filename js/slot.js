@@ -1,3 +1,5 @@
+let pityCounter = 0;
+
 export function showSlotMachine(images, balance, updateBalanceUI) {
   const main = document.getElementById('main-content');
   main.innerHTML = `
@@ -40,7 +42,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
         if (item && item.image) {
           const img = document.createElement('img');
           img.src = item.image;
-          img.onerror = () => img.remove(); // защита от битой картинки
+          img.onerror = () => img.remove();
           reel.appendChild(img);
         }
       }
@@ -49,7 +51,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       if (final && final.image) {
         const img = document.createElement('img');
         img.src = final.image;
-        img.onerror = () => img.remove(); // защита от битой картинки
+        img.onerror = () => img.remove();
         reel.appendChild(img);
         selected.push(final);
       }
@@ -58,34 +60,48 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       reel.style.transform = 'translateY(0px)';
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-180 * 19}px)`;
+        reel.style.transform = `translateY(${-150 * 19}px)`;
       }, 100);
     });
 
     setTimeout(() => {
       if (selected.length < 3) {
-        document.getElementById("result").textContent = "Ошибка при выборе карт.";
+        document.getElementById("result").textContent = "Ошибка при загрузке карт.";
         return;
       }
 
       const names = selected.map(c => c.name);
-      const imgs = selected.map(c => c.image);
-      const allSameName = names.every(n => n === names[0]);
+      const sketchers = selected.map(c => c.sketcher || '');
+
+      const sameName = names.every(n => n === names[0]);
+      const sameSketcher = sketchers.every(s => s === sketchers[0]);
+      const uniqueSketchers = [...new Set(sketchers)];
+      const sketcherMatchCount = sketchers.filter(s => s === sketchers[0]).length;
+
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
-      if (allSameName) {
-        const uniqueImgs = [...new Set(imgs)];
-        if (uniqueImgs.length === 1) {
-          reward = 300;
-          msg = "🎉 Джекпот! +300 токенов!";
-        } else if (uniqueImgs.length === 2) {
-          reward = 150;
-          msg = "🃏 2 совпали (один герой)! +150 токенов!";
-        } else {
-          reward = 50;
-          msg = "🎨 Все разные, но один герой! +50 токенов!";
-        }
+      // Pity chance boost
+      const jackpotChance = Math.random() < (0.01 + pityCounter * 0.001);
+
+      if (sameName && sameSketcher && jackpotChance) {
+        reward = 500;
+        msg = "🎉 Джекпот! Все совпали! +500 токенов!";
+        pityCounter = 0;
+      } else if (sameName && sketcherMatchCount >= 2) {
+        reward = 250;
+        msg = "✨ Почти джекпот! +250 токенов!";
+        pityCounter++;
+      } else if (sameName && uniqueSketchers.length === 3) {
+        reward = 100;
+        msg = "🔥 Один герой, разные стили! +100 токенов!";
+        pityCounter++;
+      } else if (!sameName && sameSketcher) {
+        reward = 50;
+        msg = "🎨 Один художник! +50 токенов!";
+        pityCounter++;
+      } else {
+        pityCounter++;
       }
 
       balance.tokens += reward;
