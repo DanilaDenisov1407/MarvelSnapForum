@@ -1,7 +1,7 @@
 export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
   const main = document.getElementById('main-content');
 
-  const enough = balance.gold >= 50 && balance.tokens >= 10;
+  const enough = balance.gold >= 50;
 
   if (!enough) {
     main.innerHTML = `
@@ -17,9 +17,9 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
     `;
 
     document.getElementById('top-up').onclick = () => {
-      balance.coins += 2000;
-      balance.gold += 2000;
-      balance.tokens += 2000;
+      balance.coins += 1000;
+      balance.gold += 1000;
+      balance.tokens += 1000;
       updateBalanceUI();
 
       // Показываем кнопку "Открыть ещё", но не запускаем автооткрытие
@@ -44,7 +44,6 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
 
   // Списываем баланс
   balance.gold -= 50;
-  balance.tokens -= 10;
   updateBalanceUI();
 
   main.innerHTML = `
