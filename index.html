@@ -67,19 +67,6 @@
       min-width: 180px;
       height: 50px;
     }
-    .card-reveal {
-      width: 180px;
-      height: 180px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px 3px gold;
-      transform: scale(0);
-      opacity: 0;
-      transition: transform 0.6s ease, opacity 0.6s ease;
-    }
-    .card-reveal.visible {
-      transform: scale(1);
-      opacity: 1;
-    }
   </style>
 </head>
 <body>
@@ -100,6 +87,7 @@
 
   <script>
     let images = [];
+    let artToName = {};
     let balance = { coins: 100, gold: 50, tokens: 10 };
 
     function updateBalanceUI() {
@@ -121,10 +109,12 @@
         .then(data => {
           const cards = data.success?.cards || [];
           cards.forEach(card => {
+            const name = card.name;
             (card.variants || []).forEach(v => {
               const url = v.art;
               if (url && !url.includes("None") && !url.includes("Not Available")) {
-                images.push(url);
+                images.push({ name: name, image: url });
+                artToName[url] = name;
               }
             });
           });
@@ -161,34 +151,50 @@
         updateBalanceUI();
 
         const slotPool = getRandomItems(images, 12);
-        const jackpot = Math.random() < 0.02;
-        const finalImage = slotPool[Math.floor(Math.random() * slotPool.length)];
-        const results = jackpot
-          ? [finalImage, finalImage, finalImage]
+        const jackpotChance = Math.random() < 0.02;
+        const finalCard = slotPool[Math.floor(Math.random() * slotPool.length)];
+        const results = jackpotChance
+          ? [finalCard, finalCard, finalCard]
           : [0, 1, 2].map(() => slotPool[Math.floor(Math.random() * slotPool.length)]);
 
         ['reel1', 'reel2', 'reel3'].forEach((id, index) => {
           const reel = document.getElementById(id);
           reel.innerHTML = '';
-          for (let i = 0; i < slotPool.length; i++) {
+          slotPool.forEach(obj => {
             const img = document.createElement('img');
-            img.src = slotPool[i];
+            img.src = obj.image;
             reel.appendChild(img);
-          }
-          const stopIndex = slotPool.indexOf(results[index]);
+          });
+          const stopIndex = slotPool.findIndex(obj => obj.image === results[index].image);
           setTimeout(() => {
             reel.style.transform = `translateY(${-180 * stopIndex}px)`;
           }, 100);
         });
 
         setTimeout(() => {
-          const isJackpot = results.every(r => r === results[0]);
-          if (isJackpot) {
-            document.getElementById('result').textContent = '🎉 Джекпот! +300 токенов!';
-            balance.tokens += 300;
-          } else {
-            document.getElementById('result').textContent = '😅 Попробуй ещё раз';
+          const imagesOnly = results.map(r => r.image);
+          const namesOnly = results.map(r => r.name);
+
+          const allSameImage = imagesOnly.every(i => i === imagesOnly[0]);
+          const allSameName = namesOnly.every(n => n === namesOnly[0]);
+          const uniqueImages = new Set(imagesOnly).size;
+
+          let reward = 0;
+          let message = "😅 Попробуй ещё раз";
+
+          if (allSameImage) {
+            reward = 300;
+            message = "🎉 Джекпот! 3 одинаковых варианта! +300 токенов!";
+          } else if (allSameName && uniqueImages === 2) {
+            reward = 150;
+            message = "🎉 Победа! 2 одинаковых варианта одного персонажа! +150 токенов!";
+          } else if (allSameName && uniqueImages === 3) {
+            reward = 50;
+            message = "🎉 Победа! 3 разных варианта одного персонажа! +50 токенов!";
           }
+
+          if (reward > 0) balance.tokens += reward;
+          document.getElementById('result').textContent = message;
           updateBalanceUI();
         }, 1200);
       };
@@ -220,7 +226,7 @@
         const card = document.getElementById('card');
         box.remove();
         const random = images[Math.floor(Math.random() * images.length)];
-        card.src = random;
+        card.src = random.image;
         card.classList.add('visible');
         const again = document.createElement('button');
         again.textContent = "Открыть ещё";
