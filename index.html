@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marvel Snap Казино</title>
   <style>
     body {
@@ -12,6 +12,7 @@
       text-align: center;
       padding: 30px;
     }
+
     #balance {
       display: flex;
       justify-content: center;
@@ -19,17 +20,20 @@
       margin-bottom: 20px;
       font-size: 18px;
     }
+
     #balance img {
       height: 24px;
       vertical-align: middle;
       margin-right: 5px;
     }
+
     .slot-machine {
       display: flex;
       justify-content: center;
       gap: 20px;
       margin-bottom: 20px;
     }
+
     .slot {
       width: 120px;
       height: 180px;
@@ -39,6 +43,7 @@
       background-color: #222;
       position: relative;
     }
+
     .reel {
       display: flex;
       flex-direction: column;
@@ -46,13 +51,15 @@
       top: 0;
       left: 0;
       width: 100%;
-      transition: transform 1s ease-in-out;
     }
+
     .reel img {
       width: 100%;
       height: 180px;
       object-fit: cover;
+      display: block;
     }
+
     button {
       padding: 12px 24px;
       font-size: 18px;
@@ -65,10 +72,26 @@
       min-width: 180px;
       height: 50px;
     }
+
+    .card-reveal {
+      width: 180px;
+      height: 180px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px 3px gold;
+      transform: scale(0);
+      opacity: 0;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+
+    .card-reveal.visible {
+      transform: scale(1);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <h1>Marvel Snap Казино</h1>
+
   <div id="balance">
     <div><img src="https://i.imgur.com/ePwPOVJ.png"> <span id="coins">100</span></div>
     <div><img src="https://i.imgur.com/St51NdG.png"> <span id="gold">50</span></div>
@@ -79,10 +102,11 @@
 
   <div id="main-content">
     <button id="btn-slot">Однорукий бандит</button>
+    <button id="btn-pack">Открыть пак</button>
   </div>
 
   <script>
-    let images = []; // { name: "Captain America", image: "..." }
+    let images = []; // { name: "Character", image: "url" }
     let balance = { coins: 100, gold: 50, tokens: 10 };
 
     function updateBalanceUI() {
@@ -112,6 +136,7 @@
             });
           });
           document.getElementById('btn-slot').onclick = showSlotMachine;
+          document.getElementById('btn-pack').onclick = showPackOpen;
         });
     }
 
@@ -134,69 +159,113 @@
         <button onclick="location.reload()">Назад</button>
       `;
 
+      const reels = ['reel1', 'reel2', 'reel3'];
+      const slotPool = getRandomItems(images, 12);
+      let selected = [];
+
       document.getElementById('spin-btn').onclick = () => {
         if (balance.tokens < 10) {
           document.getElementById("result").textContent = "Недостаточно токенов!";
           return;
         }
+
         balance.tokens -= 10;
         updateBalanceUI();
 
-        const slotPool = getRandomItems(images, 12);
-        const jackpot = Math.random() < 0.02;
-
-        let selected;
-        if (jackpot) {
-          const one = slotPool[Math.floor(Math.random() * slotPool.length)];
-          selected = [one, one, one];
-        } else {
-          selected = [0, 1, 2].map(() => slotPool[Math.floor(Math.random() * slotPool.length)]);
-        }
-
-        const reels = ['reel1', 'reel2', 'reel3'];
+        selected = [];
         reels.forEach((id, index) => {
           const reel = document.getElementById(id);
           reel.innerHTML = '';
-          for (let i = 0; i < slotPool.length; i++) {
+          for (let i = 0; i < 19; i++) {
+            const item = slotPool[Math.floor(Math.random() * slotPool.length)];
             const img = document.createElement('img');
-            img.src = slotPool[i].image;
+            img.src = item.image;
             reel.appendChild(img);
           }
-          const stopIndex = slotPool.findIndex(item => item.image === selected[index].image);
+          const final = slotPool[Math.floor(Math.random() * slotPool.length)];
+          const img = document.createElement('img');
+          img.src = final.image;
+          selected.push(final);
+          reel.appendChild(img);
+
+          reel.style.transition = 'none';
+          reel.style.transform = 'translateY(0px)';
+
           setTimeout(() => {
-            reel.style.transform = `translateY(${-180 * stopIndex}px)`;
+            reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
+            reel.style.transform = `translateY(${-180 * 19}px)`;
           }, 100);
         });
 
         setTimeout(() => {
           const names = selected.map(c => c.name);
-          const imagesOnly = selected.map(c => c.image);
-          const allSameImage = imagesOnly.every(img => img === imagesOnly[0]);
+          const imgs = selected.map(c => c.image);
           const allSameName = names.every(n => n === names[0]);
-          let reward = 0;
-          let resultText = "😅 Попробуй ещё раз";
 
-          if (allSameImage) {
-            reward = 300;
-            resultText = "🎉 Джекпот! +300 токенов!";
-          } else if (allSameName) {
-            const uniqueImages = [...new Set(imagesOnly)];
-            if (uniqueImages.length === 1) {
+          let reward = 0;
+          let msg = "😅 Попробуй ещё раз";
+
+          if (allSameName) {
+            const uniqueImgs = [...new Set(imgs)];
+            if (uniqueImgs.length === 1) {
               reward = 300;
-              resultText = "🎉 Джекпот! +300 токенов!";
-            } else if (uniqueImages.length === 2) {
+              msg = "🎉 Джекпот! +300 токенов!";
+            } else if (uniqueImgs.length === 2) {
               reward = 150;
-              resultText = "🃏 2 варианта совпали! +150 токенов!";
-            } else if (uniqueImages.length === 3) {
+              msg = "🃏 2 совпали, все — один герой! +150 токенов!";
+            } else if (uniqueImgs.length === 3) {
               reward = 50;
-              resultText = "🎨 Все варианты разные! +50 токенов!";
+              msg = "🎨 Все варианты разные, но герой один! +50 токенов!";
             }
           }
 
           balance.tokens += reward;
-          document.getElementById('result').textContent = resultText;
+          document.getElementById("result").textContent = msg;
           updateBalanceUI();
-        }, 1300);
+        }, 2000);
+      };
+    }
+        function showPackOpen() {
+      const main = document.getElementById('main-content');
+
+      if (balance.gold < 50 || balance.tokens < 10) {
+        main.innerHTML = `<h2>Недостаточно средств</h2><button onclick="location.reload()">Назад</button>`;
+        return;
+      }
+
+      balance.gold -= 50;
+      balance.tokens -= 10;
+      updateBalanceUI();
+
+      main.innerHTML = `
+        <h2>Открытие пака</h2>
+        <div class="box-container">
+          <div class="box" id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/yWRnQH7.jpeg') center/contain no-repeat;"></div>
+          <img id="card" class="card-reveal" />
+        </div>
+        <div id="pack-buttons">
+          <button id="open-pack-btn">Открыть</button>
+          <button onclick="location.reload()">Назад</button>
+        </div>
+      `;
+
+      const box = document.getElementById('box');
+      const card = document.getElementById('card');
+
+      document.getElementById('open-pack-btn').onclick = () => {
+        box.remove();
+        const random = images[Math.floor(Math.random() * images.length)];
+        card.src = random.image;
+        card.classList.add('visible');
+
+        const again = document.createElement('button');
+        again.textContent = "Открыть ещё";
+        again.onclick = showPackOpen;
+
+        const openBtn = document.getElementById('open-pack-btn');
+        openBtn.remove();
+
+        document.getElementById('pack-buttons').prepend(again);
       };
     }
 
