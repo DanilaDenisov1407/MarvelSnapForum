@@ -58,11 +58,6 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     });
 
     setTimeout(() => {
-      if (finalImages.length < 3) {
-        document.getElementById("result").textContent = "Ошибка загрузки результатов.";
-        return;
-      }
-
       const names = finalImages.map(c => c.name);
       const sketchers = finalImages.map(c => (c.sketcher || '').trim());
 
