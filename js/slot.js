@@ -34,29 +34,42 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
+
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        reel.appendChild(new Image().src = item.image);
+        if (item && item.image) {
+          const img = document.createElement('img');
+          img.src = item.image;
+          reel.appendChild(img);
+        }
       }
 
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      const img = document.createElement('img');
-      img.src = final.image;
-      reel.appendChild(img);
-      selected.push(final);
+      if (final && final.image) {
+        const img = document.createElement('img');
+        img.src = final.image;
+        reel.appendChild(img);
+        selected.push(final);
+      }
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-180 * 19}px)`;
+        reel.style.transform = `translateY(${-150 * 19}px)`; // 150 — высота одной карты
       }, 100);
     });
 
     setTimeout(() => {
+      if (selected.length < 3) {
+        document.getElementById("result").textContent = "Ошибка загрузки карт.";
+        return;
+      }
+
       const names = selected.map(c => c.name);
       const imgs = selected.map(c => c.image);
       const allSameName = names.every(n => n === names[0]);
+
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
@@ -75,7 +88,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       }
 
       balance.tokens += reward;
-      document.getElementById('result').textContent = msg;
+      document.getElementById("result").textContent = msg;
       updateBalanceUI();
     }, 2000);
   };
