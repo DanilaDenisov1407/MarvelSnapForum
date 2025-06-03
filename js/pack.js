@@ -88,9 +88,9 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
       const topupBtn = document.createElement('button');
       topupBtn.textContent = "Пополнить";
       topupBtn.onclick = () => {
-        balance.coins += 2000;
-        balance.gold += 2000;
-        balance.tokens += 2000;
+        balance.coins += 1000;
+        balance.gold += 1000;
+        balance.tokens += 1000;
         updateBalanceUI();
 
         // После пополнения — показать "Открыть ещё" вручную
