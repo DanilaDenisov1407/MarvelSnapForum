@@ -34,25 +34,22 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
-
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        const img = document.createElement('img');
-        img.src = item.image;
-        reel.appendChild(img);
+        reel.appendChild(new Image().src = item.image);
       }
 
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      const finalImg = document.createElement('img');
-      finalImg.src = final.image;
-      reel.appendChild(finalImg);
+      const img = document.createElement('img');
+      img.src = final.image;
+      reel.appendChild(img);
       selected.push(final);
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-150 * 19}px)`; // 150px = высота одной карты
+        reel.style.transform = `translateY(${-180 * 19}px)`;
       }, 100);
     });
 
@@ -60,7 +57,6 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       const names = selected.map(c => c.name);
       const imgs = selected.map(c => c.image);
       const allSameName = names.every(n => n === names[0]);
-
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
@@ -79,7 +75,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       }
 
       balance.tokens += reward;
-      document.getElementById("result").textContent = msg;
+      document.getElementById('result').textContent = msg;
       updateBalanceUI();
     }, 2000);
   };
