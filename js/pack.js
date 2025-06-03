@@ -13,7 +13,7 @@ export function showPackOpen(images, balance, updateBalanceUI) {
   main.innerHTML = `
     <h2>Открытие пака</h2>
     <div class="box-container">
-      <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/yWRnQH7.jpeg') center/contain no-repeat;"></div>
+      <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/lsPEidR.png') center/contain no-repeat;"></div>
       <img id="card" class="card-reveal" />
     </div>
     <div id="pack-buttons">
