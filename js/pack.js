@@ -20,7 +20,6 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
       balance.gold += 1000;
       balance.tokens += 1000;
       updateBalanceUI();
-
       showPackOpen(images, balance, updateBalanceUI);
     };
 
@@ -52,11 +51,7 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
     if (random?.image) {
       card.src = random.image;
       card.classList.add('visible');
-
-      card.onerror = () => {
-        console.warn("❌ Битое изображение:", random.image);
-        card.remove();
-      };
+      card.onerror = () => card.remove();
     } else {
       card.remove();
     }
