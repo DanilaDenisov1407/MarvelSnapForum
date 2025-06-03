@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -11,9 +12,6 @@
       font-family: sans-serif;
       text-align: center;
       padding: 30px;
-    }
-    h1 {
-      margin-bottom: 10px;
     }
     #balance {
       display: flex;
@@ -50,12 +48,12 @@
       top: 0;
       left: 0;
       width: 100%;
+      transition: transform 1s ease-in-out;
     }
     .reel img {
       width: 100%;
       height: 180px;
       object-fit: cover;
-      display: block;
     }
     button {
       padding: 12px 24px;
@@ -68,17 +66,19 @@
       margin: 10px;
       min-width: 180px;
       height: 50px;
-      box-sizing: border-box;
     }
     .card-reveal {
       width: 180px;
       height: 180px;
       border-radius: 12px;
       box-shadow: 0 0 15px 3px gold;
-      display: none;
+      transform: scale(0);
+      opacity: 0;
+      transition: transform 0.6s ease, opacity 0.6s ease;
     }
     .card-reveal.visible {
-      display: block;
+      transform: scale(1);
+      opacity: 1;
     }
   </style>
 </head>
@@ -128,20 +128,14 @@
               }
             });
           });
-
-          if (images.length === 0) {
-            alert("Нет картинок в JSON.");
-            return;
-          }
-
-          updateBalanceUI();
           document.getElementById('btn-slot').onclick = showSlotMachine;
           document.getElementById('btn-pack').onclick = showPackOpen;
-        })
-        .catch(err => {
-          console.error("Ошибка загрузки JSON:", err);
-          alert("Ошибка загрузки marvelsnapzone.com.json");
         });
+    }
+
+    function getRandomItems(array, count) {
+      const shuffled = array.slice().sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
     }
 
     function showSlotMachine() {
@@ -158,77 +152,57 @@
         <button onclick="location.reload()">Назад</button>
       `;
 
-      const reels = ['reel1', 'reel2', 'reel3'];
-
-      reels.forEach(id => {
-        const reel = document.getElementById(id);
-        for (let i = 0; i < 20; i++) {
-          const img = document.createElement('img');
-          img.src = images[Math.floor(Math.random() * images.length)];
-          reel.appendChild(img);
-        }
-      });
-
-      document.getElementById('spin-btn').addEventListener('click', () => {
-        const resultDiv = document.getElementById("result");
-
+      document.getElementById('spin-btn').onclick = () => {
         if (balance.tokens < 10) {
-          resultDiv.textContent = "❌ Недостаточно токенов (нужно 10)";
+          document.getElementById("result").textContent = "Недостаточно токенов!";
           return;
         }
-
         balance.tokens -= 10;
         updateBalanceUI();
 
-        const stopImages = [];
+        const slotPool = getRandomItems(images, 12);
+        const jackpot = Math.random() < 0.02;
+        const finalImage = slotPool[Math.floor(Math.random() * slotPool.length)];
+        const results = jackpot
+          ? [finalImage, finalImage, finalImage]
+          : [0, 1, 2].map(() => slotPool[Math.floor(Math.random() * slotPool.length)]);
 
-        reels.forEach((id, index) => {
+        ['reel1', 'reel2', 'reel3'].forEach((id, index) => {
           const reel = document.getElementById(id);
           reel.innerHTML = '';
-
-          const finalImage = images[Math.floor(Math.random() * images.length)];
-          stopImages.push(finalImage);
-
-          for (let i = 0; i < 19; i++) {
+          for (let i = 0; i < slotPool.length; i++) {
             const img = document.createElement('img');
-            img.src = images[Math.floor(Math.random() * images.length)];
+            img.src = slotPool[i];
             reel.appendChild(img);
           }
-
-          const finalImg = document.createElement('img');
-          finalImg.src = finalImage;
-          reel.appendChild(finalImg);
-
-          reel.style.transition = 'none';
-          reel.style.transform = 'translateY(0px)';
-
+          const stopIndex = slotPool.indexOf(results[index]);
           setTimeout(() => {
-            reel.style.transition = `transform 1s ease-out`;
-            reel.style.transform = `translateY(${-180 * 19}px)`;
+            reel.style.transform = `translateY(${-180 * stopIndex}px)`;
           }, 100);
         });
 
         setTimeout(() => {
-          const win = stopImages.every(img => img === stopImages[0]);
-          resultDiv.textContent = win ? "🎉 Джекпот! +300 токенов!" : "😅 Попробуй ещё раз";
-          if (win) balance.tokens += 300;
+          const isJackpot = results.every(r => r === results[0]);
+          if (isJackpot) {
+            document.getElementById('result').textContent = '🎉 Джекпот! +300 токенов!';
+            balance.tokens += 300;
+          } else {
+            document.getElementById('result').textContent = '😅 Попробуй ещё раз';
+          }
           updateBalanceUI();
-        }, 1500);
-      });
+        }, 1200);
+      };
     }
 
     function showPackOpen() {
       const main = document.getElementById('main-content');
-
       if (balance.gold < 50 || balance.tokens < 10) {
         main.innerHTML = `<h2>Недостаточно средств</h2><button onclick="location.reload()">Назад</button>`;
         return;
       }
-
       balance.gold -= 50;
       balance.tokens -= 10;
       updateBalanceUI();
-
       main.innerHTML = `
         <h2>Открытие пака</h2>
         <div class="box-container">
@@ -241,23 +215,18 @@
         </div>
       `;
 
-      const box = document.getElementById('box');
-      const card = document.getElementById('card');
-
       document.getElementById('open-pack-btn').onclick = () => {
+        const box = document.getElementById('box');
+        const card = document.getElementById('card');
         box.remove();
         const random = images[Math.floor(Math.random() * images.length)];
         card.src = random;
         card.classList.add('visible');
-
         const again = document.createElement('button');
         again.textContent = "Открыть ещё";
         again.onclick = showPackOpen;
-
-        const openBtn = document.getElementById('open-pack-btn');
-        openBtn.remove();
-
         document.getElementById('pack-buttons').prepend(again);
+        document.getElementById('open-pack-btn').remove();
       };
     }
 
