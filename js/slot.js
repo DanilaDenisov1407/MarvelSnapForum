@@ -15,8 +15,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
   const reels = ['reel1', 'reel2', 'reel3'];
 
   function getRandomItems(array, count) {
-    const shuffled = array.slice().sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+    return array.slice().sort(() => 0.5 - Math.random()).slice(0, count);
   }
 
   document.getElementById('spin-btn').onclick = () => {
@@ -35,26 +34,23 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
 
-      // Имитация "ленты"
       for (let i = 0; i < 18; i++) {
-        const fakeImg = new Image();
-        fakeImg.src = slotPool[Math.floor(Math.random() * slotPool.length)].image;
-        fakeImg.onerror = () => fakeImg.remove();
-        reel.appendChild(fakeImg);
+        const fake = new Image();
+        fake.src = slotPool[Math.floor(Math.random() * slotPool.length)].image;
+        fake.onerror = () => fake.remove();
+        reel.appendChild(fake);
       }
 
-      // Финальная карта
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
       finalImages.push(final);
 
-      const finalImg = new Image();
-      finalImg.src = final.image;
-      finalImg.onerror = () => finalImg.remove();
-      reel.appendChild(finalImg);
+      const img = new Image();
+      img.src = final.image;
+      img.onerror = () => img.remove();
+      reel.appendChild(img);
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
-
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
         reel.style.transform = `translateY(${-180 * 18}px)`;
@@ -71,7 +67,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       const sketchers = finalImages.map(c => (c.sketcher || '').trim());
 
       const sameName = names.every(n => n === names[0]);
-      const allSameSketcher = sketchers.length === 3 && sketchers.every(s => s === sketchers[0]);
+      const allSameSketcher = sketchers.every(s => s === sketchers[0]);
       const uniqueSketchers = [...new Set(sketchers)];
       const sketcherMatchCount = sketchers.filter(s => s === sketchers[0]).length;
 
@@ -89,7 +85,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       } else if (sameName && uniqueSketchers.length === 3) {
         reward = 100;
         msg = "🔥 Один герой, разные стили! +100 токенов!";
-      } else if (!sameName && allSameSketcher && sketchers[0] && sketchers[0].length > 3) {
+      } else if (!sameName && allSameSketcher && sketchers[0].length > 3) {
         reward = 50;
         msg = "🎨 Один художник! +50 токенов!";
       }
