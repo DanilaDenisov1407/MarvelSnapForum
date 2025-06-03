@@ -1,5 +1,3 @@
-let pityCounter = 0;
-
 export function showSlotMachine(images, balance, updateBalanceUI) {
   const main = document.getElementById('main-content');
   main.innerHTML = `
@@ -95,26 +93,20 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
-      const jackpotChance = Math.random() < (0.01 + pityCounter * 0.001);
+      const jackpot = sameName && allSameSketcher && Math.random() < 0.01;
 
-      if (sameName && allSameSketcher && jackpotChance) {
+      if (jackpot) {
         reward = 500;
         msg = "🎉 Джекпот! +500 токенов!";
-        pityCounter = 0;
       } else if (sameName && sketcherMatchCount >= 2) {
         reward = 250;
         msg = "✨ Почти джекпот! +250 токенов!";
-        pityCounter++;
       } else if (sameName && uniqueSketchers.length === 3) {
         reward = 100;
         msg = "🔥 Один герой, разные стили! +100 токенов!";
-        pityCounter++;
       } else if (!sameName && allSameSketcher) {
         reward = 50;
         msg = "🎨 Один художник! +50 токенов!";
-        pityCounter++;
-      } else {
-        pityCounter++;
       }
 
       balance.tokens += reward;
