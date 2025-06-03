@@ -52,7 +52,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       reel.style.transform = 'translateY(0px)';
       setTimeout(() => {
         reel.style.transition = `transform ${1000 + index * 500}ms ease-out`;
-        reel.style.transform = `translateY(${-180 * 19}px)`;
+        reel.style.transform = `translateY(${-150 * 19}px)`; // 150px = высота одной карты
       }, 100);
     });
 
