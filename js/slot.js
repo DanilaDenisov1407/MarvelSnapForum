@@ -34,16 +34,25 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
+
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        reel.appendChild(new Image().src = item.image);
+        if (item && item.image) {
+          const img = document.createElement('img');
+          img.src = item.image;
+          img.onerror = () => img.remove(); // защита от битой картинки
+          reel.appendChild(img);
+        }
       }
 
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      const img = document.createElement('img');
-      img.src = final.image;
-      reel.appendChild(img);
-      selected.push(final);
+      if (final && final.image) {
+        const img = document.createElement('img');
+        img.src = final.image;
+        img.onerror = () => img.remove(); // защита от битой картинки
+        reel.appendChild(img);
+        selected.push(final);
+      }
 
       reel.style.transition = 'none';
       reel.style.transform = 'translateY(0px)';
@@ -54,6 +63,11 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     });
 
     setTimeout(() => {
+      if (selected.length < 3) {
+        document.getElementById("result").textContent = "Ошибка при выборе карт.";
+        return;
+      }
+
       const names = selected.map(c => c.name);
       const imgs = selected.map(c => c.image);
       const allSameName = names.every(n => n === names[0]);
