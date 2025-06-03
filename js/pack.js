@@ -11,7 +11,7 @@ export function showPackOpen(images, balance, updateBalanceUI) {
   updateBalanceUI();
 
   main.innerHTML = `
-    <h2>Открытие пака 0% гарантии что без пикселей</h2>
+    <h2>Открытие пака</h2>
     <div class="box-container">
       <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/u1Ml2nW.png') center/contain no-repeat;"></div>
       <img id="card" class="card-reveal" />
@@ -27,8 +27,12 @@ export function showPackOpen(images, balance, updateBalanceUI) {
   function openBox() {
     box.remove();
     const random = images[Math.floor(Math.random() * images.length)];
-    card.src = random.image;
-    card.classList.add('visible');
+    if (random && random.image) {
+      card.src = random.image;
+      card.classList.add('visible');
+    } else {
+      card.remove(); // скрыть карту вообще, если невалидная
+    }
 
     const again = document.createElement('button');
     again.textContent = "Открыть ещё";
@@ -36,6 +40,5 @@ export function showPackOpen(images, balance, updateBalanceUI) {
     document.getElementById('pack-buttons').prepend(again);
   }
 
-  // Сразу открыть без дополнительного нажатия
   setTimeout(openBox, 500);
 }
