@@ -11,7 +11,7 @@ export function showPackOpen(images, balance, updateBalanceUI) {
   updateBalanceUI();
 
   main.innerHTML = `
-    <h2>Открытие пака</h2>
+    <h2>Открытие пака 0% гарантии что без пикселей</h2>
     <div class="box-container">
       <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/u1Ml2nW.png') center/contain no-repeat;"></div>
       <img id="card" class="card-reveal" />
