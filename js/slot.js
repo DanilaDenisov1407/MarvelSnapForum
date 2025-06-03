@@ -34,15 +34,18 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
       reel.innerHTML = '';
+
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        reel.appendChild(new Image().src = item.image);
+        const img = document.createElement('img');
+        img.src = item.image;
+        reel.appendChild(img);
       }
 
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
-      const img = document.createElement('img');
-      img.src = final.image;
-      reel.appendChild(img);
+      const finalImg = document.createElement('img');
+      finalImg.src = final.image;
+      reel.appendChild(finalImg);
       selected.push(final);
 
       reel.style.transition = 'none';
@@ -57,6 +60,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       const names = selected.map(c => c.name);
       const imgs = selected.map(c => c.image);
       const allSameName = names.every(n => n === names[0]);
+
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
@@ -75,7 +79,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       }
 
       balance.tokens += reward;
-      document.getElementById('result').textContent = msg;
+      document.getElementById("result").textContent = msg;
       updateBalanceUI();
     }, 2000);
   };
