@@ -29,7 +29,6 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     updateBalanceUI();
 
     const slotPool = getRandomItems(images, 12);
-    const selected = [];
 
     reels.forEach((id, index) => {
       const reel = document.getElementById(id);
@@ -37,7 +36,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
 
       for (let i = 0; i < 19; i++) {
         const item = slotPool[Math.floor(Math.random() * slotPool.length)];
-        const img = document.createElement('img');
+        const img = new Image();
         img.src = item.image;
         img.onerror = () => img.remove();
         reel.appendChild(img);
@@ -46,7 +45,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       const final = slotPool[Math.floor(Math.random() * slotPool.length)];
       reel.dataset.final = JSON.stringify(final);
 
-      const finalImg = document.createElement('img');
+      const finalImg = new Image();
       finalImg.src = final.image;
       finalImg.onerror = () => finalImg.remove();
       reel.appendChild(finalImg);
@@ -62,15 +61,11 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     setTimeout(() => {
       const selected = [];
       reels.forEach(id => {
-        const data = document.getElementById(id).dataset.final;
-        if (data) {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed && parsed.image) {
-              selected.push(parsed);
-            }
-          } catch (e) {}
-        }
+        const reel = document.getElementById(id);
+        try {
+          const data = JSON.parse(reel.dataset.final);
+          if (data && data.image) selected.push(data);
+        } catch {}
       });
 
       if (selected.length < 3) {
@@ -108,6 +103,6 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       balance.tokens += reward;
       document.getElementById('result').textContent = msg;
       updateBalanceUI();
-    }, 2200); // подстраховка на длительность анимации
+    }, 2200);
   };
 }
