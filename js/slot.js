@@ -51,9 +51,12 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       if (final && final.image) {
         const img = document.createElement('img');
         img.src = final.image;
-        img.onerror = () => img.remove();
+        img.onerror = () => {
+          img.remove();
+          final.__skip = true;
+        };
         reel.appendChild(img);
-        selected.push(final);
+        reel.dataset.final = JSON.stringify(final);
       }
 
       reel.style.transition = 'none';
@@ -65,8 +68,19 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
     });
 
     setTimeout(() => {
+      selected.length = 0;
+      reels.forEach(id => {
+        const reel = document.getElementById(id);
+        try {
+          const final = JSON.parse(reel.dataset.final);
+          if (!final.__skip) selected.push(final);
+        } catch (e) {
+          console.warn('⚠️ Не удалось прочитать финальную карту');
+        }
+      });
+
       if (selected.length < 3) {
-        document.getElementById("result").textContent = "Ошибка при загрузке карт.";
+        document.getElementById("result").textContent = "Ошибка при загрузке финальных карт.";
         return;
       }
 
@@ -85,7 +99,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
 
       if (sameName && allSameSketcher && jackpotChance) {
         reward = 500;
-        msg = "🎉 Джекпот! Все совпали! +500 токенов!";
+        msg = "🎉 Джекпот! +500 токенов!";
         pityCounter = 0;
       } else if (sameName && sketcherMatchCount >= 2) {
         reward = 250;
