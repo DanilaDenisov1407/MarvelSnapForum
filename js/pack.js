@@ -1,6 +1,5 @@
 export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
   const main = document.getElementById('main-content');
-
   const enough = balance.gold >= 50;
 
   if (!enough) {
@@ -22,27 +21,12 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
       balance.tokens += 1000;
       updateBalanceUI();
 
-      // Показываем кнопку "Открыть ещё", но не запускаем автооткрытие
-      main.innerHTML = `
-        <h2>Готов к открытию!</h2>
-        <div class="box-container">
-          <div id="box" style="width:180px;height:180px;background:url('https://i.imgur.com/u1Ml2nW.png') center/contain no-repeat;"></div>
-          <img id="card" class="card-reveal" />
-        </div>
-        <div id="pack-buttons">
-          <button id="open-next">Открыть ещё</button>
-          <button onclick="location.reload()">Назад</button>
-        </div>
-      `;
-
-      document.getElementById('open-next').onclick = () =>
-        showPackOpen(images, balance, updateBalanceUI, true);
+      showPackOpen(images, balance, updateBalanceUI);
     };
 
     return;
   }
 
-  // Списываем баланс
   balance.gold -= 50;
   updateBalanceUI();
 
@@ -63,54 +47,40 @@ export function showPackOpen(images, balance, updateBalanceUI, auto = false) {
 
   function openBox() {
     box.remove();
+
     const random = images[Math.floor(Math.random() * images.length)];
-    if (random && random.image) {
+    if (random?.image) {
       card.src = random.image;
       card.classList.add('visible');
 
-      // 💡 Защита от битых ссылок
       card.onerror = () => {
         console.warn("❌ Битое изображение:", random.image);
         card.remove();
       };
     } else {
-      card.remove(); // если данных нет
+      card.remove();
     }
 
     const btnContainer = document.getElementById('pack-buttons');
+    btnContainer.innerHTML = '';
 
-    if (balance.gold >= 50 && balance.tokens >= 10) {
-      const againBtn = document.createElement('button');
-      againBtn.textContent = "Открыть ещё";
-      againBtn.onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
-      btnContainer.prepend(againBtn);
-    } else {
-      const topupBtn = document.createElement('button');
-      topupBtn.textContent = "Пополнить";
-      topupBtn.onclick = () => {
+    const againBtn = document.createElement('button');
+    againBtn.textContent = balance.gold >= 50 ? "Открыть ещё" : "Пополнить";
+    againBtn.onclick = () => {
+      if (balance.gold < 50) {
         balance.coins += 1000;
         balance.gold += 1000;
         balance.tokens += 1000;
         updateBalanceUI();
+      }
+      showPackOpen(images, balance, updateBalanceUI, true);
+    };
+    btnContainer.appendChild(againBtn);
 
-        // После пополнения — показать "Открыть ещё" вручную
-        const openNext = document.createElement('button');
-        openNext.textContent = "Открыть ещё";
-        openNext.onclick = () => showPackOpen(images, balance, updateBalanceUI, true);
-
-        btnContainer.innerHTML = '';
-        btnContainer.appendChild(openNext);
-
-        const backBtn = document.createElement('button');
-        backBtn.textContent = "Назад";
-        backBtn.onclick = () => location.reload();
-        btnContainer.appendChild(backBtn);
-      };
-      btnContainer.prepend(topupBtn);
-    }
-
-    const openBtn = document.getElementById('open-pack-btn');
-    if (openBtn) openBtn.remove();
+    const backBtn = document.createElement('button');
+    backBtn.textContent = "Назад";
+    backBtn.onclick = () => location.reload();
+    btnContainer.appendChild(backBtn);
   }
 
   if (auto) {
