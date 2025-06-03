@@ -1,7 +1,7 @@
 export function showSlotMachine(images, balance, updateBalanceUI) {
   const main = document.getElementById('main-content');
   main.innerHTML = `
-    <h2>Однорукий бандит</h2>
+    <h2>Слот Машина</h2>
     <div class="slot-machine">
       <div class="slot"><div class="reel" id="reel1"></div></div>
       <div class="slot"><div class="reel" id="reel2"></div></div>
