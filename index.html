@@ -4,25 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Marvel Snap Казино</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Marvel Snap Казино</h1>
-
-  <div id="balance">
-    <div><img src="https://i.imgur.com/ePwPOVJ.png"> <span id="coins">100</span></div>
-    <div><img src="https://i.imgur.com/St51NdG.png"> <span id="gold">50</span></div>
-    <div><img src="https://i.imgur.com/plqro8Q.png"> <span id="tokens">10</span></div>
-  </div>
-
-  <button onclick="addFunds()" style="background-color: green;">Пополнить баланс</button>
-
   <div id="main-content">
-    <button id="btn-slot">Слот машина</button>
+    <h1>Marvel Snap Казино</h1>
+
+    <div class="balance">
+      <img src="https://i.imgur.com/ePwPOVJ.png" width="20"/> <span id="coins">100</span>
+      <img src="https://i.imgur.com/St51NdG.png" width="20"/> <span id="gold">100</span>
+      <img src="https://i.imgur.com/plqro8Q.png" width="20"/> <span id="tokens">100</span>
+    </div>
+
+    <button onclick="addFunds()" style="background-color: green;">Пополнить баланс</button>
+
+    <h2>Выберите режим</h2>
+    <button id="btn-slot">Однорукий бандит</button>
     <button id="btn-pack">Открыть пак</button>
   </div>
 
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
-
