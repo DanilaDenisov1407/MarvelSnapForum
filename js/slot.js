@@ -71,20 +71,19 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
       }
 
       const names = selected.map(c => c.name);
-      const sketchers = selected.map(c => c.sketcher || '');
+      const sketchers = selected.map(c => (c.sketcher || '').trim());
 
       const sameName = names.every(n => n === names[0]);
-      const sameSketcher = sketchers.every(s => s === sketchers[0]);
+      const allSameSketcher = sketchers.length === 3 && sketchers.every(s => s === sketchers[0]);
       const uniqueSketchers = [...new Set(sketchers)];
       const sketcherMatchCount = sketchers.filter(s => s === sketchers[0]).length;
 
       let reward = 0;
       let msg = "😅 Попробуй ещё раз";
 
-      // Pity chance boost
       const jackpotChance = Math.random() < (0.01 + pityCounter * 0.001);
 
-      if (sameName && sameSketcher && jackpotChance) {
+      if (sameName && allSameSketcher && jackpotChance) {
         reward = 500;
         msg = "🎉 Джекпот! Все совпали! +500 токенов!";
         pityCounter = 0;
@@ -96,7 +95,7 @@ export function showSlotMachine(images, balance, updateBalanceUI) {
         reward = 100;
         msg = "🔥 Один герой, разные стили! +100 токенов!";
         pityCounter++;
-      } else if (!sameName && sameSketcher) {
+      } else if (!sameName && allSameSketcher) {
         reward = 50;
         msg = "🎨 Один художник! +50 токенов!";
         pityCounter++;
