@@ -1,0 +1,1 @@
+End of Turn: If your opponent has unspent Energy, draw a card with 10 or more Power.

@@ -1,0 +1,1 @@
+After you play a skill, +1 Power.

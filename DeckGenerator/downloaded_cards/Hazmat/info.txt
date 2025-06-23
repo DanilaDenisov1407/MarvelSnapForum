@@ -1,0 +1,1 @@
+On Reveal: Afflict all other cards with -1 Power.

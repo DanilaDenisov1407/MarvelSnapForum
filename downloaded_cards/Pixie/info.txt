@@ -1,0 +1,1 @@
+On Reveal: Shuffle the base Costs of all cards in your deck that started there.

@@ -1,0 +1,1 @@
+On Reveal: Give the top card of your deck +2 Power.

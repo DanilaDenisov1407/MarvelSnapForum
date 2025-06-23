@@ -1,0 +1,1 @@
+On Reveal: Your cards with Power below 0 switch sides. Destroy those that can't.

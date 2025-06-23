@@ -1,0 +1,1 @@
+On Reveal: Move away all enemy cards played here this turn. (including unrevealed cards)

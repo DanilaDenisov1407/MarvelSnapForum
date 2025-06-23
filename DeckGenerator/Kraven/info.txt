@@ -1,0 +1,1 @@
+When a card moves here, this gains +2 Power.

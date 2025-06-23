@@ -1,0 +1,1 @@
+On Reveal: Set this card's Power equal to that of the last card you played. (if able)

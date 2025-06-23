@@ -1,0 +1,1 @@
+On Reveal: Destroy all enemy cards here that have 10 or more Power.

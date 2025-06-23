@@ -1,0 +1,1 @@
+On Reveal: Move an enemy card here one location to the right.

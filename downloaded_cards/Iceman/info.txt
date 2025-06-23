@@ -1,0 +1,1 @@
+On Reveal: Give a card in your opponent's hand +1 Cost. (maximum 6)

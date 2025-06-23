@@ -1,0 +1,1 @@
+Ongoing: Has the Ongoing effects of all enemy cards.

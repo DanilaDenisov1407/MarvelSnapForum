@@ -1,0 +1,1 @@
+Activate: Afflict an enemy card here with negative Power equal to this card's Power.

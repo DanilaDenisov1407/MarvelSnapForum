@@ -1,0 +1,1 @@
+After ANY card is played here, this moves to another location.
