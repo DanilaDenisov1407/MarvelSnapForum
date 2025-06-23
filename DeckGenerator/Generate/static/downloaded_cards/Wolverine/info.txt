@@ -1,0 +1,1 @@
+When this is discarded or destroyed, regenerate it with +2 Power at a random location.

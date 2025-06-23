@@ -1,0 +1,1 @@
+On Reveal: Replace this location with 'Limbo'. Doesn't work after turn 5.

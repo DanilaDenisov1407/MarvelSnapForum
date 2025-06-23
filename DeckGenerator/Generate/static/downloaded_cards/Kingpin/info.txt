@@ -1,0 +1,1 @@
+When an enemy card moves here, afflict it with -2 Power.

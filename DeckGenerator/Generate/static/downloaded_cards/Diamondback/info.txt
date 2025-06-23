@@ -1,0 +1,1 @@
+Ongoing: Enemy cards here afflicted with negative Power have an additional -2 Power.

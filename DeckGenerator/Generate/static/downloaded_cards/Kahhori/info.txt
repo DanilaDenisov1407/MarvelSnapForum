@@ -1,0 +1,1 @@
+On Reveal: Each card in your hand gives one of your cards in play +1 Power.

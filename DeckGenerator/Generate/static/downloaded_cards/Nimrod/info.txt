@@ -1,0 +1,1 @@
+When this is destroyed, add a copy to each other location.
