@@ -1,1 +1,0 @@
-On Reveal: Replace the text of each card in your hand with text from a random card of the same Cost.

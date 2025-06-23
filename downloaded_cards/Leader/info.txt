@@ -1,1 +1,0 @@
-<span>On Reveal</span>: Copy the enemy card(s) with the highest Power played this turn, but on your side.

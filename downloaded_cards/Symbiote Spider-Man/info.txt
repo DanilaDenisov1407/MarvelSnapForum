@@ -1,1 +1,0 @@
-Activate: Merge your lowest-Cost card here with this. Copy its text like it just revealed.

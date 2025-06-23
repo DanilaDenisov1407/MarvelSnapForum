@@ -1,1 +1,0 @@
-On Reveal: Remove the text from all unrevealed enemy characters here.

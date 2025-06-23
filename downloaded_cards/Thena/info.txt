@@ -1,1 +1,0 @@
-End of Turn: +3 Power if you played (exactly) 2 cards.

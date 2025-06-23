@@ -1,1 +1,0 @@
-Ongoing: Your cards are always revealed last. (Their On Reveal abilities happen last.)
