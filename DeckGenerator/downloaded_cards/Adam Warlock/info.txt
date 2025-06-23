@@ -1,1 +1,0 @@
-End of Turn: Draw a card if you're winning here. Otherwise, +1 Power.

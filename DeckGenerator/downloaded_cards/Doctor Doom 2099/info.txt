@@ -1,1 +1,0 @@
-End of Turn: Add a DoomBot 2099 to a random location if you played (exactly) 1 card.

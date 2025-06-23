@@ -1,1 +1,0 @@
-When a card enters your hand from anywhere (except your deck), +1 Power.

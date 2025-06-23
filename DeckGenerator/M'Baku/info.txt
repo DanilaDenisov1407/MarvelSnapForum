@@ -1,1 +1,0 @@
-At the end of the game, this jumps from your deck to your lowest-Power location. (that isn't full)

@@ -1,1 +1,0 @@
-The first time another card moves here each turn, move it to another location.

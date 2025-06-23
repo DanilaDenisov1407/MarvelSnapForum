@@ -1,1 +1,0 @@
-Ongoing: Your adjacent locations with 2+ cards and no repeated Costs have +5 Power.

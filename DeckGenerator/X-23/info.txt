@@ -1,1 +1,0 @@
-When this is discarded or destroyed, regenerate it at a random location and you get +1 Energy next turn.

@@ -1,1 +1,0 @@
-On Reveal: Add a random 4, 5, or 6-Cost card to your hand. If you're winning here after next turn, give it -3 Cost.

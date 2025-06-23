@@ -1,1 +1,0 @@
-<span>On Reveal</span>: If this is in the back row, copy the text of the card in front of it.

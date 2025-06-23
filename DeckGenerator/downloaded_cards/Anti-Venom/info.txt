@@ -1,1 +1,0 @@
-On Reveal: Set the Cost and Power of your deck's top card to 0.

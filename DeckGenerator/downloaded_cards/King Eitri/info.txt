@@ -1,1 +1,0 @@
-Activate: Draw a created card from your deck.

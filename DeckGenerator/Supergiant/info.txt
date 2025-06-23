@@ -1,1 +1,0 @@
-On Reveal: All cards played next turn don't reveal until the game ends.

@@ -1,1 +1,0 @@
-On Reveal: Discard the lowest-Power card from your hand. Remove that card's Power from this.

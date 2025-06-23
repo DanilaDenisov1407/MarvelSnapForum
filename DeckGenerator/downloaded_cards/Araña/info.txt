@@ -1,1 +1,0 @@
-Activate: After you play your next card, give it +1 Power and move it to the right.

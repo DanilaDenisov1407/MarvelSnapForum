@@ -1,1 +1,0 @@
-Activate: Discard all cards that cost 1 or less from your hand. Afflict that many different enemy cards with -2 Power.

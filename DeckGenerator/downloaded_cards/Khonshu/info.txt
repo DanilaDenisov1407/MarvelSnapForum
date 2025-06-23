@@ -1,1 +1,0 @@
-When discarded, returns in its next phase. On Reveal: Resurrect a card you discarded to another location with its Power set to 5.

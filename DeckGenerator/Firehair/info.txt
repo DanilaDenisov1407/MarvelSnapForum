@@ -1,1 +1,0 @@
-When one of your cards is destroyed, this uses that card's On Reveal.
