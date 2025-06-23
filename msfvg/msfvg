@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Генератор новых вариаций Marvel Snap Forum</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,900;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="./js/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="preview-container" id="previewContainer">
+        <div class="preview-data">
+          <div id="rarityText" class="rarity-block"><span>Rare</span></div>
+        </div>
+        <img
+          id="previewImage"
+          class="preview-image"
+          src="./img/card-preview.webp"
+          alt="Карта превью"
+        />
+        <div class="preview-data">
+          <div id="authorText" class="author-text">
+            <span class="author-label">Художник:</span>
+            <span class="author-name">Kim Jacinto</span>
+          </div>
+          <div id="costWrapper" class="cost-wrapper">
+            <span class="price-label">Цена:</span>
+            <img id="iconImg" src="./img/icons/gold-icon.webp" alt="Иконка" />
+            <span id="costText">2400 золота</span>
+          </div>
+          <a
+            class="telegram-link"
+            href="https://t.me/marvelsnapcom"
+            target="_blank"
+            >@marvelsnapcom</a
+          >
+        </div>
+      </div>
+      <div class="controls">
+        <div class="controls-wrapper">
+          <div class="file-input-wrapper">
+            <button type="button" class="custom-file-button">
+              Выбрать файл
+            </button>
+            <input
+              type="file"
+              id="imageInput"
+              accept="image/*,.webp"
+              style="display: none"
+            />
+          </div>
+          <div class="input-value">
+            <input
+              type="text"
+              id="rarityInput"
+              placeholder="Редкость (можно выбрать)"
+            />
+          </div>
+          <div class="rarity-style-select">
+            <label for="rarityStyleSelect">Стиль редкости:</label>
+            <select id="rarityStyleSelect">
+              <option value="rare">Rare</option>
+              <option value="super-rare">Super Rare</option>
+              <option value="ultimate">Ultimate</option>
+              <option value="spotlight">Spotlight</option>
+            </select>
+          </div>
+          <div class="input-value">
+            <input type="text" id="authorInput" placeholder="Художник" />
+          </div>
+          <label>
+            <input type="checkbox" id="authorLabelCheckbox" checked />
+            Показывать «Художник:»
+          </label>
+        </div>
+        <div class="controls-wrapper">
+          <div class="input-value">
+            <input
+              type="text"
+              id="priceInput"
+              placeholder="Цена (например, 1200)"
+            />
+          </div>
+          <select id="iconSelect">
+            <option value="./img/icons/gold-icon.webp">Золото</option>
+            <option value="./img/icons/token-icon.webp">Жетоны</option>
+            <option value="./img/icons/credit-icon.webp">Кредиты</option>
+          </select>
+          <label>
+            <input type="checkbox" id="priceLabelCheckbox" checked /> Показывать
+            «Цена:»
+          </label>
+
+          <label>
+            <input type="checkbox" id="iconCheckbox" checked /> Показывать
+            иконку и валюту
+          </label>
+          <button id="resetButton">Сбросить</button>
+          <button id="downloadButton">Скачать результат</button>
+        </div>
+      </div>
+    </div>
+    <div class="capture-container" id="captureContainer">
+      <div class="capture-data">
+        <div id="captureRarityText" class="rarity-block">
+          <span>Super Rare</span>
+        </div>
+      </div>
+      <img
+        id="captureImage"
+        class="capture-image"
+        src="./img/card-preview.webp"
+        alt="Карта превью"
+      />
+      <div class="capture-data">
+        <div id="captureAuthorText" class="author-text">
+          <span class="author-label">Художник:</span>
+          <span class="author-name">Kim Jacinto</span>
+        </div>
+        <div id="captureCostWrapper" class="cost-wrapper">
+          <span class="price-label">Цена:</span>
+          <img
+            id="captureIconImg"
+            src="./img/icons/gold-icon.webp"
+            alt="Иконка"
+          />
+          <span id="captureCostText">2400 золота</span>
+        </div>
+        <a
+          class="telegram-link"
+          href="https://t.me/marvelsnapcom"
+          target="_blank"
+          >@marvelsnapcom</a
+        >
+      </div>
+    </div>
+    <div class="scaled-capture-container" id="scaledCaptureContainer">
+      <div class="capture-data">
+        <div id="scaledRarityText" class="rarity-block">
+          <span>Super Rare</span>
+        </div>
+      </div>
+      <img
+        id="scaledCaptureImage"
+        class="capture-image"
+        src="./img/card-preview.webp"
+        alt="Карта превью"
+      />
+      <div class="capture-data">
+        <div id="scaledAuthorText" class="author-text">
+          <span class="author-label">Художник:</span>
+          <span class="author-name">Kim Jacinto</span>
+        </div>
+        <div id="scaledCostWrapper" class="cost-wrapper">
+          <span class="price-label">Цена:</span>
+          <img
+            id="scaledCaptureIconImg"
+            src="./img/icons/gold-icon.webp"
+            alt="Иконка"
+          />
+          <span id="scaledCaptureCostText">2400 золота</span>
+        </div>
+        <a
+          class="telegram-link"
+          href="https://t.me/marvelsnapcom"
+          target="_blank"
+          >@marvelsnapcom</a
+        >
+      </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+      function toggleScaledCopy() {
+        const scaledContainer = document.getElementById(
+          'scaledCaptureContainer'
+        )
+        scaledContainer.classList.toggle('visible')
+      }
+    </script>
+  </body>
+</html>
