@@ -15,7 +15,7 @@
       color: white;
     }
 
-    /* Центрированный заголовок */
+    /* Контейнер для заголовка */
     .header-container {
       display: flex;
       justify-content: center;
@@ -25,13 +25,13 @@
     h1 {
       font-size: 36px;
       background: rgba(0, 0, 0, 0.6);
-      display: inline-block;
       padding: 10px 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px black;
       text-align: center;
     }
 
+    /* Стили меню (по умолчанию — левый верхний угол) */
     nav {
       position: absolute;
       top: 40px;
@@ -71,6 +71,32 @@
 
     a:hover {
       background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ----------- АДАПТИВ ДЛЯ МОБИЛЬНЫХ ---------- */
+    @media (max-width: 768px) {
+      nav {
+        position: static; /* убираем абсолютное позиционирование */
+        margin: 20px auto 0 auto; /* отступ сверху + центрируем */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 90%;
+      }
+
+      .header-container {
+        margin-top: 30px;
+      }
+
+      h1 {
+        font-size: 28px;
+        padding: 8px 16px;
+      }
+
+      a {
+        width: 100%; /* кнопки по ширине меню */
+        text-align: center;
+      }
     }
   </style>
 </head>
