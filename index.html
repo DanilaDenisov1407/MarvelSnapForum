@@ -6,80 +6,80 @@
   <title>Marvel Snap Forum</title>
 
   <style>
-    /* Стили для всей страницы */
     body {
       margin: 0;
       padding: 0;
-      font-family: sans-serif; /* Шрифт по умолчанию */
-      background: url('1281451.png') no-repeat center center fixed; /* Фон - изображение */
-      background-size: cover; /* Растягиваем фон на весь экран */
-      color: white; /* Цвет текста */
+      font-family: sans-serif;
+      background: url('1281451.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
     }
 
-    /* Заголовок "Marvel Snap Forum" */
+    /* Центрированный заголовок */
+    .header-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 50px;
+    }
+
     h1 {
-      text-align: center; /* Центрируем по горизонтали */
-      margin-top: 50px; /* Отступ сверху */
       font-size: 36px;
-      background: rgba(0, 0, 0, 0.6); /* Полупрозрачный фон под текстом */
-      display: inline-block; /* Чтобы фон подстраивался под текст */
-      padding: 10px 20px; /* Внутренние отступы */
-      border-radius: 10px; /* Скруглённые углы */
-      box-shadow: 0 0 10px black; /* Тень вокруг */
+      background: rgba(0, 0, 0, 0.6);
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px black;
+      text-align: center;
     }
 
-    /* Блок с меню */
     nav {
-      position: absolute; /* Позиционируем по координатам */
-      top: 40px; /* Отступ сверху */
-      left: 30px; /* Отступ слева */
-      background: rgba(0, 0, 0, 0.5); /* Полупрозрачный тёмный фон */
-      padding: 20px 25px; /* Отступы внутри блока */
-      border-radius: 12px; /* Скруглённые углы */
-      box-shadow: 0 0 10px black; /* Тень */
+      position: absolute;
+      top: 40px;
+      left: 30px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px black;
     }
 
-    /* Заголовок "МЕНЮ:" */
     nav h2 {
-      margin-top: 0; /* Убираем верхний отступ */
+      margin-top: 0;
       font-size: 20px;
-      margin-bottom: 10px; /* Отступ снизу до кнопок */
+      margin-bottom: 10px;
     }
 
-    /* Список кнопок */
     ul {
-      list-style: none; /* Убираем маркеры у списка */
+      list-style: none;
       padding: 0;
       margin: 0;
     }
 
-    /* Элемент списка — один пункт меню */
     li {
-      margin: 12px 0; /* Расстояние между кнопками */
+      margin: 12px 0;
     }
 
-    /* Стили для самих кнопок-ссылок */
     a {
-      color: white; /* Белый текст */
+      color: white;
       font-size: 18px;
-      text-decoration: none; /* Убираем подчёркивание */
-      background-color: rgba(0, 0, 0, 0.4); /* Фон кнопки — полупрозрачный */
-      padding: 8px 14px; /* Внутренние отступы */
-      border-radius: 8px; /* Скруглённые края */
-      transition: background-color 0.3s; /* Анимация при наведении */
+      text-decoration: none;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
       display: inline-block;
     }
 
-    /* Поведение кнопки при наведении */
     a:hover {
-      background-color: rgba(255, 255, 255, 0.2); /* Светлее при наведении */
+      background-color: rgba(255, 255, 255, 0.2);
     }
   </style>
 </head>
 <body>
 
-  <!-- Заголовок -->
-  <h1>Marvel Snap Forum</h1>
+  <!-- Центрированный заголовок -->
+  <div class="header-container">
+    <h1>Marvel Snap Forum</h1>
+  </div>
 
   <!-- Меню навигации -->
   <nav>
