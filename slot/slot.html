@@ -155,7 +155,7 @@
       setTimeout(() => {
         const r = Array.from(strips).map(s => s.dataset.result);
         const win = r[0] && r[0] === r[1] && r[1] === r[2];
-        resultEl.textContent = win ? "🎉 Победа! Все совпали!" : "😥 Попробуй ещё!";
+        resultEl.textContent = win ? "🎉 Победа! Все совпали!" : "Проебали?";
         spinBtn.disabled = false;
       }, lastStopAt);
     }
