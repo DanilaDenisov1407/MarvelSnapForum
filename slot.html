@@ -21,8 +21,8 @@
     }
 
     .reel {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       overflow: hidden;
       border: 2px solid #fff;
       border-radius: 10px;
@@ -40,7 +40,7 @@
 
     .reel img {
       width: 100%;
-      height: 100px;
+      height: 120px;
       display: block;
     }
 
@@ -70,11 +70,11 @@
   <div class="result" id="result"></div>
 
   <script>
-    // ⚡ Твои картинки (сюда вставь ссылки из Google Таблицы)
+    // ⚡ Твои ссылки на карты
     const images = [
-      https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/1_166196504250.webp?v=557
-      https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/2_166025533667.webp?v=557
-      https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/3_166196504332.webp?v=557
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/1_166196504250.webp?v=557",
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/2_166025533667.webp?v=557",
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/3_166196504332.webp?v=557"
     ];
 
     const reels = document.querySelectorAll(".reel-inner");
@@ -83,28 +83,29 @@
     function spin() {
       resultEl.textContent = "Кручусь...";
       reels.forEach((reel, index) => {
-        // Сбрасываем
+        // очищаем
         reel.innerHTML = "";
 
-        // Добавляем длинную "ленту" из картинок для анимации
+        // создаем "ленту" из случайных картинок
         for (let i = 0; i < 20; i++) {
           const img = document.createElement("img");
           img.src = images[Math.floor(Math.random() * images.length)];
           reel.appendChild(img);
         }
 
-        // Выбираем итоговую картинку
+        // итоговая картинка
         const finalImg = images[Math.floor(Math.random() * images.length)];
         const img = document.createElement("img");
         img.src = finalImg;
         reel.appendChild(img);
 
-        // Анимация
-        const totalHeight = reel.scrollHeight - 100; // прокрутка
+        // сброс позиции
         reel.style.transition = "none";
         reel.style.top = "0px";
 
+        // запускаем анимацию с задержкой (чтобы барабаны останавливались по очереди)
         setTimeout(() => {
+          const totalHeight = reel.scrollHeight - 120; // высота прокрутки
           reel.style.transition = `top ${1 + index * 0.5}s ease-out`;
           reel.style.top = `-${totalHeight}px`;
         }, 50);
@@ -112,7 +113,7 @@
         reel.dataset.result = finalImg;
       });
 
-      // Проверяем победу после остановки
+      // проверяем совпадение после остановки
       setTimeout(() => {
         const results = Array.from(reels).map(r => r.dataset.result);
         if (results[0] === results[1] && results[1] === results[2]) {
