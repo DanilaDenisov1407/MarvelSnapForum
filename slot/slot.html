@@ -83,6 +83,10 @@
       const reels = document.querySelectorAll(".reel-strip");
       const results = [];
 
+      // блокируем кнопку пока крутится
+      document.querySelector("button").disabled = true;
+      document.getElementById("result").innerHTML = "";
+
       reels.forEach((reel, index) => {
         reel.innerHTML = ""; // очищаем ленту
 
@@ -103,25 +107,26 @@
         finalImg.src = finalCard.image;
         reel.appendChild(finalImg);
 
-        // считаем высоту
+        // ставим ленту сверху
         const totalHeight = reel.scrollHeight - 120;
         reel.style.transition = "none";
-        reel.style.top = `-${totalHeight}px`; // ставим ленту сверху
+        reel.style.top = `-${totalHeight}px`;
 
-        // анимация вниз
+        // запускаем анимацию с задержкой (поочерёдно)
         setTimeout(() => {
-          reel.style.transition = `top ${1 + index * 0.5}s ease-out`;
+          reel.style.transition = `top 1s ease-out`;
           reel.style.top = "0px";
-        }, 50);
+        }, 200 + index * 1000); // задержка между барабанами
       });
 
-      // проверка выигрыша после остановки
+      // проверка выигрыша после того как последний барабан остановился
       setTimeout(() => {
         const win = results.every(card => card.name === results[0].name);
         document.getElementById("result").innerHTML = win
           ? "🎉 Поздравляем, ты выиграл!"
           : "😥 Попробуй ещё!";
-      }, 2500);
+        document.querySelector("button").disabled = false;
+      }, 200 + reels.length * 1000 + 1200); // ждём пока все докрутятся
     }
 
     loadCards();
