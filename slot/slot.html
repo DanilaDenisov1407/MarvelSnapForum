@@ -2,136 +2,129 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Слот Машина</title>
+  <title>🎰 Слот Машина</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      background-color: #111;
+      background: #111;
       color: #fff;
-      padding-top: 50px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
     }
-
-    .slots {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
+    h1 {
       margin-bottom: 20px;
     }
-
+    .slot {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
     .reel {
       width: 120px;
       height: 120px;
       overflow: hidden;
       border: 2px solid #fff;
       border-radius: 10px;
-      background: #222;
+      margin: 0 10px;
       position: relative;
+      background: #222;
     }
-
-    .reel-inner {
+    .reel .reel-strip {
       position: absolute;
+      width: 100%;
       top: 0;
       left: 0;
-      width: 100%;
-      animation-timing-function: linear;
     }
-
     .reel img {
       width: 100%;
       height: 120px;
       display: block;
     }
-
     button {
       padding: 10px 20px;
-      font-size: 18px;
+      font-size: 16px;
+      margin-top: 20px;
+      border-radius: 8px;
+      border: none;
       cursor: pointer;
     }
-
-    .result {
-      font-size: 24px;
+    #result {
       margin-top: 20px;
+      font-size: 20px;
     }
   </style>
 </head>
 <body>
   <h1>🎰 Слот Машина</h1>
-
-  <div class="slots">
-    <div class="reel"><div class="reel-inner"></div></div>
-    <div class="reel"><div class="reel-inner"></div></div>
-    <div class="reel"><div class="reel-inner"></div></div>
+  <div class="slot">
+    <div class="reel"><div class="reel-strip"></div></div>
+    <div class="reel"><div class="reel-strip"></div></div>
+    <div class="reel"><div class="reel-strip"></div></div>
   </div>
-
   <button onclick="spin()">Крутить!</button>
-
-  <div class="result" id="result"></div>
+  <div id="result"></div>
 
   <script>
-    let images = []; // сюда загрузим ссылки из Cards.json
-    const reels = document.querySelectorAll(".reel-inner");
-    const resultEl = document.getElementById("result");
+    let cards = [];
 
     // Загружаем JSON с картами
-    fetch("Cards.json")
-      .then(response => response.json())
-      .then(data => {
-        images = data;
-      })
-      .catch(err => {
-        console.error("Ошибка загрузки Cards.json:", err);
-        resultEl.textContent = "⚠️ Не удалось загрузить ссылки!";
-      });
+    async function loadCards() {
+      const response = await fetch("slot/Cards.json");
+      cards = await response.json();
+    }
 
-    function spin() {
-      if (images.length === 0) {
-        resultEl.textContent = "⚠️ Ссылки ещё не загрузились!";
-        return;
-      }
+    // Генерация случайной карты
+    function getRandomCard() {
+      const idx = Math.floor(Math.random() * cards.length);
+      return cards[idx];
+    }
 
-      resultEl.textContent = "Кручусь...";
+    async function spin() {
+      const reels = document.querySelectorAll(".reel-strip");
+      const results = [];
+
       reels.forEach((reel, index) => {
-        reel.innerHTML = "";
+        reel.innerHTML = ""; // очищаем ленту
 
-        // создаём ленту
-        for (let i = 0; i < 20; i++) {
+        // выбираем финальную карту
+        const finalCard = getRandomCard();
+        results.push(finalCard);
+
+        // создаём ленту: случайные карты + финальная
+        for (let i = 0; i < 5; i++) {
+          const card = getRandomCard();
           const img = document.createElement("img");
-          img.src = images[Math.floor(Math.random() * images.length)];
+          img.src = card.image;
           reel.appendChild(img);
         }
 
-        // итоговая картинка
-        const finalImg = images[Math.floor(Math.random() * images.length)];
-        const img = document.createElement("img");
-        img.src = finalImg;
-        reel.appendChild(img);
+        // финальная карта внизу
+        const finalImg = document.createElement("img");
+        finalImg.src = finalCard.image;
+        reel.appendChild(finalImg);
 
-        // сброс позиции
+        // считаем высоту
+        const totalHeight = reel.scrollHeight - 120;
         reel.style.transition = "none";
-        reel.style.top = "0px";
+        reel.style.top = `-${totalHeight}px`; // ставим ленту сверху
 
-        // запускаем анимацию вниз
+        // анимация вниз
         setTimeout(() => {
-          const totalHeight = reel.scrollHeight - 120; // высота прокрутки
           reel.style.transition = `top ${1 + index * 0.5}s ease-out`;
-          reel.style.top = `${totalHeight}px`; // теперь вниз
+          reel.style.top = "0px";
         }, 50);
-
-        reel.dataset.result = finalImg;
       });
 
-      // проверяем совпадение после остановки
+      // проверка выигрыша после остановки
       setTimeout(() => {
-        const results = Array.from(reels).map(r => r.dataset.result);
-        if (results[0] === results[1] && results[1] === results[2]) {
-          resultEl.textContent = "🎉 Победа! Все совпали!";
-        } else {
-          resultEl.textContent = "😢 Попробуй ещё!";
-        }
-      }, 3000);
+        const win = results.every(card => card.name === results[0].name);
+        document.getElementById("result").innerHTML = win
+          ? "🎉 Поздравляем, ты выиграл!"
+          : "😥 Попробуй ещё!";
+      }, 2500);
     }
+
+    loadCards();
   </script>
 </body>
 </html>
