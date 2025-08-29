@@ -1,0 +1,36 @@
+import requests
+import csv
+import os
+
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRq2vqWZTGEBPMZwtyWTR-kEJttXkpqoSyOkoWjMLAiV--NBDbVx3qXmSUTDyxsciyXDNOkzRGEXNFB/pub?gid=608272023&single=true&output=csv"
+LOCAL_FILE = "cards.csv"
+
+# скачать csv с гугл-таблицы
+resp = requests.get(SHEET_URL)
+resp.raise_for_status()
+new_lines = list(csv.reader(resp.text.splitlines()))
+
+# если файла ещё нет → создаём
+if not os.path.exists(LOCAL_FILE):
+    with open(LOCAL_FILE, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerows(new_lines)
+    print("Создан новый cards.csv")
+    exit()
+
+# читаем существующие строки
+with open(LOCAL_FILE, newline="", encoding="utf-8") as f:
+    existing_lines = list(csv.reader(f))
+
+existing_set = {tuple(row) for row in existing_lines}
+added = 0
+
+# добавляем только новые
+with open(LOCAL_FILE, "a", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    for row in new_lines:
+        if tuple(row) not in existing_set:
+            writer.writerow(row)
+            added += 1
+
+print(f"Добавлено {added} новых строк")
