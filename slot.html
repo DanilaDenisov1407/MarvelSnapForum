@@ -67,49 +67,33 @@
 
   <button onclick="spin()">Крутить!</button>
 
-  <div class="result" id="result">Загрузка картинок...</div>
+  <div class="result" id="result"></div>
 
   <script>
-    let images = []; // сюда загрузим ссылки из таблицы
+    // ⚡ Твои ссылки на карты
+    const images = [
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/1_166196504250.webp?v=557",
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/2_166025533667.webp?v=557",
+      "https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/3_166196504332.webp?v=557"
+    ];
+
     const reels = document.querySelectorAll(".reel-inner");
     const resultEl = document.getElementById("result");
 
-    // ⚡ Подставь сюда ссылку на свою таблицу (CSV)
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRq2vqWZTGEBPMZwtyWTR-kEJttXkpqoSyOkoWjMLAiV--NBDbVx3qXmSUTDyxsciyXDNOkzRGEXNFB/pub?gid=608272023&single=true&output=csv";
-
-    // Загружаем CSV и парсим ссылки
-    async function loadImages() {
-      try {
-        const res = await fetch(sheetUrl);
-        const text = await res.text();
-        images = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-        resultEl.textContent = "Картинки загружены! Жми Крутить!";
-      } catch (err) {
-        resultEl.textContent = "Ошибка загрузки картинок 😢";
-        console.error(err);
-      }
-    }
-
-    loadImages();
-
     function spin() {
-      if (images.length === 0) {
-        resultEl.textContent = "Картинки ещё не загружены!";
-        return;
-      }
-
       resultEl.textContent = "Кручусь...";
       reels.forEach((reel, index) => {
+        // очищаем
         reel.innerHTML = "";
 
-        // создаем "ленту"
+        // создаем "ленту" из случайных картинок
         for (let i = 0; i < 20; i++) {
           const img = document.createElement("img");
           img.src = images[Math.floor(Math.random() * images.length)];
           reel.appendChild(img);
         }
 
-        // итоговое изображение
+        // итоговая картинка
         const finalImg = images[Math.floor(Math.random() * images.length)];
         const img = document.createElement("img");
         img.src = finalImg;
@@ -119,9 +103,9 @@
         reel.style.transition = "none";
         reel.style.top = "0px";
 
-        // анимация
+        // запускаем анимацию с задержкой (чтобы барабаны останавливались по очереди)
         setTimeout(() => {
-          const totalHeight = reel.scrollHeight - 120;
+          const totalHeight = reel.scrollHeight - 120; // высота прокрутки
           reel.style.transition = `top ${1 + index * 0.5}s ease-out`;
           reel.style.top = `-${totalHeight}px`;
         }, 50);
@@ -129,6 +113,7 @@
         reel.dataset.result = finalImg;
       });
 
+      // проверяем совпадение после остановки
       setTimeout(() => {
         const results = Array.from(reels).map(r => r.dataset.result);
         if (results[0] === results[1] && results[1] === results[2]) {
