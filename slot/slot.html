@@ -1,0 +1,60 @@
+<script>
+  let images = []; // сюда загрузим из JSON
+  const reels = document.querySelectorAll(".reel-inner");
+  const resultEl = document.getElementById("result");
+
+  // Загружаем JSON с картами
+  fetch("Cards.json")
+    .then(response => response.json())
+    .then(data => {
+      images = data;
+    })
+    .catch(err => {
+      console.error("Ошибка загрузки Cards.json:", err);
+      resultEl.textContent = "⚠️ Не удалось загрузить ссылки!";
+    });
+
+  function spin() {
+    if (images.length === 0) {
+      resultEl.textContent = "⚠️ Ссылки ещё не загрузились!";
+      return;
+    }
+
+    resultEl.textContent = "Кручусь...";
+    reels.forEach((reel, index) => {
+      reel.innerHTML = "";
+
+      // создаём ленту
+      for (let i = 0; i < 20; i++) {
+        const img = document.createElement("img");
+        img.src = images[Math.floor(Math.random() * images.length)];
+        reel.appendChild(img);
+      }
+
+      const finalImg = images[Math.floor(Math.random() * images.length)];
+      const img = document.createElement("img");
+      img.src = finalImg;
+      reel.appendChild(img);
+
+      reel.style.transition = "none";
+      reel.style.top = "0px";
+
+      setTimeout(() => {
+        const totalHeight = reel.scrollHeight - 120;
+        reel.style.transition = `top ${1 + index * 0.5}s ease-out`;
+        reel.style.top = `-${totalHeight}px`;
+      }, 50);
+
+      reel.dataset.result = finalImg;
+    });
+
+    setTimeout(() => {
+      const results = Array.from(reels).map(r => r.dataset.result);
+      if (results[0] === results[1] && results[1] === results[2]) {
+        resultEl.textContent = "🎉 Победа! Все совпали!";
+      } else {
+        resultEl.textContent = "😢 Попробуй ещё!";
+      }
+    }, 3000);
+  }
+</script>
