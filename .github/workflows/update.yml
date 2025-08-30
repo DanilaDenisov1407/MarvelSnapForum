@@ -19,13 +19,15 @@ jobs:
         run: |
           curl -L "https://script.google.com/macros/s/AKfycbw-Y4KW2d1qwX-_36BxnbQ-sYrhnJ0aTFte_ocdb6a8Hkz95LFSiZVemhv5NmPmUMs6/exec" -o slot/Cards.json
 
-      # Коммитим и пушим изменения
+      # Коммитим и пушим изменения только если есть что коммитить
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git reset --hard origin/main
           git add slot/Cards.json
-          git commit -m "Auto-update Cards.json" || echo "No changes"
-          git push origin main
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-update Cards.json"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
