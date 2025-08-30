@@ -1,186 +1,125 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🎰 Слот Машина</title>
+  <meta charset="UTF-8">
+  <title>Слот Машина</title>
   <style>
-    :root { --reel-w: 140px; --reel-h: 140px; }
-    body{
-      background:#111;
-      color:#fff;
-      font-family: Arial, Helvetica, sans-serif;
-      text-align:center;
-      padding:30px;
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
     }
-    h1{ margin:4px 0 16px; }
-    .machine{ display:flex; justify-content:center; gap:18px; margin-top:10px; }
-    .reel{
-      width:var(--reel-w);
-      height:var(--reel-h);
-      border:3px solid #fff;
-      border-radius:12px;
-      background:#222;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      box-shadow:0 4px 12px rgba(0,0,0,.6);
+    h1 {
+      margin: 20px;
     }
-    .reel img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-      user-select:none;
-      pointer-events:none;
+    .slots {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
     }
-    #spin{
-      margin-top:20px;
-      padding:10px 18px;
-      font-size:16px;
-      border-radius:8px;
-      border:none;
-      cursor:pointer;
-      background:#fff;
-      color:#000;
+    .slot {
+      width: 120px;
+      height: 160px;
+      border: 2px solid white;
+      margin: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #222;
+      border-radius: 10px;
+      overflow: hidden;
     }
-    #spin:disabled{ opacity:.5; cursor:not-allowed; }
-    #result{ margin-top:18px; font-size:18px; min-height:1.2em; }
-    /* маленькая адаптивка */
-    @media (max-width:520px){
-      :root{ --reel-w:110px; --reel-h:110px; }
+    .slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h1>🎰 Слот Машина</h1>
-
-  <div class="machine">
-    <div class="reel"><img id="img0" src="" alt=""></div>
-    <div class="reel"><img id="img1" src="" alt=""></div>
-    <div class="reel"><img id="img2" src="" alt=""></div>
+  <div class="slots">
+    <div class="slot"><img src="" alt=""></div>
+    <div class="slot"><img src="" alt=""></div>
+    <div class="slot"><img src="" alt=""></div>
   </div>
-
   <button id="spin">Крутить!</button>
   <div id="result"></div>
 
   <script>
-    /***********************************************
-     * Настройки
-     ***********************************************/
-    const JSON_PATH = "./Cards.json";      // файл рядом с этим HTML
-    const TICK_MS = 80;                    // частота смены картинки при кручении (мс)
-    const DURATION_BASE = 1200;            // через сколько мс остановится первый барабан
-    const BETWEEN = 900;                   // дополнительная задержка между барабанами (мс)
-    const FINAL_CHECK_DELAY = 200;         // перед финальной проверкой дать картинкам подгрузиться
+    const spinButton = document.getElementById("spin");
+    const slots = document.querySelectorAll(".slot img");
+    const result = document.getElementById("result");
 
-    /***********************************************
-     * Переменные
-     ***********************************************/
-    let images = [];                       // массив URL картинок (строки)
-    const imgEls = [
-      document.getElementById("img0"),
-      document.getElementById("img1"),
-      document.getElementById("img2")
-    ];
-    const spinBtn = document.getElementById("spin");
-    const resultEl = document.getElementById("result");
+    let cards = [];
 
-    /***********************************************
-     * Загрузка и нормализация Cards.json
-     * Поддерживаются:
-     *  - ["https://...","https://..."]
-     *  - [{ "image": "...", "name":"..." }, {"img":"...",...}]
-     ***********************************************/
-    fetch(JSON_PATH)
-      .then(r => r.json())
-      .then(data => {
-        if (!Array.isArray(data)) throw new Error("Cards.json не массив");
-        // Нормализуем в массив строк-URL
-        images = data.map(item => {
-          if (typeof item === "string") return item;
-          if (typeof item === "object" && item !== null) {
-            return item.url || item.image || item.img || item.src || "";
-          }
-          return "";
-        }).filter(Boolean);
-        if (images.length === 0) {
-          resultEl.textContent = "⚠️ Cards.json пуст или неверного формата";
-          spinBtn.disabled = true;
-        } else {
-          // Покажем начальные картинки (чтобы интерфейс не пустовал)
-          imgEls.forEach(el => el.src = images[Math.floor(Math.random()*images.length)]);
-        }
-      })
-      .catch(err => {
-        console.error("Ошибка загрузки Cards.json:", err);
-        resultEl.textContent = "⚠️ Не удалось загрузить Cards.json";
-        spinBtn.disabled = true;
-      });
+    // Загружаем JSON
+    fetch("slot/Cards.json")
+      .then(response => response.json())
+      .then(data => { cards = data; });
 
-    /***********************************************
-     * Утилиты
-     ***********************************************/
-    function randUrl(){ return images[Math.floor(Math.random()*images.length)]; }
+    function getRandomCard() {
+      return cards[Math.floor(Math.random() * cards.length)];
+    }
 
-    /***********************************************
-     * Основная логика спина:
-     * - все 3 барабана начинают сменять картинки одновременно (setInterval)
-     * - останавливаем их по очереди (clearInterval с задержкой)
-     ***********************************************/
-    spinBtn.addEventListener("click", () => {
-      if (!images.length) {
-        resultEl.textContent = "⏳ Ссылки ещё не загрузились...";
-        return;
-      }
+    function spin() {
+      result.textContent = "";
+      spinButton.disabled = true;
 
-      spinBtn.disabled = true;
-      resultEl.textContent = "";
+      let intervals = [];
+      let finalResults = [];
 
-      // промежуточные данные
-      const intervals = [null, null, null];
-      const finals = [null, null, null];
-
-      // 1) стартуем смену картинок одновременно
-      imgEls.forEach((el, i) => {
+      // Запускаем кручение (быстрая смена картинок)
+      slots.forEach((slot, i) => {
         intervals[i] = setInterval(() => {
-          el.src = randUrl();
-        }, TICK_MS);
+          let card = getRandomCard();
+          slot.src = card.url;
+        }, 100); // смена каждые 100мс
       });
 
-      // 2) останавливаем по очереди
-      imgEls.forEach((el, i) => {
-        const stopAt = DURATION_BASE + i * BETWEEN; // ms от сейчас
+      // Останавливаем по очереди
+      slots.forEach((slot, i) => {
         setTimeout(() => {
-          // остановка интервала
           clearInterval(intervals[i]);
+          let card = getRandomCard();
+          slot.src = card.url;
+          finalResults[i] = card.name;
 
-          // ставим финальную картинку (сразу) и сохраняем её URL
-          const final = randUrl();
-          el.src = final;
-          finals[i] = final;
-        }, stopAt);
-      });
-
-      // 3) Проверка выигрыша после того как последний барабан остановился
-      const lastStop = DURATION_BASE + (imgEls.length - 1) * BETWEEN;
-      setTimeout(() => {
-        // даём небольшой запас на подгрузку изображений
-        setTimeout(() => {
-          // Если у нас нет финалов (маловероятно) — берём src
-          const finalURLs = finals.map((f, idx) => f || imgEls[idx].src);
-          const win = finalURLs[0] && finalURLs[0] === finalURLs[1] && finalURLs[1] === finalURLs[2];
-
-          if (win) {
-            resultEl.textContent = "🎉 Выиграли!";
-          } else {
-            resultEl.textContent = "Проебали?";
+          // Когда последний остановился — проверяем результат
+          if (i === slots.length - 1) {
+            setTimeout(() => {
+              checkWin(finalResults);
+              spinButton.disabled = false;
+            }, 500);
           }
-          spinBtn.disabled = false;
-        }, FINAL_CHECK_DELAY);
-      }, lastStop + 30);
-    });
+        }, 1500 + i * 1000); // первый через 1.5с, второй через 2.5с, третий через 3.5с
+      });
+    }
+
+    function checkWin(finalResults) {
+      if (finalResults.every(name => name === finalResults[0])) {
+        result.textContent = "🎉 Победа!";
+      } else {
+        result.textContent = "Проебали?";
+      }
+    }
+
+    spinButton.addEventListener("click", spin);
   </script>
 </body>
 </html>
