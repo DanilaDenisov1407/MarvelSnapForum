@@ -2,24 +2,30 @@ name: Update Cards.json
 
 on:
   schedule:
-    - cron: "1 19 * * *" # каждый день в 22:01 по Москве (19:01 UTC)
+    - cron: "1 19 * * *" # каждый день в 22:01 по Москве
   workflow_dispatch: # возможность запускать вручную
 
 jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # <-- добавляем права на запись
+      contents: write
     steps:
+      # Клонируем репозиторий
       - uses: actions/checkout@v4
 
+      # Скачиваем JSON из Google Script
       - name: Download JSON from Google Sheets
-        run: curl -L "https://script.google.com/macros/s/AKfycbwCw8VbbmJ_KnFOXppN7yvjHTlLP12jq1nkyMcYbp0dnTJb2lbFvWmBq5l0YB8eyECx/exec" -o slot/Cards.json
+        run: |
+          curl -L "https://script.google.com/macros/s/AKfycbwCw8VbbmJ_KnFOXppN7yvjHTlLP12jq1nkyMcYbp0dnTJb2lbFvWmBq5l0YB8eyECx/exec" -o slot/Cards.json
 
+      # Коммитим и пушим изменения
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main
           git add slot/Cards.json
           git commit -m "Auto-update Cards.json" || echo "No changes"
-          git push
+          git push origin main
