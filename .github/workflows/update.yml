@@ -11,12 +11,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Клонируем репозиторий
       - uses: actions/checkout@v4
 
+      # Скачиваем JSON из веб-приложения Google Apps Script
       - name: Download JSON from Google Sheets
         run: |
           curl -L "https://script.google.com/macros/s/AKfycbwjqIex5c7nWXsz2N5bAADeIa3fjgLzEd6zlfHVYM1cAvlMmoSYOwAdrL3ICxyb0fK8/exec" -o slot/Cards.json
 
+      # Коммитим и пушим изменения
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
