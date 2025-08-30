@@ -17,7 +17,7 @@ jobs:
       # Скачиваем JSON из веб-приложения Google Apps Script
       - name: Download JSON from Google Sheets
         run: |
-          curl -L "https://script.google.com/macros/s/AKfycbwjqIex5c7nWXsz2N5bAADeIa3fjgLzEd6zlfHVYM1cAvlMmoSYOwAdrL3ICxyb0fK8/exec" -o slot/Cards.json
+          curl -L "https://script.google.com/macros/s/AKfycbw-Y4KW2d1qwX-_36BxnbQ-sYrhnJ0aTFte_ocdb6a8Hkz95LFSiZVemhv5NmPmUMs6/exec" -o slot/Cards.json
 
       # Коммитим и пушим изменения
       - name: Commit and push
