@@ -1,0 +1,32 @@
+name: Check Links and Remove 404
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # раз в день в 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Check and remove 404 links
+        run: node scripts/checkLinks.js
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add slot/Cards.json
+          git diff-index --quiet HEAD || git commit -m "Remove 404 links"
+          git push
