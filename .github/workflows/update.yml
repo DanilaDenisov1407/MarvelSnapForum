@@ -2,7 +2,7 @@ name: Update Cards.json
 
 on:
   schedule:
-    - cron: "1 19 * * *" # каждый день в 22:01 по Москве
+    - cron: "10 20 * * *" # каждый день в 23:10 по Москве
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
       # Клонируем репозиторий
       - uses: actions/checkout@v4
 
-      # Скачиваем JSON из веб-приложения Google Apps Script
+      # Скачиваем JSON из веб-приложения Google Sheets
       - name: Download JSON from Google Sheets
         run: |
           curl -L "https://script.google.com/macros/s/AKfycbwJTpWVhcel98iIv0mXfDVunkhv3Vep0esoq_i5LsBbPuVfZCeSZQym0xY0rVeIU-k3/exec" -o slot/Cards.json
@@ -30,4 +30,3 @@ jobs:
             git push origin main
           else
             echo "No changes to commit"
-          fi
