@@ -21,6 +21,7 @@ h1 {
 }
 
 .machine-container {
+  position: relative;
   width: 90vw;
   max-width: 920px;
 }
@@ -29,11 +30,36 @@ h1 {
   width: 100%;
   height: auto;
   display: block;
+  pointer-events: none;
 }
 
-/* Стили для встроенных барабанов */
-.reel image {
+.reels-wrapper {
+  position: absolute;
+  top: 360px;   /* верх прозрачного окна в SVG */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 230px; /* подгоняем под прозрачные окна */
+  height: 320px;    /* высота окна */
+  z-index: 2;
+}
+
+.reel {
   width: 220px;   /* ширина окна */
   height: 320px;  /* высота окна */
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  border-radius: 22px;
+}
+
+.reel img {
+  width: auto;
+  max-height: 100%;
   object-fit: contain;
+  user-select: none;
+  pointer-events: none;
 }
