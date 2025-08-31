@@ -10,41 +10,12 @@
   <h1>🎰 Слот Машина</h1>
 
   <div class="machine-container">
-    <!-- SVG слот -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" class="slot-frame">
-      <defs>
-        <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ff3b3b"/>
-          <stop offset="1" stop-color="#b80022"/>
-        </linearGradient>
-        <linearGradient id="gInner" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#3460ff"/>
-          <stop offset="1" stop-color="#132c8c"/>
-        </linearGradient>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity="0.45"/>
-        </filter>
-      </defs>
-
-      <!-- Рамка и тело слота -->
-      <g filter="url(#shadow)">
-        <path fill="url(#gBody)" d="M120,200 Q600,-60 1080,200 L1080,760 Q1080,820 1020,840 L180,840 Q120,820 120,760 Z"/>
-        <g clip-path="url(#arcClip)">
-          <rect x="200" y="260" width="800" height="380" rx="28" fill="url(#gInner)" opacity="0.9"/>
-          <rect x="220" y="280" width="760" height="340" rx="22" fill="#1a1a1a" opacity="0.85"/>
-        </g>
-
-        <!-- Прозрачные окна для барабанов -->
-        <rect x="230" y="360" width="220" height="320" rx="22" fill="transparent"/>
-        <rect x="490" y="360" width="220" height="320" rx="22" fill="transparent"/>
-        <rect x="750" y="360" width="220" height="320" rx="22" fill="transparent"/>
-
-        <!-- Встроенные барабаны -->
-        <g id="reel0" class="reel" transform="translate(230,360)"></g>
-        <g id="reel1" class="reel" transform="translate(490,360)"></g>
-        <g id="reel2" class="reel" transform="translate(750,360)"></g>
-      </g>
-    </svg>
+    <img class="slot-frame" src="slot-frame.svg" alt="slot frame" />
+    <div class="reels-wrapper">
+      <div class="reel" id="r0"></div>
+      <div class="reel" id="r1"></div>
+      <div class="reel" id="r2"></div>
+    </div>
   </div>
 
   <button id="spin">Крутить!</button>
