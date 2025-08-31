@@ -1,41 +1,24 @@
-/* размеры барабанов управляются кадром — сделаем контейнер резиновым */
-.machine{
-  position: relative;
-  width: min(920px, 92vw);   /* адаптивная ширина */
-  aspect-ratio: 1200 / 900;  /* как у SVG, чтобы не прыгало */
-  margin: 10px auto 0;
-}
+<link rel="stylesheet" href="slot/style.css" />
+<style>
+  /* Поднятие карт на 110px */
+  .track { top: -110px; }
 
-/* сам кадр-оверлей */
-.slot-frame{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  pointer-events:none; /* клики проходят к кнопкам и т.п. */
-  user-select:none;
-}
+  /* Центрирование машины по экрану */
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    background: #111;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
 
-/* удаляем прежние рамки у барабанов — они теперь под маской */
-.reel{
-  position:absolute;
-  border:none;
-  background:transparent;
-  overflow:hidden;
-  box-shadow:none;
-}
-
-/* дорожка внутри барабана без изменений */
-.track{ position:absolute; left:0; top:0; width:100%; will-change: transform; }
-.track img{ display:block; width:100%; height:100%; object-fit:contain; user-select:none; pointer-events:none; }
-
-/* ✔️ Позиции окон — совпадают с окнами в SVG (в процентах от 1200×900) */
-#r0{ left:19.17%; top:40%; width:18.33%; height:35.56%; }
-#r1{ left:40.83%; top:40%; width:18.33%; height:35.56%; }
-#r2{ left:62.50%; top:40%; width:18.33%; height:35.56%; }
-
-/* Чуть больше карт в высоту (выглядит как «карта»), можно играться */
-:root{ --reel-w: 220px; --reel-h: 320px; --gap: 18px; } /* не критично, оставлено для JS */
-.track img{ height:100%; } /* важно: растягиваем по высоте окна */
-
-@media (max-width:520px){
-  .machine{ width: 98vw; }
-}
+  /* Центрирование кнопки и заголовка */
+  h1, #spin, #result {
+    z-index: 10;
+  }
+</style>
