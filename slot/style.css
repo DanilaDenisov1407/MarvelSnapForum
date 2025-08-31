@@ -45,14 +45,16 @@ h1 {
 
 /* контейнер для барабанов */
 .reels-wrapper {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2%;
   position: absolute;
-  top: 40%;
-  left: 10%;
-  width: 80%;
-  height: 35%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;    /* подбираем под ширину окна рамки */
+  height: 50%;   /* подбираем под высоту окна рамки */
+  
+  display: flex;
+  justify-content: space-between; /* равномерно распределяем барабаны */
+  align-items: center;            /* выравнивание по вертикали */
   z-index: 2;
 }
 
@@ -64,6 +66,8 @@ h1 {
   justify-content: center;
   align-items: center;
   border-radius: 6px;
+  flex: 1;           /* равная ширина для всех барабанов */
+  margin: 0 1%;      /* промежуток между барабанами */
 }
 
 .track {
@@ -73,6 +77,7 @@ h1 {
   width: 100%;
   will-change: transform;
 }
+
 .track img {
   display: block;
   width: 100%;
