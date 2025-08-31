@@ -9,21 +9,21 @@ async function checkLink(url) {
     const response = await axios.get(url, { validateStatus: false });
     return response.status !== 404;
   } catch (e) {
-    return false; // если ошибка запроса, считаем ссылку недоступной
+    return false; // ошибка запроса → считаем ссылку недоступной
   }
 }
 
 (async () => {
   const newData = [];
-  for (const item of data) {
-    const url = item.link; // если поле с ссылкой называется иначе, замени
+  for (const url of data) {
     const ok = await checkLink(url);
     if (ok) {
-      newData.push(item);
+      newData.push(url);
     } else {
-      console.log(`Удаляем: ${url}`);
+      console.log(`❌ Удаляем: ${url}`);
     }
   }
 
+  console.log(`✅ Осталось ссылок: ${newData.length} (из ${data.length})`);
   fs.writeFileSync(filePath, JSON.stringify(newData, null, 2));
 })();
