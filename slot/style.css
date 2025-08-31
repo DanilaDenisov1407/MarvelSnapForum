@@ -4,62 +4,105 @@ html, body {
 }
 
 body {
-  background:#111;
-  color:#fff;
+  background: #111;
+  color: #fff;
   font-family: Arial, Helvetica, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align:center;
+  text-align: center;
   padding: 20px;
   box-sizing: border-box;
 }
 
-h1 { 
-  margin: 4px 0 16px; 
+h1 {
+  margin: 4px 0 16px;
 }
 
+/* контейнер автомата */
 .machine-container {
   position: relative;
   width: 90vw;
   max-width: 920px;
-}
-
-.slot-frame {
-  width: 100%;
-  height: auto;
-  display: block;
-  pointer-events: none;
-}
-
-.reels-wrapper {
-  position: absolute;
-  top: 360px;   /* верх прозрачного окна в SVG */
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 230px; /* подгоняем под прозрачные окна */
-  height: 320px;    /* высота окна */
-  z-index: 2;
-}
-
-.reel {
-  width: 220px;   /* ширина окна */
-  height: 320px;  /* высота окна */
-  overflow: hidden;
+  aspect-ratio: 1200 / 900; /* сохраняем пропорции рамки */
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #000;
-  border-radius: 22px;
 }
 
-.reel img {
-  width: auto;
-  max-height: 100%;
+/* рамка автомата */
+.slot-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* контейнер для барабанов */
+.reels-wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2%;
+  position: absolute;
+  top: 40%;
+  left: 10%;
+  width: 80%;
+  height: 35%;
+  z-index: 2;
+}
+
+/* барабан */
+.reel {
+  overflow: hidden;
+  position: relative;
+  border-radius: 6px;
+  background: #000;
+}
+
+/* дорожка, которую мы анимируем */
+.track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* картинки в дорожке */
+.track img {
+  display: block;
+  width: 100%;
+  height: 100%;       /* каждая картинка по размеру окна барабана */
   object-fit: contain;
   user-select: none;
   pointer-events: none;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  background: #ff4444;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+button:hover:not(:disabled) {
+  background: #ff2222;
+}
+
+#result {
+  margin-top: 16px;
+  font-size: 20px;
+  min-height: 28px;
 }
