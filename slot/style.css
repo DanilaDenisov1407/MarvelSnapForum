@@ -20,69 +20,20 @@ h1 {
   margin: 4px 0 16px; 
 }
 
-/* контейнер автомата */
 .machine-container {
-  position: relative;
   width: 90vw;
   max-width: 920px;
-  aspect-ratio: 1200 / 900; /* сохраняем пропорции рамки */
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* рамка автомата */
 .slot-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  user-select: none;
-  object-fit: contain;
-  z-index: 1;
-}
-
-/* контейнер для барабанов */
-.reels-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70%;    /* подбираем под ширину окна рамки */
-  height: 50%;   /* подбираем под высоту окна рамки */
-  
-  display: flex;
-  justify-content: space-between; /* равномерно распределяем барабаны */
-  align-items: center;            /* выравнивание по вертикали */
-  z-index: 2;
-}
-
-/* барабан */
-.reel {
-  background: #000;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 6px;
-  flex: 1;           /* равная ширина для всех барабанов */
-  margin: 0 1%;      /* промежуток между барабанами */
-}
-
-.track {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  will-change: transform;
-}
-
-.track img {
-  display: block;
   width: 100%;
   height: auto;
+  display: block;
+}
+
+/* Стили для встроенных барабанов */
+.reel image {
+  width: 220px;   /* ширина окна */
+  height: 320px;  /* высота окна */
   object-fit: contain;
-  user-select: none;
-  pointer-events: none;
 }
