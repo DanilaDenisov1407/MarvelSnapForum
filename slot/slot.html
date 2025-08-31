@@ -1,38 +1,47 @@
-body {
-  background:#111;
-  color:#fff;
-  font-family: Arial, Helvetica, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align:center;
-  padding: 20px;
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎰 Слот Машина</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>🎰 Слот Машина</h1>
 
-.machine-container {
-  width: 90vw;
-  max-width: 920px;
-}
+  <div class="machine-container">
+    <!-- SVG твоя рамка автомата -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" class="slot-frame">
+      <defs>
+        <clipPath id="arcClip">
+          <path d="M120,200 Q600,-60 1080,200 L1080,760 Q1080,820 1020,840 L180,840 Q120,820 120,760 Z"/>
+        </clipPath>
+      </defs>
 
-.slot-frame {
-  width: 100%;
-  height: auto;
-  display: block;
-}
+      <!-- корпус -->
+      <path fill="#b80022" d="M120,200 Q600,-60 1080,200 L1080,760 Q1080,820 1020,840 L180,840 Q120,820 120,760 Z"/>
 
-/* барабан */
-.reel {
-  width: 100%;
-  height: 100%;
-  background: #000;
-  overflow: hidden;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.reel img {
-  width: 100%;
-  object-fit: contain;
-}
+      <!-- внутренний фон -->
+      <g clip-path="url(#arcClip)">
+        <rect x="200" y="260" width="800" height="380" rx="28" fill="#132c8c"/>
+      </g>
+
+      <!-- окна -->
+      <rect x="230" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
+      <rect x="490" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
+      <rect x="750" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
+    </svg>
+
+    <!-- барабаны -->
+    <div class="reels-wrapper">
+      <div class="reel" id="r0"></div>
+      <div class="reel" id="r1"></div>
+      <div class="reel" id="r2"></div>
+    </div>
+  </div>
+
+  <button id="spin">Крутить!</button>
+  <div id="result"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
