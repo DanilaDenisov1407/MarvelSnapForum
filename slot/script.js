@@ -46,7 +46,7 @@ async function loadCards() {
       return;
     }
 
-    // заполнить превью в барабанах одной случайной картинкой
+    // показать превью
     reels.forEach(r => {
       r.innerHTML = `<div class="track"><img src="${images[Math.floor(Math.random()*images.length)]}" alt=""></div>`;
     });
@@ -55,7 +55,7 @@ async function loadCards() {
     spinBtn.disabled = false;
     resultEl.textContent = "";
 
-    // префетчим картинки в фоне (ускоряет следущую загрузку)
+    // префетчим картинки
     images.forEach(u => {
       const img = new Image();
       img.src = u;
@@ -92,7 +92,6 @@ function waitForImagesInTrack(track) {
 }
 
 async function buildTrack(reelEl, finalUrl) {
-  // собираем дорожку: REPEAT случайных + финальная
   reelEl.innerHTML = "";
   const track = document.createElement("div");
   track.className = "track";
@@ -110,11 +109,8 @@ async function buildTrack(reelEl, finalUrl) {
 
   reelEl.appendChild(track);
 
-  // ждём загрузки всех картинок в дорожке
   await waitForImagesInTrack(track);
 
-  // вычисляем на сколько нужно сдвинуть дорожку вверх,
-  // чтобы показать конец (финальную картинку)
   const trackHeight = track.scrollHeight;
   const viewH = reelEl.clientHeight;
   const totalShift = Math.max(0, trackHeight - viewH);
@@ -135,26 +131,19 @@ async function spin() {
   const buildPromises = reels.map((r, i) => buildTrack(r, finals[i]));
   const built = await Promise.all(buildPromises);
 
-  // запускаем анимации с разной длительностью
   built.forEach(({ track, totalShift }, i) => {
     const duration = BASE_DURATION + i * STEP_DURATION;
 
-    // сброс (без анимации)
     track.style.transition = "none";
     track.style.transform = `translateY(0px)`;
+    track.getBoundingClientRect(); // форсируем релоад
 
-    // форсируем релоад (reflow)
-    // eslint-disable-next-line no-unused-expressions
-    track.getBoundingClientRect();
-
-    // через RAF задаём transition + transform (чтобы браузер применил начальное состояние)
     requestAnimationFrame(() => {
       track.style.transition = `transform ${duration}ms cubic-bezier(0.22,1,0.36,1)`;
       track.style.transform = `translateY(-${totalShift}px)`;
     });
   });
 
-  // ждём окончания самого долгого барабана + небольшой буфер
   const lastDuration = BASE_DURATION + (reels.length - 1) * STEP_DURATION;
   await new Promise(res => setTimeout(res, lastDuration + BUFFER_AFTER));
 
