@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function capitalizeWords(str) {
     return str
       .split(' ')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : ''))
       .join(' ')
   }
 
@@ -23,9 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const priceLabel = document.querySelector('.price-label')
   const resetButton = document.getElementById('resetButton')
   const downloadButton = document.getElementById('downloadButton')
+  const downloadGifButton = document.getElementById('downloadGifButton')
   const costWrapper = document.getElementById('costWrapper')
   const customFileButton = document.querySelector('.custom-file-button')
   const rarityStyleSelect = document.getElementById('rarityStyleSelect')
+
+  const previewContainer = document.querySelector('.preview-container')
+  const captureContainer = document.getElementById('captureContainer')
+  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer')
 
   const captureImage = document.getElementById('captureImage')
   const captureRarityText = document.getElementById('captureRarityText')
@@ -36,32 +41,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const capturePriceLabel = document.querySelector('#captureCostWrapper .price-label')
   const captureCostWrapper = document.getElementById('captureCostWrapper')
 
-  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer')
-  const scaledImage = scaledCaptureContainer.querySelector('#scaledCaptureImage')
-  const scaledRarityText = scaledCaptureContainer.querySelector('#scaledRarityText')
-  const scaledAuthorLabel = scaledCaptureContainer.querySelector('#scaledAuthorText .author-label')
-  const scaledAuthorName = scaledCaptureContainer.querySelector('#scaledAuthorText .author-name')
-  const scaledCostText = scaledCaptureContainer.querySelector('#scaledCaptureCostText')
-  const scaledIconImg = scaledCaptureContainer.querySelector('#scaledCaptureIconImg')
-  const scaledPriceLabel = scaledCaptureContainer.querySelector('#scaledCostWrapper .price-label')
-  const scaledCostWrapper = scaledCaptureContainer.querySelector('#scaledCostWrapper')
-
-  const previewContainer = document.querySelector('.preview-container')
-  const captureContainer = document.querySelector('.capture-container')
-  const scaledContainer = document.querySelector('.scaled-capture-container')
+  const scaledImage = document.getElementById('scaledCaptureImage')
+  const scaledRarityText = document.getElementById('scaledRarityText')
+  const scaledAuthorLabel = document.querySelector('#scaledAuthorText .author-label')
+  const scaledAuthorName = document.querySelector('#scaledAuthorText .author-name')
+  const scaledCostText = document.getElementById('scaledCaptureCostText')
+  const scaledIconImg = document.getElementById('scaledCaptureIconImg')
+  const scaledPriceLabel = document.querySelector('#scaledCostWrapper .price-label')
+  const scaledCostWrapper = document.getElementById('scaledCostWrapper')
 
   const defaultPrice = '1200'
   const defaultAuthor = 'Kim Jacinto'
 
-  // Добавил новые варианты: conquest-reward, webshop-reward, bundle
+  // новые стили добавлены здесь
   const rarityStyles = {
     rare: 'Rare',
     'super-rare': 'Super Rare',
     ultimate: 'Ultimate',
     spotlight: 'Spotlight',
     'conquest-reward': 'Conquest Reward',
-    'webshop-reward': 'Webshop Reward',
     bundle: 'Bundle',
+    'webshop-reward': 'Webshop Reward',
+  }
+
+  const ALL_STYLE_KEYS = Object.keys(rarityStyles)
+
+  // === helpers ===
+  function setRarityText(node, cls, text) {
+    // снять все классы редкости
+    ALL_STYLE_KEYS.forEach((k) => node.classList.remove(k))
+    node.classList.add(cls)
+    node.querySelector('span').textContent = text
+  }
+
+  function setContainerRarityClass(cls) {
+    // убрать старые классы
+    ;[previewContainer, captureContainer, scaledCaptureContainer].forEach((el) => {
+      if (!el) return
+      ALL_STYLE_KEYS.forEach((k) => el.classList.remove(k))
+      el.classList.add(cls)
+    })
   }
 
   function renderCost() {
@@ -74,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       iconImg.style.display = 'none'
     }
-
     updateCostWrapperVisibility()
   }
 
@@ -123,62 +141,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const event = new Event('input', { bubbles: true })
     input.dispatchEvent(event)
     if (input === rarityInput) {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
+      const cls = rarityStyleSelect.value
+      setRarityText(rarityText, cls, rarityStyles[cls])
+      setRarityText(captureRarityText, cls, rarityStyles[cls])
+      setRarityText(scaledRarityText, cls, rarityStyles[cls])
     }
   }
 
-  // Все возможные классы, которые мы будем переключать
-  const ALL_RARITY_CLASSES = [
-    'rare',
-    'super-rare',
-    'ultimate',
-    'spotlight',
-    'conquest-reward',
-    'webshop-reward',
-    'bundle',
-  ]
-
   function updateRarityStyle() {
     const selectedStyle = rarityStyleSelect.value
+    const text =
+      rarityInput.value.trim() !== ''
+        ? capitalizeWords(rarityInput.value.trim())
+        : rarityStyles[selectedStyle]
 
-    // очистим все классы у блока rarityText и captureRarityText и добавим выбранный
-    ALL_RARITY_CLASSES.forEach((c) => {
-      rarityText.classList.remove(c)
-      captureRarityText.classList.remove(c)
-    })
-    if (selectedStyle && ALL_RARITY_CLASSES.includes(selectedStyle)) {
-      rarityText.classList.add(selectedStyle)
-      captureRarityText.classList.add(selectedStyle)
-    }
+    setRarityText(rarityText, selectedStyle, text)
+    setRarityText(captureRarityText, selectedStyle, text)
+    setRarityText(scaledRarityText, selectedStyle, text)
 
-    // если текст не задан вручную, ставим имя по выбранному стилю
-    if (!rarityInput.value.trim()) {
-      rarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
-      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
-    }
-
-    // Теперь обновим рамки контейнеров (preview, capture, scaled)
-    // убираем все возможные классы и добавляем текущий
-    if (previewContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => previewContainer.classList.remove(c))
-      if (selectedStyle) previewContainer.classList.add(selectedStyle)
-    }
-    if (captureContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => captureContainer.classList.remove(c))
-      if (selectedStyle) captureContainer.classList.add(selectedStyle)
-    }
-    if (scaledContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => scaledContainer.classList.remove(c))
-      if (selectedStyle) scaledContainer.classList.add(selectedStyle)
-    }
+    // рамка контейнера под стиль
+    setContainerRarityClass(selectedStyle)
   }
 
   function updateCaptureContainer() {
     captureImage.src = previewImage.src
-    captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    // синхронизируем классы содержимого
-    captureRarityText.className = rarityText.className
-
     captureAuthorLabel.style.display = authorLabel.style.display
     captureAuthorName.textContent = authorName.textContent
     captureCostText.textContent = costText.textContent
@@ -188,10 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     captureCostWrapper.style.display = costWrapper.style.display
     captureCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
-    if (scaledCaptureContainer.classList.contains('visible')) {
+    if (scaledCaptureContainer) {
       scaledImage.src = previewImage.src
-      scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-      scaledRarityText.className = rarityText.className
       scaledAuthorLabel.style.display = authorLabel.style.display
       scaledAuthorName.textContent = authorName.textContent
       scaledCostText.textContent = costText.textContent
@@ -204,11 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updatePreview() {
-    if (rarityInput.value) {
-      rarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value)
-    } else {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
-    }
+    const cls = rarityStyleSelect.value
+    const text =
+      rarityInput.value.trim() !== ''
+        ? capitalizeWords(rarityInput.value.trim())
+        : rarityStyles[cls]
+
+    setRarityText(rarityText, cls, text)
+    setRarityText(captureRarityText, cls, text)
+    setRarityText(scaledRarityText, cls, text)
+    setContainerRarityClass(cls)
+
     renderCost()
     renderAuthor()
     updateLabelsVisibility()
@@ -238,12 +228,22 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   })
 
+  // === загрузка картинки / гифа ===
+  let uploadedFile = null
+  let isGif = false
+
   imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0]
     if (!file) return
+
+    uploadedFile = file
+    isGif = file.type === 'image/gif'
+    downloadGifButton.disabled = !isGif
+
     const url = URL.createObjectURL(file)
     previewImage.src = url
     captureImage.src = url
+    scaledImage.src = url
     updateCaptureContainer()
   })
 
@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePreview()
   })
 
+  // инициализация
   renderCost()
   renderAuthor()
   updateLabelsVisibility()
@@ -269,9 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
     imageInput.value = ''
     previewImage.src = './img/card-preview.webp'
     captureImage.src = './img/card-preview.webp'
+    scaledImage.src = './img/card-preview.webp'
     rarityInput.value = ''
     rarityStyleSelect.value = 'rare'
-    rarityText.querySelector('span').textContent = rarityStyles['rare']
+    setRarityText(rarityText, 'rare', rarityStyles['rare'])
+    setRarityText(captureRarityText, 'rare', rarityStyles['rare'])
+    setRarityText(scaledRarityText, 'rare', rarityStyles['rare'])
     authorInput.value = ''
     priceInput.value = ''
     iconCheckbox.checked = true
@@ -279,20 +283,25 @@ document.addEventListener('DOMContentLoaded', () => {
     iconSelect.value = './img/icons/gold-icon.webp'
     authorLabelCheckbox.checked = true
     priceLabelCheckbox.checked = true
-    updateRarityStyle()
+    setContainerRarityClass('rare')
     renderCost()
     renderAuthor()
     updateLabelsVisibility()
     updateCaptureContainer()
     ;[rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
+    uploadedFile = null
+    isGif = false
+    downloadGifButton.disabled = true
   })
 
+  // ===== PNG =====
   downloadButton.addEventListener('click', () => {
-    const scaledContainerElement = document.getElementById('scaledCaptureContainer')
+    const scaled = scaledCaptureContainer
 
+    // синхронизация содержимого перед снимком
     scaledImage.src = previewImage.src
     scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    scaledRarityText.className = rarityText.className
+    setRarityText(scaledRarityText, rarityStyleSelect.value, scaledRarityText.querySelector('span').textContent)
     scaledAuthorLabel.style.display = authorLabel.style.display
     scaledAuthorName.textContent = authorName.textContent
     scaledCostText.textContent = costText.textContent
@@ -302,17 +311,17 @@ document.addEventListener('DOMContentLoaded', () => {
     scaledCostWrapper.style.display = costWrapper.style.display
     scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
-    const originalDisplay = scaledContainerElement.style.display
-    const originalPosition = scaledContainerElement.style.position
-    const originalLeft = scaledContainerElement.style.left
-    const originalTop = scaledContainerElement.style.top
+    const originalDisplay = scaled.style.display
+    const originalPosition = scaled.style.position
+    const originalLeft = scaled.style.left
+    const originalTop = scaled.style.top
 
-    scaledContainerElement.style.display = 'flex'
-    scaledContainerElement.style.position = 'absolute'
-    scaledContainerElement.style.left = '-9999px'
-    scaledContainerElement.style.top = '-9999px'
+    scaled.style.display = 'flex'
+    scaled.style.position = 'absolute'
+    scaled.style.left = '-9999px'
+    scaled.style.top = '-9999px'
 
-    html2canvas(scaledContainerElement, {
+    html2canvas(scaled, {
       scale: 1,
       width: 615,
       height: 850,
@@ -320,10 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
       useCORS: true,
     })
       .then((canvas) => {
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
+        // восстановить
+        scaled.style.display = originalDisplay
+        scaled.style.position = originalPosition
+        scaled.style.left = originalLeft
+        scaled.style.top = originalTop
 
         const now = new Date()
         const hours = String(now.getHours()).padStart(2, '0')
@@ -343,11 +353,107 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click()
       })
       .catch((err) => {
-        console.error('Ошибка при рендеринге:', err)
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
+        console.error('Ошибка при рендеринге PNG:', err)
+        scaled.style.display = originalDisplay
+        scaled.style.position = originalPosition
+        scaled.style.left = originalLeft
+        scaled.style.top = originalTop
       })
+  })
+
+  // ===== GIF (с сохранением анимации) =====
+  downloadGifButton.addEventListener('click', async () => {
+    if (!uploadedFile || !isGif) return
+
+    try {
+      // читаем гиф
+      const arrayBuffer = await uploadedFile.arrayBuffer()
+      const GIFNS = window.GIF || window.gifuct || window.GIFuct
+      const gifParsed = GIFNS.parseGIF(arrayBuffer)
+      const frames = GIFNS.decompressFrames(gifParsed, true) // build patches
+
+      // канвас для восстановления кадров гифа
+      const baseCanvas = document.createElement('canvas')
+      baseCanvas.width = gifParsed.lsd.width
+      baseCanvas.height = gifParsed.lsd.height
+      const baseCtx = baseCanvas.getContext('2d')
+
+      // энкодер итогового GIF 615x850
+      const encoder = new window.GIF({
+        workers: 2,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
+        quality: 10,
+        width: 615,
+        height: 850,
+      })
+
+      // вспомогательная функция ожидания загрузки src у <img>
+      const waitImg = (img) =>
+        new Promise((res) => {
+          if (img.complete) return res()
+          img.onload = () => res()
+        })
+
+      // прячем/показываем scaled контейнер как в PNG
+      const scaled = scaledCaptureContainer
+      const originalDisplay = scaled.style.display
+      const originalPosition = scaled.style.position
+      const originalLeft = scaled.style.left
+      const originalTop = scaled.style.top
+
+      scaled.style.display = 'flex'
+      scaled.style.position = 'absolute'
+      scaled.style.left = '-9999px'
+      scaled.style.top = '-9999px'
+
+      for (const frame of frames) {
+        // восстановление кадра в baseCanvas
+        const imageData = baseCtx.createImageData(frame.dims.width, frame.dims.height)
+        imageData.data.set(frame.patch)
+        baseCtx.putImageData(imageData, frame.dims.left, frame.dims.top)
+
+        // подменяем картинку в scaled контейнере
+        scaledImage.src = baseCanvas.toDataURL('image/png')
+        await waitImg(scaledImage)
+
+        // снимок DOM
+        // (важно: фон контейнера уже нужный градиент)
+        // рендерим 615x850
+        /* eslint-disable no-await-in-loop */
+        const canvas = await html2canvas(scaled, {
+          scale: 1,
+          width: 615,
+          height: 850,
+          useCORS: true,
+          backgroundColor: null,
+        })
+
+        // задержка в ms (в GIF единицы — сотые секунды)
+        const delay = Math.max(20, (frame.delay || 10) * 10)
+        encoder.addFrame(canvas.getContext('2d'), { copy: true, delay })
+
+        // обработка disposalType=2 (очистка области под текущим кадром для следующего)
+        if (frame.disposalType === 2) {
+          baseCtx.clearRect(frame.dims.left, frame.dims.top, frame.dims.width, frame.dims.height)
+        }
+      }
+
+      encoder.on('finished', (blob) => {
+        // восстановить положение контейнера
+        scaled.style.display = originalDisplay
+        scaled.style.position = originalPosition
+        scaled.style.left = originalLeft
+        scaled.style.top = originalTop
+
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = 'card.gif'
+        a.click()
+      })
+
+      encoder.render()
+    } catch (e) {
+      console.error('GIF export error:', e)
+    }
   })
 })
