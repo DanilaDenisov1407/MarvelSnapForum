@@ -541,3 +541,46 @@ body {
   width: var(--scaled-icon-width);
   height: var(--scaled-icon-height);
 }
+/* Рамка в зависимости от редкости */
+.preview-container.rare,
+.capture-container.rare,
+.scaled-capture-container.rare {
+  border-color: #e800fe; /* Фиолетовый */
+}
+
+.preview-container.super-rare,
+.capture-container.super-rare,
+.scaled-capture-container.super-rare {
+  border-color: #69e0e4; /* Голубой */
+}
+
+.preview-container.ultimate,
+.capture-container.ultimate,
+.scaled-capture-container.ultimate {
+  border-color: #db2a24; /* Красный */
+}
+
+.preview-container.spotlight,
+.capture-container.spotlight,
+.scaled-capture-container.spotlight {
+  border-color: #0027d5; /* Синий */
+}
+
+/* Новые */
+.preview-container.conquest-reward,
+.capture-container.conquest-reward,
+.scaled-capture-container.conquest-reward {
+  border-color: #1a821a; /* Зелёный */
+}
+
+.preview-container.bundle,
+.capture-container.bundle,
+.scaled-capture-container.bundle {
+  border-color: #ffd700; /* Золотой */
+}
+
+.preview-container.webshop-reward,
+.capture-container.webshop-reward,
+.scaled-capture-container.webshop-reward {
+  border-color: #db8216; /* Оранжевый */
+}
