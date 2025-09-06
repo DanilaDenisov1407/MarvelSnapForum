@@ -296,71 +296,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (downloadGifButton) downloadGifButton.disabled = true
   })
 
-  // ===== PNG export (html2canvas) =====
-  downloadButton.addEventListener('click', () => {
-    const scaled = scaledCaptureContainer
+downloadButton.addEventListener('click', () => {
+  const scaled = scaledCaptureContainer;
 
-    // sync content
-    scaledImage.src = previewImage.src
-    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    setRarityText(scaledRarityText, rarityStyleSelect.value, scaledRarityText.querySelector('span').textContent)
-    scaledAuthorLabel.style.display = authorLabel.style.display
-    scaledAuthorName.textContent = authorName.textContent
-    scaledCostText.textContent = costText.textContent
-    scaledIconImg.src = iconImg.src
-    scaledIconImg.style.display = iconImg.style.display
-    scaledPriceLabel.style.display = priceLabel.style.display
-    scaledCostWrapper.style.display = costWrapper.style.display
-    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
+  // Обновляем содержимое полностью
+  updateCaptureContainer();
 
-    const originalDisplay = scaled.style.display
-    const originalPosition = scaled.style.position
-    const originalLeft = scaled.style.left
-    const originalTop = scaled.style.top
+  // Делаем контейнер видимым за экраном
+  const originalDisplay = scaled.style.display;
+  const originalPosition = scaled.style.position;
+  const originalLeft = scaled.style.left;
+  const originalTop = scaled.style.top;
 
-    scaled.style.display = 'flex'
-    scaled.style.position = 'absolute'
-    scaled.style.left = '-9999px'
-    scaled.style.top = '-9999px'
+  scaled.style.display = 'flex';
+  scaled.style.position = 'absolute';
+  scaled.style.left = '-9999px';
+  scaled.style.top = '-9999px';
 
-    html2canvas(scaled, {
-      scale: 1,
-      width: 615,
-      height: 850,
-      backgroundColor: '#9801e7',
-      useCORS: true,
-    })
-      .then((canvas) => {
-        scaled.style.display = originalDisplay
-        scaled.style.position = originalPosition
-        scaled.style.left = originalLeft
-        scaled.style.top = originalTop
+  html2canvas(scaled, {
+    scale: 1,
+    width: 615,
+    height: 850,
+    useCORS: true, // ✅ важно!
+    backgroundColor: null // ✅ прозрачный, возьмёт градиент из CSS
+  }).then((canvas) => {
+    const link = document.createElement('a');
+    link.download = 'card.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 
-        const now = new Date()
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const year = now.getFullYear()
-        const time = `${hours}:${minutes}`
-        const date = `${day}.${month}.${year}`
-        let artist = authorName.textContent || 'Unknown'
-        artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
-        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
-
-        const link = document.createElement('a')
-        link.download = fileName
-        link.href = canvas.toDataURL('image/png')
-        link.click()
-      })
-      .catch((err) => {
-        console.error('Ошибка при рендеринге PNG:', err)
-        scaled.style.display = originalDisplay
-        scaled.style.position = originalPosition
-        scaled.style.left = originalLeft
-        scaled.style.top = originalTop
-      })
-  })
+    // Возвращаем оригинальные стили
+    scaled.style.display = originalDisplay;
+    scaled.style.position = originalPosition;
+    scaled.style.left = originalLeft;
+    scaled.style.top = originalTop;
+  });
+});
 
   // ===== GIF export (compose frames + overlay via html2canvas) =====
   downloadGifButton.addEventListener('click', async () => {
