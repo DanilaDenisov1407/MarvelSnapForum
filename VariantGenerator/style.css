@@ -118,8 +118,8 @@ body {
   --container-min-width: 300px;
   --container-max-width: 360px;
   --image-min-height: 330px;
-  --rarity-padding-y: 5px;
-  --rarity-padding-x: 15px;
+  --rarity-padding-y: 3px;
+  --rarity-padding-x: 92px;
   --rarity-font-size: 16px;
   --rarity-border-width: 6px;
   --rarity-border-radius: 15px;
@@ -150,7 +150,8 @@ body {
   border-radius: var(--container-border-radius);
   overflow: hidden;
   padding: var(--container-padding);
-  position: relative; /* <- важно: чтобы плашка была абсолютной относительно контейнера */
+  padding-top: 60px; /* ✅ добавлено место для плашки */
+  position: relative;
 }
 .preview-image {
   min-height: var(--image-min-height);
@@ -166,11 +167,11 @@ body {
 }
 
 /* ===== rarity block (плашка) ===== */
-/* делаем абсолютной (чтобы всегда сверху) и стилизуем */
 .rarity-block {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 15px; /* ✅ чтобы чуть отступала от рамки */
+  left: 50%;
+  transform: translateX(-50%) skew(-20deg);
   z-index: 20;
   display: inline-block;
   background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
@@ -178,7 +179,6 @@ body {
   padding: var(--rarity-padding-y) var(--rarity-padding-x);
   font-size: var(--rarity-font-size);
   text-transform: uppercase;
-  transform: skew(-20deg);
   border: var(--rarity-border-width) solid transparent;
   border-right-color: rgba(0, 0, 0, 0);
   border-left-color: rgba(0, 0, 0, 0);
@@ -373,13 +373,15 @@ body {
   border-radius: var(--container-border-radius);
   overflow: hidden;
   padding: 10px;
+  padding-top: 70px; /* ✅ место сверху для плашки */
   flex-direction: column;
   align-items: center;
-  position: relative; /* важно */
+  position: relative;
 }
 .capture-container .rarity-block {
-  top: 16px;
-  left: 16px;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) skew(-20deg);
 }
 .capture-container .rarity-block.rare { background: linear-gradient(180deg, #e800fe, #9500d0, #380274); }
 .capture-container .rarity-block.super-rare { background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f); }
@@ -450,7 +452,9 @@ body {
   border-radius: var(--scaled-container-border-radius);
   overflow: hidden;
   padding: var(--scaled-container-padding);
+  padding-top: 80px; /* ✅ место сверху */
   align-items: center;
+  position: relative;
 }
 .scaled-capture-container.visible {
   display: flex;
@@ -458,8 +462,9 @@ body {
   left: auto;
 }
 .scaled-capture-container .rarity-block {
-  top: 18px;
-  left: 18px;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%) skew(-20deg);
   padding: var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);
   font-size: var(--scaled-rarity-font-size);
 }
