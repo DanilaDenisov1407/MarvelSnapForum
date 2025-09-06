@@ -277,34 +277,43 @@ document.addEventListener('DOMContentLoaded', () => {
     ;[rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
   })
 
-  // 🔽 Исправленный обработчик скачивания
   downloadButton.addEventListener('click', () => {
-    const target = document.querySelector('.capture-container') // рендерим видимый блок
+  const target = document.querySelector('.capture-container') // рендерим видимый блок
 
-    html2canvas(target, {
-      scale: 2,       // HQ
-      useCORS: true,  // для внешних картинок
-    })
-      .then((canvas) => {
-        const now = new Date()
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const year = now.getFullYear()
-        const time = `${hours}_${minutes}`
-        const date = `${day}.${month}.${year}`
-        let artist = authorName.textContent || 'Unknown'
-        artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
-        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
+  html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+  })
+    .then((canvas) => {
+      const now = new Date()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const year = now.getFullYear()
+      const time = `${hours}_${minutes}`
+      const date = `${day}.${month}.${year}`
 
+      let artist = authorName.textContent || 'Unknown'
+      artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
+      const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
+
+      // ✅ используем toBlob вместо toDataURL
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('Ошибка: blob пустой')
+          return
+        }
         const link = document.createElement('a')
         link.download = fileName
-        link.href = canvas.toDataURL('image/png')
+        link.href = URL.createObjectURL(blob)
         link.click()
-      })
-      .catch((err) => {
-        console.error('Ошибка при рендеринге:', err)
-      })
-  })
+
+        // освободить память
+        URL.revokeObjectURL(link.href)
+      }, 'image/png')
+    })
+    .catch((err) => {
+      console.error('Ошибка при рендеринге:', err)
+    })
 })
