@@ -6,15 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
       .join(' ')
   }
 
-  function getDeclension(number, words) {
-    const n = Math.abs(number) % 100
-    const n1 = n % 10
-    if (n > 10 && n < 20) return words[2]
-    if (n1 > 1 && n1 < 5) return words[1]
-    if (n1 === 1) return words[0]
-    return words[2]
-  }
-
   const imageInput = document.getElementById('imageInput')
   const previewImage = document.getElementById('previewImage')
   const rarityInput = document.getElementById('rarityInput')
@@ -79,11 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const defaultPrice = '1200'
   const defaultAuthor = 'Kim Jacinto'
-  const suffixes = {
-    './img/icons/gold-icon.webp': ['золота', 'золота', 'золота'],
-    './img/icons/token-icon.webp': ['жетон', 'жетона', 'жетонов'],
-    './img/icons/credit-icon.webp': ['кредит', 'кредита', 'кредитов'],
-  }
 
   const rarityStyles = {
     rare: 'Rare',
@@ -94,21 +80,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderCost() {
     const base = priceInput.value || defaultPrice
-    let text = base
+    costText.textContent = base
+
     if (iconCheckbox.checked) {
       iconImg.src = iconSelect.value
       iconImg.style.display = 'inline'
-      const number = parseInt(base, 10) || 0
-      const suffixArray = suffixes[iconSelect.value] || [
-        'золота',
-        'золота',
-        'золота',
-      ]
-      text += ' ' + getDeclension(number, suffixArray)
     } else {
       iconImg.style.display = 'none'
     }
-    costText.textContent = text
+
     updateCostWrapperVisibility()
   }
 
