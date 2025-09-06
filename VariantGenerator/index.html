@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-  
-<!-- Mirrored from daniilrozyev.github.io/msfvg/ by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Jun 2025 08:18:48 GMT -->
-<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,8 +10,8 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script src="js/html2canvas.min.js"></script>
-  </head>
-  <body>
+</head>
+<body>
     <div class="wrapper">
       <div class="preview-container" id="previewContainer">
         <div class="preview-data">
@@ -33,36 +30,25 @@
           </div>
           <div id="costWrapper" class="cost-wrapper">
             <span class="price-label">Цена:</span>
+            <span id="costText">2400</span>
             <img id="iconImg" src="img/icons/gold-icon.webp" alt="Иконка" />
-            <span id="costText">2400 золота</span>
           </div>
           <a
             class="telegram-link"
             href="https://t.me/tgmarvelsnap"
             target="_blank"
-            >@tgmarvelsnap</a
-          >
+            >@tgmarvelsnap</a>
         </div>
       </div>
+
       <div class="controls">
         <div class="controls-wrapper">
           <div class="file-input-wrapper">
-            <button type="button" class="custom-file-button">
-              Выбрать файл
-            </button>
-            <input
-              type="file"
-              id="imageInput"
-              accept="image/*,.webp"
-              style="display: none"
-            />
+            <button type="button" class="custom-file-button">Выбрать файл</button>
+            <input type="file" id="imageInput" accept="image/*,.webp" style="display: none" />
           </div>
           <div class="input-value">
-            <input
-              type="text"
-              id="rarityInput"
-              placeholder="Редкость (можно выбрать)"
-            />
+            <input type="text" id="rarityInput" placeholder="Редкость (можно выбрать)" />
           </div>
           <div class="rarity-style-select">
             <label for="rarityStyleSelect">Стиль редкости:</label>
@@ -71,6 +57,9 @@
               <option value="super-rare">Super Rare</option>
               <option value="ultimate">Ultimate</option>
               <option value="spotlight">Spotlight</option>
+              <option value="webshop">WebShop Reward</option>
+              <option value="conquest">Conquest Reward</option>
+              <option value="bundle">Bundle</option>
             </select>
           </div>
           <div class="input-value">
@@ -81,46 +70,38 @@
             Показывать «Художник:»
           </label>
         </div>
+
         <div class="controls-wrapper">
           <div class="input-value">
-            <input
-              type="text"
-              id="priceInput"
-              placeholder="Цена (например, 1200)"
-            />
+            <input type="text" id="priceInput" placeholder="Цена (например, 1200)" />
           </div>
           <select id="iconSelect">
             <option value="./img/icons/gold-icon.webp">Золото</option>
             <option value="./img/icons/tokens_big.webp">Жетоны</option>
             <option value="./img/icons/credits_big.webp">Кредиты</option>
-            <option value="./img/icons/usd-icon2.webp">Долары</option>
+            <option value="./img/icons/usd-icon2.webp">Доллары</option>
           </select>
           <label>
-            <input type="checkbox" id="priceLabelCheckbox" checked /> Показывать
-            «Цена:»
+            <input type="checkbox" id="priceLabelCheckbox" checked />
+            Показывать «Цена:»
           </label>
-
           <label>
-            <input type="checkbox" id="iconCheckbox" checked /> Показывать
-            иконку и валюту
+            <input type="checkbox" id="iconCheckbox" checked />
+            Показывать иконку
           </label>
           <button id="resetButton">Сбросить</button>
           <button id="downloadButton">Скачать результат</button>
         </div>
       </div>
     </div>
+
     <div class="capture-container" id="captureContainer">
       <div class="capture-data">
         <div id="captureRarityText" class="rarity-block">
           <span>Super Rare</span>
         </div>
       </div>
-      <img
-        id="captureImage"
-        class="capture-image"
-        src="img/card-preview.webp"
-        alt="Карта превью"
-      />
+      <img id="captureImage" class="capture-image" src="img/card-preview.webp" alt="Карта превью" />
       <div class="capture-data">
         <div id="captureAuthorText" class="author-text">
           <span class="author-label">Художник:</span>
@@ -128,33 +109,20 @@
         </div>
         <div id="captureCostWrapper" class="cost-wrapper">
           <span class="price-label">Цена:</span>
-          <img
-            id="captureIconImg"
-            src="img/icons/gold-icon.webp"
-            alt="Иконка"
-          />
-          <span id="captureCostText">2400 золота</span>
+          <span id="captureCostText">2400</span>
+          <img id="captureIconImg" src="img/icons/gold-icon.webp" alt="Иконка" />
         </div>
-        <a
-          class="telegram-link"
-          href="https://t.me/marvelsnapcom"
-          target="_blank"
-          >@marvelsnapcom</a
-        >
+        <a class="telegram-link" href="https://t.me/marvelsnapcom" target="_blank">@marvelsnapcom</a>
       </div>
     </div>
+
     <div class="scaled-capture-container" id="scaledCaptureContainer">
       <div class="capture-data">
         <div id="scaledRarityText" class="rarity-block">
           <span>Super Rare</span>
         </div>
       </div>
-      <img
-        id="scaledCaptureImage"
-        class="capture-image"
-        src="img/card-preview.webp"
-        alt="Карта превью"
-      />
+      <img id="scaledCaptureImage" class="capture-image" src="img/card-preview.webp" alt="Карта превью" />
       <div class="capture-data">
         <div id="scaledAuthorText" class="author-text">
           <span class="author-label">Художник:</span>
@@ -162,31 +130,19 @@
         </div>
         <div id="scaledCostWrapper" class="cost-wrapper">
           <span class="price-label">Цена:</span>
-          <img
-            id="scaledCaptureIconImg"
-            src="img/icons/gold-icon.webp"
-            alt="Иконка"
-          />
-          <span id="scaledCaptureCostText">2400 золота</span>
+          <span id="scaledCaptureCostText">2400</span>
+          <img id="scaledCaptureIconImg" src="img/icons/gold-icon.webp" alt="Иконка" />
         </div>
-        <a
-          class="telegram-link"
-          href="https://t.me/marvelsnapcom"
-          target="_blank"
-          >@marvelsnapcom</a
-        >
+        <a class="telegram-link" href="https://t.me/marvelsnapcom" target="_blank">@marvelsnapcom</a>
       </div>
     </div>
+
     <script src="script.js"></script>
     <script>
       function toggleScaledCopy() {
-        const scaledContainer = document.getElementById(
-          'scaledCaptureContainer'
-        )
+        const scaledContainer = document.getElementById('scaledCaptureContainer')
         scaledContainer.classList.toggle('visible')
       }
     </script>
-  </body>
-
-<!-- Mirrored from daniilrozyev.github.io/msfvg/ by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 23 Jun 2025 08:18:49 GMT -->
+</body>
 </html>
