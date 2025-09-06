@@ -29,44 +29,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const captureImage = document.getElementById('captureImage')
   const captureRarityText = document.getElementById('captureRarityText')
-  const captureAuthorLabel = document.querySelector(
-    '#captureAuthorText .author-label'
-  )
-  const captureAuthorName = document.querySelector(
-    '#captureAuthorText .author-name'
-  )
+  const captureAuthorLabel = document.querySelector('#captureAuthorText .author-label')
+  const captureAuthorName = document.querySelector('#captureAuthorText .author-name')
   const captureCostText = document.getElementById('captureCostText')
   const captureIconImg = document.getElementById('captureIconImg')
-  const capturePriceLabel = document.querySelector(
-    '#captureCostWrapper .price-label'
-  )
+  const capturePriceLabel = document.querySelector('#captureCostWrapper .price-label')
   const captureCostWrapper = document.getElementById('captureCostWrapper')
 
-  const scaledCaptureContainer = document.getElementById(
-    'scaledCaptureContainer'
-  )
-  const scaledImage = scaledCaptureContainer.querySelector(
-    '#scaledCaptureImage'
-  )
-  const scaledRarityText =
-    scaledCaptureContainer.querySelector('#scaledRarityText')
-  const scaledAuthorLabel = scaledCaptureContainer.querySelector(
-    '#scaledAuthorText .author-label'
-  )
-  const scaledAuthorName = scaledCaptureContainer.querySelector(
-    '#scaledAuthorText .author-name'
-  )
-  const scaledCostText = scaledCaptureContainer.querySelector(
-    '#scaledCaptureCostText'
-  )
-  const scaledIconImg = scaledCaptureContainer.querySelector(
-    '#scaledCaptureIconImg'
-  )
-  const scaledPriceLabel = scaledCaptureContainer.querySelector(
-    '#scaledCostWrapper .price-label'
-  )
-  const scaledCostWrapper =
-    scaledCaptureContainer.querySelector('#scaledCostWrapper')
+  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer')
+  const scaledImage = scaledCaptureContainer.querySelector('#scaledCaptureImage')
+  const scaledRarityText = scaledCaptureContainer.querySelector('#scaledRarityText')
+  const scaledAuthorLabel = scaledCaptureContainer.querySelector('#scaledAuthorText .author-label')
+  const scaledAuthorName = scaledCaptureContainer.querySelector('#scaledAuthorText .author-name')
+  const scaledCostText = scaledCaptureContainer.querySelector('#scaledCaptureCostText')
+  const scaledIconImg = scaledCaptureContainer.querySelector('#scaledCaptureIconImg')
+  const scaledPriceLabel = scaledCaptureContainer.querySelector('#scaledCostWrapper .price-label')
+  const scaledCostWrapper = scaledCaptureContainer.querySelector('#scaledCostWrapper')
 
   const defaultPrice = '1200'
   const defaultAuthor = 'Kim Jacinto'
@@ -107,8 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasPrice = priceInput.value.trim() !== ''
     const showPriceLabel = priceLabelCheckbox.checked
     const showIcon = iconCheckbox.checked
-    costWrapper.style.display =
-      hasPrice || showPriceLabel || showIcon ? 'flex' : 'none'
+    const visible = hasPrice || showPriceLabel || showIcon
+
+    // превью
+    costWrapper.style.display = visible ? 'flex' : 'none'
+    costWrapper.classList.toggle('with-border', visible)
+
+    // capture
+    captureCostWrapper.style.display = visible ? 'flex' : 'none'
+    captureCostWrapper.classList.toggle('with-border', visible)
+
+    // scaled
+    scaledCostWrapper.style.display = visible ? 'flex' : 'none'
+    scaledCostWrapper.classList.toggle('with-border', visible)
   }
 
   function toggleActiveClass(input) {
@@ -126,40 +115,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const event = new Event('input', { bubbles: true })
     input.dispatchEvent(event)
     if (input === rarityInput) {
-      rarityText.querySelector('span').textContent =
-        rarityStyles[rarityStyleSelect.value]
+      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
     }
   }
 
   function updateRarityStyle() {
     const selectedStyle = rarityStyleSelect.value
     rarityText.classList.remove('rare', 'super-rare', 'ultimate', 'spotlight')
-    captureRarityText.classList.remove(
-      'rare',
-      'super-rare',
-      'ultimate',
-      'spotlight'
-    )
+    captureRarityText.classList.remove('rare', 'super-rare', 'ultimate', 'spotlight')
     rarityText.classList.add(selectedStyle)
     captureRarityText.classList.add(selectedStyle)
     if (!rarityInput.value.trim()) {
       rarityText.querySelector('span').textContent = rarityStyles[selectedStyle]
-      captureRarityText.querySelector('span').textContent =
-        rarityStyles[selectedStyle]
+      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle]
     }
   }
 
   function updateCaptureContainer() {
     captureImage.src = previewImage.src
-    captureRarityText.querySelector('span').textContent =
-      rarityText.querySelector('span').textContent
-    captureRarityText.classList.remove(
-      'rare',
-      'super-rare',
-      'ultimate',
-      'spotlight'
-    )
-    captureRarityText.classList.add(rarityStyleSelect.value)
+    captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+    captureRarityText.className = rarityText.className
     captureAuthorLabel.style.display = authorLabel.style.display
     captureAuthorName.textContent = authorName.textContent
     captureCostText.textContent = costText.textContent
@@ -167,18 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
     captureIconImg.style.display = iconImg.style.display
     capturePriceLabel.style.display = priceLabel.style.display
     captureCostWrapper.style.display = costWrapper.style.display
+    captureCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
     if (scaledCaptureContainer.classList.contains('visible')) {
       scaledImage.src = previewImage.src
-      scaledRarityText.querySelector('span').textContent =
-        rarityText.querySelector('span').textContent
-      scaledRarityText.classList.remove(
-        'rare',
-        'super-rare',
-        'ultimate',
-        'spotlight'
-      )
-      scaledRarityText.classList.add(rarityStyleSelect.value)
+      scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+      scaledRarityText.className = rarityText.className
       scaledAuthorLabel.style.display = authorLabel.style.display
       scaledAuthorName.textContent = authorName.textContent
       scaledCostText.textContent = costText.textContent
@@ -186,17 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
       scaledIconImg.style.display = iconImg.style.display
       scaledPriceLabel.style.display = priceLabel.style.display
       scaledCostWrapper.style.display = costWrapper.style.display
+      scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
     }
   }
 
   function updatePreview() {
     if (rarityInput.value) {
-      rarityText.querySelector('span').textContent = capitalizeWords(
-        rarityInput.value
-      )
+      rarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value)
     } else {
-      rarityText.querySelector('span').textContent =
-        rarityStyles[rarityStyleSelect.value]
+      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
     }
     renderCost()
     renderAuthor()
@@ -204,9 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCaptureContainer()
   }
 
-  customFileButton.addEventListener('click', () => {
-    imageInput.click()
-  })
+  customFileButton.addEventListener('click', () => imageInput.click())
+
   ;[rarityInput, authorInput, priceInput].forEach((input) => {
     if (input) {
       input.addEventListener('input', () => {
@@ -244,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
   iconSelect.addEventListener('change', updatePreview)
   authorLabelCheckbox.addEventListener('change', updatePreview)
   priceLabelCheckbox.addEventListener('change', updatePreview)
-
   rarityStyleSelect.addEventListener('change', () => {
     updateRarityStyle()
     updatePreview()
@@ -279,37 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   downloadButton.addEventListener('click', () => {
-    const captureContainer = document.getElementById('captureContainer')
     const scaledContainer = document.getElementById('scaledCaptureContainer')
 
-    const scaledRarityText = scaledContainer.querySelector('#scaledRarityText')
-    const scaledImage = scaledContainer.querySelector('#scaledCaptureImage')
-    const scaledAuthorLabel = scaledContainer.querySelector(
-      '#scaledAuthorText .author-label'
-    )
-    const scaledAuthorName = scaledContainer.querySelector(
-      '#scaledAuthorText .author-name'
-    )
-    const scaledCostText = scaledContainer.querySelector(
-      '#scaledCaptureCostText'
-    )
-    const scaledIconImg = scaledContainer.querySelector('#scaledCaptureIconImg')
-    const scaledPriceLabel = scaledContainer.querySelector(
-      '#scaledCostWrapper .price-label'
-    )
-    const scaledCostWrapper =
-      scaledContainer.querySelector('#scaledCostWrapper')
-
     scaledImage.src = previewImage.src
-    scaledRarityText.querySelector('span').textContent =
-      rarityText.querySelector('span').textContent
-    scaledRarityText.classList.remove(
-      'rare',
-      'super-rare',
-      'ultimate',
-      'spotlight'
-    )
-    scaledRarityText.classList.add(rarityStyleSelect.value)
+    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+    scaledRarityText.className = rarityText.className
     scaledAuthorLabel.style.display = authorLabel.style.display
     scaledAuthorName.textContent = authorName.textContent
     scaledCostText.textContent = costText.textContent
@@ -317,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scaledIconImg.style.display = iconImg.style.display
     scaledPriceLabel.style.display = priceLabel.style.display
     scaledCostWrapper.style.display = costWrapper.style.display
+    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
     const originalDisplay = scaledContainer.style.display
     const originalPosition = scaledContainer.style.position
@@ -351,10 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = `${day}.${month}.${year}`
         let artist = authorName.textContent || 'Unknown'
         artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
-        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(
-          /\s+/g,
-          '_'
-        )
+        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
 
         const link = document.createElement('a')
         link.download = fileName
