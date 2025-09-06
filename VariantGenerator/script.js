@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const defaultPrice = '1200'
   const defaultAuthor = 'Kim Jacinto'
 
-  // новые стили добавлены здесь
   const rarityStyles = {
     rare: 'Rare',
     'super-rare': 'Super Rare',
@@ -66,16 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const ALL_STYLE_KEYS = Object.keys(rarityStyles)
 
-  // === helpers ===
   function setRarityText(node, cls, text) {
-    // снять все классы редкости
+    if (!node) return
     ALL_STYLE_KEYS.forEach((k) => node.classList.remove(k))
     node.classList.add(cls)
-    node.querySelector('span').textContent = text
+    const span = node.querySelector('span')
+    if (span) span.textContent = text
   }
 
   function setContainerRarityClass(cls) {
-    // убрать старые классы
     ;[previewContainer, captureContainer, scaledCaptureContainer].forEach((el) => {
       if (!el) return
       ALL_STYLE_KEYS.forEach((k) => el.classList.remove(k))
@@ -87,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const base = priceInput.value || defaultPrice
     costText.textContent = base
 
-    if (iconCheckbox.checked) {
+    if (iconCheckbox && iconCheckbox.checked) {
       iconImg.src = iconSelect.value
       iconImg.style.display = 'inline'
     } else {
@@ -102,28 +100,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateLabelsVisibility() {
-    authorLabel.style.display = authorLabelCheckbox.checked ? 'inline' : 'none'
-    priceLabel.style.display = priceLabelCheckbox.checked ? 'inline' : 'none'
+    if (authorLabel) authorLabel.style.display = authorLabelCheckbox.checked ? 'inline' : 'none'
+    if (priceLabel) priceLabel.style.display = priceLabelCheckbox.checked ? 'inline' : 'none'
     updateCostWrapperVisibility()
   }
 
   function updateCostWrapperVisibility() {
-    const hasPrice = priceInput.value.trim() !== ''
+    const hasPrice = priceInput.value && priceInput.value.trim() !== ''
     const showPriceLabel = priceLabelCheckbox.checked
     const showIcon = iconCheckbox.checked
     const visible = hasPrice || showPriceLabel || showIcon
 
-    // превью
-    costWrapper.style.display = visible ? 'flex' : 'none'
-    costWrapper.classList.toggle('with-border', visible)
+    if (costWrapper) {
+      costWrapper.style.display = visible ? 'flex' : 'none'
+      costWrapper.classList.toggle('with-border', visible)
+    }
 
-    // capture
-    captureCostWrapper.style.display = visible ? 'flex' : 'none'
-    captureCostWrapper.classList.toggle('with-border', visible)
+    if (captureCostWrapper) {
+      captureCostWrapper.style.display = visible ? 'flex' : 'none'
+      captureCostWrapper.classList.toggle('with-border', visible)
+    }
 
-    // scaled
-    scaledCostWrapper.style.display = visible ? 'flex' : 'none'
-    scaledCostWrapper.classList.toggle('with-border', visible)
+    if (scaledCostWrapper) {
+      scaledCostWrapper.style.display = visible ? 'flex' : 'none'
+      scaledCostWrapper.classList.toggle('with-border', visible)
+    }
   }
 
   function toggleActiveClass(input) {
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateRarityStyle() {
     const selectedStyle = rarityStyleSelect.value
     const text =
-      rarityInput.value.trim() !== ''
+      rarityInput.value && rarityInput.value.trim() !== ''
         ? capitalizeWords(rarityInput.value.trim())
         : rarityStyles[selectedStyle]
 
@@ -159,19 +160,20 @@ document.addEventListener('DOMContentLoaded', () => {
     setRarityText(captureRarityText, selectedStyle, text)
     setRarityText(scaledRarityText, selectedStyle, text)
 
-    // рамка контейнера под стиль
     setContainerRarityClass(selectedStyle)
   }
 
   function updateCaptureContainer() {
-    captureImage.src = previewImage.src
-    captureAuthorLabel.style.display = authorLabel.style.display
-    captureAuthorName.textContent = authorName.textContent
-    captureCostText.textContent = costText.textContent
-    captureIconImg.src = iconImg.src
-    captureIconImg.style.display = iconImg.style.display
-    capturePriceLabel.style.display = priceLabel.style.display
-    captureCostWrapper.style.display = costWrapper.style.display
+    if (captureImage) captureImage.src = previewImage.src
+    if (captureAuthorLabel) captureAuthorLabel.style.display = authorLabel.style.display
+    if (captureAuthorName) captureAuthorName.textContent = authorName.textContent
+    if (captureCostText) captureCostText.textContent = costText.textContent
+    if (captureIconImg) {
+      captureIconImg.src = iconImg.src
+      captureIconImg.style.display = iconImg.style.display
+    }
+    if (capturePriceLabel) capturePriceLabel.style.display = priceLabel.style.display
+    if (captureCostWrapper) captureCostWrapper.style.display = costWrapper.style.display
     captureCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
     if (scaledCaptureContainer) {
@@ -190,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updatePreview() {
     const cls = rarityStyleSelect.value
     const text =
-      rarityInput.value.trim() !== ''
+      rarityInput.value && rarityInput.value.trim() !== ''
         ? capitalizeWords(rarityInput.value.trim())
         : rarityStyles[cls]
 
@@ -237,8 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!file) return
 
     uploadedFile = file
-    isGif = file.type === 'image/gif'
-    downloadGifButton.disabled = !isGif
+    isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')
+    if (downloadGifButton) downloadGifButton.disabled = !isGif
 
     const url = URL.createObjectURL(file)
     previewImage.src = url
@@ -259,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePreview()
   })
 
-  // инициализация
+  // init
   renderCost()
   renderAuthor()
   updateLabelsVisibility()
@@ -291,14 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ;[rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
     uploadedFile = null
     isGif = false
-    downloadGifButton.disabled = true
+    if (downloadGifButton) downloadGifButton.disabled = true
   })
 
-  // ===== PNG =====
+  // ===== PNG export (html2canvas) =====
   downloadButton.addEventListener('click', () => {
     const scaled = scaledCaptureContainer
 
-    // синхронизация содержимого перед снимком
+    // sync content
     scaledImage.src = previewImage.src
     scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
     setRarityText(scaledRarityText, rarityStyleSelect.value, scaledRarityText.querySelector('span').textContent)
@@ -329,7 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
       useCORS: true,
     })
       .then((canvas) => {
-        // восстановить
         scaled.style.display = originalDisplay
         scaled.style.position = originalPosition
         scaled.style.left = originalLeft
@@ -361,24 +362,37 @@ document.addEventListener('DOMContentLoaded', () => {
       })
   })
 
-  // ===== GIF (с сохранением анимации) =====
+  // ===== GIF export (compose frames + overlay via html2canvas) =====
   downloadGifButton.addEventListener('click', async () => {
-    if (!uploadedFile || !isGif) return
+    if (!uploadedFile || !isGif) {
+      alert('Сначала загрузите анимированный GIF (файл *.gif).')
+      return
+    }
+
+    // ensure gifuct functions exist
+    if (typeof parseGIF !== 'function' || typeof decompressFrames !== 'function') {
+      // если библиотека не загружена — просто отдаём оригинал
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(uploadedFile)
+      link.download = uploadedFile.name || 'card.gif'
+      link.click()
+      return
+    }
 
     try {
-      // читаем гиф
       const arrayBuffer = await uploadedFile.arrayBuffer()
-      const GIFNS = window.GIF || window.gifuct || window.GIFuct
-      const gifParsed = GIFNS.parseGIF(arrayBuffer)
-      const frames = GIFNS.decompressFrames(gifParsed, true) // build patches
+      const parsedGif = parseGIF(arrayBuffer)
+      const frames = decompressFrames(parsedGif, true)
 
-      // канвас для восстановления кадров гифа
+      // base canvas — логический размер GIF
+      const gifWidth = parsedGif.lsd.width
+      const gifHeight = parsedGif.lsd.height
       const baseCanvas = document.createElement('canvas')
-      baseCanvas.width = gifParsed.lsd.width
-      baseCanvas.height = gifParsed.lsd.height
+      baseCanvas.width = gifWidth
+      baseCanvas.height = gifHeight
       const baseCtx = baseCanvas.getContext('2d')
 
-      // энкодер итогового GIF 615x850
+      // encoder — итоговый GIF (размер 615x850)
       const encoder = new window.GIF({
         workers: 2,
         workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
@@ -387,14 +401,14 @@ document.addEventListener('DOMContentLoaded', () => {
         height: 850,
       })
 
-      // вспомогательная функция ожидания загрузки src у <img>
       const waitImg = (img) =>
         new Promise((res) => {
           if (img.complete) return res()
           img.onload = () => res()
+          img.onerror = () => res()
         })
 
-      // прячем/показываем scaled контейнер как в PNG
+      // показать scaled контейнер offscreen
       const scaled = scaledCaptureContainer
       const originalDisplay = scaled.style.display
       const originalPosition = scaled.style.position
@@ -406,21 +420,31 @@ document.addEventListener('DOMContentLoaded', () => {
       scaled.style.left = '-9999px'
       scaled.style.top = '-9999px'
 
-      for (const frame of frames) {
-        // восстановление кадра в baseCanvas
-        const imageData = baseCtx.createImageData(frame.dims.width, frame.dims.height)
-        imageData.data.set(frame.patch)
-        baseCtx.putImageData(imageData, frame.dims.left, frame.dims.top)
+      // очистить базовый кадр
+      baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height)
 
-        // подменяем картинку в scaled контейнере
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i]
+
+        // создаём ImageData для патча кадра
+        try {
+          const imgData = baseCtx.createImageData(frame.dims.width, frame.dims.height)
+          imgData.data.set(frame.patch)
+          baseCtx.putImageData(imgData, frame.dims.left, frame.dims.top)
+        } catch (err) {
+          // если putImageData не проходит — fallback: пропустить кадр
+          console.warn('Ошибка putImageData для кадра', i, err)
+        }
+
+        // вставляем изображение в scaled контейнер (масштабируем baseCanvas до визуального размера)
+        // scaledImage отображает картинку; мы используем её src
         scaledImage.src = baseCanvas.toDataURL('image/png')
         await waitImg(scaledImage)
 
-        // снимок DOM
-        // (важно: фон контейнера уже нужный градиент)
-        // рендерим 615x850
-        /* eslint-disable no-await-in-loop */
-        const canvas = await html2canvas(scaled, {
+        // рендерим DOM (scaled) в canvas
+        // важно: html2canvas вернёт canvas с размерами 615x850
+        // eslint-disable-next-line no-await-in-loop
+        const rendered = await html2canvas(scaled, {
           scale: 1,
           width: 615,
           height: 850,
@@ -428,18 +452,22 @@ document.addEventListener('DOMContentLoaded', () => {
           backgroundColor: null,
         })
 
-        // задержка в ms (в GIF единицы — сотые секунды)
-        const delay = Math.max(20, (frame.delay || 10) * 10)
-        encoder.addFrame(canvas.getContext('2d'), { copy: true, delay })
+        // задержка кадра (gifuct-js дает delay в сотых секунды)
+        const delayHundredths = frame.delay || 10 // если 0 — ставим 10
+        const delayMs = Math.max(20, delayHundredths * 10)
 
-        // обработка disposalType=2 (очистка области под текущим кадром для следующего)
+        // добавляем кадр в энкодер: передаем контекст
+        encoder.addFrame(rendered.getContext('2d'), { copy: true, delay: delayMs })
+
+        // обработка удаления (disposalType)
+        // если disposalType === 2 => очистить область кадра
         if (frame.disposalType === 2) {
           baseCtx.clearRect(frame.dims.left, frame.dims.top, frame.dims.width, frame.dims.height)
         }
       }
 
       encoder.on('finished', (blob) => {
-        // восстановить положение контейнера
+        // восстановим scaled
         scaled.style.display = originalDisplay
         scaled.style.position = originalPosition
         scaled.style.left = originalLeft
@@ -454,6 +482,11 @@ document.addEventListener('DOMContentLoaded', () => {
       encoder.render()
     } catch (e) {
       console.error('GIF export error:', e)
+      // fallback: отдать оригинальный файл
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(uploadedFile)
+      link.download = uploadedFile.name || 'card.gif'
+      link.click()
     }
   })
 })
