@@ -277,44 +277,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ;[rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
   })
 
+  // 🔽 Исправленный обработчик скачивания
   downloadButton.addEventListener('click', () => {
-    const scaledContainerElement = document.getElementById('scaledCaptureContainer')
+    const target = document.querySelector('.capture-container') // рендерим видимый блок
 
-    scaledImage.src = previewImage.src
-    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    scaledRarityText.className = rarityText.className
-    scaledAuthorLabel.style.display = authorLabel.style.display
-    scaledAuthorName.textContent = authorName.textContent
-    scaledCostText.textContent = costText.textContent
-    scaledIconImg.src = iconImg.src
-    scaledIconImg.style.display = iconImg.style.display
-    scaledPriceLabel.style.display = priceLabel.style.display
-    scaledCostWrapper.style.display = costWrapper.style.display
-    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
-
-    const originalDisplay = scaledContainerElement.style.display
-    const originalPosition = scaledContainerElement.style.position
-    const originalLeft = scaledContainerElement.style.left
-    const originalTop = scaledContainerElement.style.top
-
-    scaledContainerElement.style.display = 'flex'
-    scaledContainerElement.style.position = 'absolute'
-    scaledContainerElement.style.left = '-9999px'
-    scaledContainerElement.style.top = '-9999px'
-
-    html2canvas(scaledContainerElement, {
-      scale: 2, // HQ
-      width: 615,
-      height: 850,
-      backgroundColor: '#9801e7',
-      useCORS: true,
+    html2canvas(target, {
+      scale: 2,       // HQ
+      useCORS: true,  // для внешних картинок
     })
       .then((canvas) => {
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
-
         const now = new Date()
         const hours = String(now.getHours()).padStart(2, '0')
         const minutes = String(now.getMinutes()).padStart(2, '0')
@@ -334,10 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch((err) => {
         console.error('Ошибка при рендеринге:', err)
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
       })
   })
 })
