@@ -46,14 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const scaledPriceLabel = scaledCaptureContainer.querySelector('#scaledCostWrapper .price-label')
   const scaledCostWrapper = scaledCaptureContainer.querySelector('#scaledCostWrapper')
 
+  const previewContainer = document.querySelector('.preview-container')
+  const captureContainer = document.querySelector('.capture-container')
+  const scaledContainer = document.querySelector('.scaled-capture-container')
+
   const defaultPrice = '1200'
   const defaultAuthor = 'Kim Jacinto'
 
+  // Добавил новые варианты: conquest-reward, webshop-reward, bundle
   const rarityStyles = {
     rare: 'Rare',
     'super-rare': 'Super Rare',
     ultimate: 'Ultimate',
     spotlight: 'Spotlight',
+    'conquest-reward': 'Conquest Reward',
+    'webshop-reward': 'Webshop Reward',
+    bundle: 'Bundle',
   }
 
   function renderCost() {
@@ -119,22 +127,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Все возможные классы, которые мы будем переключать
+  const ALL_RARITY_CLASSES = [
+    'rare',
+    'super-rare',
+    'ultimate',
+    'spotlight',
+    'conquest-reward',
+    'webshop-reward',
+    'bundle',
+  ]
+
   function updateRarityStyle() {
     const selectedStyle = rarityStyleSelect.value
-    rarityText.classList.remove('rare', 'super-rare', 'ultimate', 'spotlight')
-    captureRarityText.classList.remove('rare', 'super-rare', 'ultimate', 'spotlight')
-    rarityText.classList.add(selectedStyle)
-    captureRarityText.classList.add(selectedStyle)
+
+    // очистим все классы у блока rarityText и captureRarityText и добавим выбранный
+    ALL_RARITY_CLASSES.forEach((c) => {
+      rarityText.classList.remove(c)
+      captureRarityText.classList.remove(c)
+    })
+    if (selectedStyle && ALL_RARITY_CLASSES.includes(selectedStyle)) {
+      rarityText.classList.add(selectedStyle)
+      captureRarityText.classList.add(selectedStyle)
+    }
+
+    // если текст не задан вручную, ставим имя по выбранному стилю
     if (!rarityInput.value.trim()) {
-      rarityText.querySelector('span').textContent = rarityStyles[selectedStyle]
-      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle]
+      rarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
+      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
+    }
+
+    // Теперь обновим рамки контейнеров (preview, capture, scaled)
+    // убираем все возможные классы и добавляем текущий
+    if (previewContainer) {
+      ALL_RARITY_CLASSES.forEach((c) => previewContainer.classList.remove(c))
+      if (selectedStyle) previewContainer.classList.add(selectedStyle)
+    }
+    if (captureContainer) {
+      ALL_RARITY_CLASSES.forEach((c) => captureContainer.classList.remove(c))
+      if (selectedStyle) captureContainer.classList.add(selectedStyle)
+    }
+    if (scaledContainer) {
+      ALL_RARITY_CLASSES.forEach((c) => scaledContainer.classList.remove(c))
+      if (selectedStyle) scaledContainer.classList.add(selectedStyle)
     }
   }
 
   function updateCaptureContainer() {
     captureImage.src = previewImage.src
     captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+    // синхронизируем классы содержимого
     captureRarityText.className = rarityText.className
+
     captureAuthorLabel.style.display = authorLabel.style.display
     captureAuthorName.textContent = authorName.textContent
     captureCostText.textContent = costText.textContent
@@ -244,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   downloadButton.addEventListener('click', () => {
-    const scaledContainer = document.getElementById('scaledCaptureContainer')
+    const scaledContainerElement = document.getElementById('scaledCaptureContainer')
 
     scaledImage.src = previewImage.src
     scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
@@ -258,17 +302,17 @@ document.addEventListener('DOMContentLoaded', () => {
     scaledCostWrapper.style.display = costWrapper.style.display
     scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
 
-    const originalDisplay = scaledContainer.style.display
-    const originalPosition = scaledContainer.style.position
-    const originalLeft = scaledContainer.style.left
-    const originalTop = scaledContainer.style.top
+    const originalDisplay = scaledContainerElement.style.display
+    const originalPosition = scaledContainerElement.style.position
+    const originalLeft = scaledContainerElement.style.left
+    const originalTop = scaledContainerElement.style.top
 
-    scaledContainer.style.display = 'flex'
-    scaledContainer.style.position = 'absolute'
-    scaledContainer.style.left = '-9999px'
-    scaledContainer.style.top = '-9999px'
+    scaledContainerElement.style.display = 'flex'
+    scaledContainerElement.style.position = 'absolute'
+    scaledContainerElement.style.left = '-9999px'
+    scaledContainerElement.style.top = '-9999px'
 
-    html2canvas(scaledContainer, {
+    html2canvas(scaledContainerElement, {
       scale: 1,
       width: 615,
       height: 850,
@@ -276,10 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
       useCORS: true,
     })
       .then((canvas) => {
-        scaledContainer.style.display = originalDisplay
-        scaledContainer.style.position = originalPosition
-        scaledContainer.style.left = originalLeft
-        scaledContainer.style.top = originalTop
+        scaledContainerElement.style.display = originalDisplay
+        scaledContainerElement.style.position = originalPosition
+        scaledContainerElement.style.left = originalLeft
+        scaledContainerElement.style.top = originalTop
 
         const now = new Date()
         const hours = String(now.getHours()).padStart(2, '0')
@@ -300,10 +344,10 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch((err) => {
         console.error('Ошибка при рендеринге:', err)
-        scaledContainer.style.display = originalDisplay
-        scaledContainer.style.position = originalPosition
-        scaledContainer.style.left = originalLeft
-        scaledContainer.style.top = originalTop
+        scaledContainerElement.style.display = originalDisplay
+        scaledContainerElement.style.position = originalPosition
+        scaledContainerElement.style.left = originalLeft
+        scaledContainerElement.style.top = originalTop
       })
   })
 })
