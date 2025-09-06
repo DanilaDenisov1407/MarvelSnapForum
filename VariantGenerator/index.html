@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Card Generator</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Card Generator — full</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrapper">
-    <!-- Превью карточки -->
-    <div class="preview-container rare">
+    <!-- Preview -->
+    <div class="preview-container rare" id="previewContainer">
       <img id="previewImage" class="preview-image" src="./img/card-preview.webp" alt="preview" />
 
       <div class="preview-data">
@@ -26,11 +26,11 @@
           <img id="iconImg" src="./img/icons/gold-icon.webp" alt="" />
         </div>
 
-        <a href="https://t.me/marvelsnap" class="telegram-link" target="_blank">@tgmarvelsnap</a>
+        <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
       </div>
     </div>
 
-    <!-- Панель управления -->
+    <!-- Controls -->
     <div class="controls-wrapper">
       <div class="controls">
         <div class="file-input-wrapper">
@@ -43,7 +43,7 @@
         </div>
 
         <div class="input-value">
-          <input id="rarityInput" type="text" placeholder="Редкость (можно выбрать)" />
+          <input id="rarityInput" type="text" placeholder="Редкость (можно вписать свою)" />
         </div>
 
         <div class="rarity-style-select">
@@ -65,6 +65,7 @@
 
         <label><input id="priceLabelCheckbox" type="checkbox" checked /> Показывать «Цена:»</label>
         <label><input id="iconCheckbox" type="checkbox" checked /> Показывать иконку</label>
+
         <select id="iconSelect">
           <option value="./img/icons/gold-icon.webp">Золото</option>
           <option value="./img/icons/dollars.webp">Доллары</option>
@@ -80,7 +81,7 @@
     </div>
   </div>
 
-  <!-- Контейнер для обычного скриншота -->
+  <!-- Capture container (hidden offscreen) -->
   <div class="capture-container rare" id="captureContainer">
     <img id="captureImage" class="capture-image" src="./img/card-preview.webp" alt="capture" />
 
@@ -102,7 +103,7 @@
     </div>
   </div>
 
-  <!-- Масштабированный контейнер (615x850) для выгрузки -->
+  <!-- Scaled container for output (615x850) -->
   <div id="scaledCaptureContainer" class="scaled-capture-container rare">
     <img id="scaledCaptureImage" class="capture-image" src="./img/card-preview.webp" alt="scaled" />
 
@@ -124,12 +125,12 @@
     </div>
   </div>
 
-  <!-- Библиотеки -->
+  <!-- Libraries (required for GIF parsing & export and PNG render) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 
-  <!-- Твой JS -->
+  <!-- Your script -->
   <script src="script.js"></script>
 </body>
 </html>
