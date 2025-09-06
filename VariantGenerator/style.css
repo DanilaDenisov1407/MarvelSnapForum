@@ -118,10 +118,10 @@ body {
   --container-min-width: 300px;
   --container-max-width: 360px;
   --image-min-height: 330px;
-  --rarity-padding-y: 5px;
-  --rarity-padding-x: 15px;
+  --rarity-padding-y: 3px;
+  --rarity-padding-x: 92px;
   --rarity-font-size: 16px;
-  --rarity-border-width: 5px;
+  --rarity-border-width: 6px;
   --rarity-border-radius: 15px;
   --rarity-text-shadow-x: 1px;
   --rarity-text-shadow-y: 1px;
