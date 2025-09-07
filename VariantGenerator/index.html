@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Card Generator — full</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Card Generator — fixed</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="wrapper">
     <!-- Preview -->
     <div class="preview-container rare" id="previewContainer">
-      <img id="previewImage" class="preview-image" src="./img/card-preview.webp" alt="Превью карты" />
+      <img id="previewImage" class="preview-image" src="./img/card-preview.webp" alt="Превью карты">
 
       <div id="rarityText" class="rarity-block rare"><span>Rare</span></div>
 
@@ -23,7 +23,7 @@
         <div id="costWrapper" class="cost-wrapper">
           <span class="price-label">Цена:</span>
           <span id="costText">1200</span>
-          <img id="iconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты" />
+          <img id="iconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты">
         </div>
 
         <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
@@ -35,15 +35,15 @@
       <div class="controls">
         <div class="file-input-wrapper">
           <button type="button" class="custom-file-button">Выбрать файл</button>
-          <input id="imageInput" type="file" accept="image/*" style="display:none" />
+          <input id="imageInput" type="file" accept="image/*" style="display:none">
         </div>
 
         <div class="input-value">
-          <input id="priceInput" type="text" placeholder="Цена (например, 1200)" />
+          <input id="priceInput" type="text" placeholder="Цена (например, 1200)">
         </div>
 
         <div class="input-value">
-          <input id="rarityInput" type="text" placeholder="Редкость (можно вписать свою)" />
+          <input id="rarityInput" type="text" placeholder="Редкость (можно вписать свою)">
         </div>
 
         <div class="rarity-style-select">
@@ -60,11 +60,11 @@
         </div>
 
         <div class="input-value">
-          <input id="authorInput" type="text" placeholder="Художник" />
+          <input id="authorInput" type="text" placeholder="Художник">
         </div>
 
-        <label><input id="priceLabelCheckbox" type="checkbox" checked /> Показывать «Цена:»</label>
-        <label><input id="iconCheckbox" type="checkbox" checked /> Показывать иконку</label>
+        <label><input id="priceLabelCheckbox" type="checkbox" checked> Показывать «Цена:»</label>
+        <label><input id="iconCheckbox" type="checkbox" checked> Показывать иконку</label>
 
         <select id="iconSelect">
           <option value="./img/icons/gold-icon.webp">Золото</option>
@@ -73,65 +73,52 @@
           <option value="./img/icons/credits_big1.webp">Кредиты</option>
         </select>
 
-        <label><input id="authorLabelCheckbox" type="checkbox" checked /> Показывать «Художник:»</label>
+        <label><input id="authorLabelCheckbox" type="checkbox" checked> Показывать «Художник:»</label>
 
         <button id="resetButton" type="button">Сбросить</button>
         <button id="downloadButton" type="button">Скачать PNG</button>
-        <button id="downloadGifButton" type="button" disabled>Скачать GIF</button>
       </div>
     </div>
   </div>
 
-  <!-- Capture container (hidden offscreen) -->
+  <!-- Capture container (hidden) -->
   <div class="capture-container rare" id="captureContainer">
-    <img id="captureImage" class="capture-image" src="./img/card-preview.webp" alt="capture" />
-
+    <img id="captureImage" class="capture-image" src="./img/card-preview.webp" alt="capture">
     <div id="captureRarityText" class="rarity-block rare"><span>Rare</span></div>
-
     <div class="capture-data">
       <div id="captureAuthorText" class="author-text">
         <span class="author-label">Художник:</span>
         <span class="author-name">Kim Jacinto</span>
       </div>
-
       <div id="captureCostWrapper" class="cost-wrapper">
         <span class="price-label">Цена:</span>
         <span id="captureCostText">1200</span>
-        <img id="captureIconImg" src="./img/icons/gold-icon.webp" alt="icon" />
+        <img id="captureIconImg" src="./img/icons/gold-icon.webp" alt="icon">
       </div>
-
       <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
     </div>
   </div>
 
-  <!-- Scaled container for output (615x850) -->
+  <!-- Scaled container -->
   <div id="scaledCaptureContainer" class="scaled-capture-container rare">
-    <img id="scaledCaptureImage" class="capture-image" src="./img/card-preview.webp" alt="scaled" />
-
+    <img id="scaledCaptureImage" class="capture-image" src="./img/card-preview.webp" alt="scaled">
     <div id="scaledRarityText" class="rarity-block rare"><span>Rare</span></div>
-
     <div class="capture-data">
       <div id="scaledAuthorText" class="author-text">
         <span class="author-label">Художник:</span>
         <span class="author-name">Kim Jacinto</span>
       </div>
-
       <div id="scaledCostWrapper" class="cost-wrapper">
         <span class="price-label">Цена:</span>
         <span id="scaledCaptureCostText">1200</span>
-        <img id="scaledCaptureIconImg" src="./img/icons/gold-icon.webp" alt="icon" />
+        <img id="scaledCaptureIconImg" src="./img/icons/gold-icon.webp" alt="icon">
       </div>
-
       <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
     </div>
   </div>
 
-  <!-- Libraries (required for GIF parsing & export and PNG render) -->
+  <!-- Libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-
-  <!-- Your script -->
   <script src="script.js"></script>
 </body>
 </html>
