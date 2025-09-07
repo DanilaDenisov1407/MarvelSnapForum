@@ -1,88 +1,121 @@
-/* ===== Reset ===== */
-*{box-sizing:border-box;padding:0;margin:0}
-html,body{height:100%}
+</style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Preview -->
+    <div class="preview-container rare" id="previewContainer">
+      <img id="previewImage" class="preview-image" src="./img/card-preview.webp" alt="Превью карты" />
 
-@font-face{font-family:'Roboto';font-style:normal;font-weight:900;src:url('fonts/Roboto-Black.ttf') format('truetype')}
-@font-face{font-family:'Comicraft';font-style:italic;font-weight:900;src:url('fonts/Comicraft-CCUltimatum-Bold-Italic.woff2') format('woff2')}
+      <div id="rarityText" class="rarity-block rare"><span>Rare</span></div>
 
-:root{
-  --container-padding:25px;
-  --container-border-width:5px;
-  --container-border-radius:20px;
-  --container-gap:10px;
-  --image-min-height:330px;
-  --rarity-padding-y:5px;
-  --rarity-padding-x:15px;
-  --rarity-font-size:16px;
-  --rarity-border-width:6px;
-  --rarity-border-radius:15px;
-  --author-font-size:18px;
-  --cost-gap:5px;
-  --price-font-size:18px;
-  --cost-font-size:18px;
-  --icon-width:20px;
-  --icon-height:20px;
-  --telegram-font-size:18px;
+      <div class="preview-data">
+        <div id="authorText" class="author-text">
+          <span class="author-label">Художник:</span>
+          <span class="author-name">Kim Jacinto</span>
+        </div>
 
-  --scaled-icon-width:40px;
-  --scaled-icon-height:40px;
-  --scaled-image-min-height:560px;
-  --scaled-telegram-font-size:36px;
-}
+        <div id="costWrapper" class="cost-wrapper">
+          <span class="price-label">Цена:</span>
+          <span id="costText">1200</span>
+          <img id="iconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты" />
+        </div>
 
-body{
-  background:#20252b;color:#fff;font-family:Roboto, sans-serif;font-weight:900;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px
-}
-.wrapper{display:flex;gap:20px;max-width:1200px;flex-wrap:wrap}
+        <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
+      </div>
+    </div>
 
-/* preview container */
-.preview-container{display:flex;flex-direction:column;gap:var(--container-gap);min-width:300px;max-width:360px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:var(--container-padding);padding-top:60px;position:relative}
-.preview-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
-.preview-data{display:flex;flex-direction:column;align-items:center;gap:var(--container-gap);text-align:center}
+    <!-- Controls -->
+    <div class="controls-wrapper">
+      <div class="controls">
+        <div class="file-input-wrapper">
+          <button type="button" class="custom-file-button">Выбрать файл</button>
+          <input id="imageInput" type="file" accept="image/*" style="display:none" />
+        </div>
 
-/* rarity */
-.rarity-block{position:absolute;top:15px;left:50%;transform:translateX(-50%) skew(-20deg);z-index:20;display:inline-block;background:linear-gradient(180deg,#e800fe,#9500d0,#380274);color:#fff;padding:var(--rarity-padding-y) var(--rarity-padding-x);font-size:var(--rarity-font-size);text-transform:uppercase;border:var(--rarity-border-width) solid transparent;border-top-right-radius:var(--rarity-border-radius);border-bottom-left-radius:var(--rarity-border-radius)}
-.rarity-block span{display:inline-block;font-family:Comicraft, sans-serif;font-weight:900;font-style:italic;transform:skew(15deg)}
+        <div class="input-value">
+          <input id="priceInput" type="text" placeholder="Цена (например, 1200)" />
+        </div>
 
-.rarity-block.super-rare{background:linear-gradient(180deg,#69e0e4,#4cbcc7,#17596f)}
-.rarity-block.ultimate{background:linear-gradient(180deg,#db2a24,#a81b14,#680d0a)}
-.rarity-block.spotlight{background:linear-gradient(180deg,#0027d5,#0549f4,#041abd)}
-.rarity-block.conquest-reward{background:linear-gradient(180deg,#39d25a,#1a821a,#0e4f0e)}
-.rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400);color:#20252b}
-.rarity-block.webshop-reward{background:linear-gradient(180deg,#ffb066,#db8216,#8a4b00)}
+        <div class="input-value">
+          <input id="rarityInput" type="text" placeholder="Редкость (можно вписать свою)" />
+        </div>
 
-.author-text{font-size:var(--author-font-size)}
-.cost-wrapper{display:flex;align-items:center;gap:var(--cost-gap)}
-.price-label{font-size:var(--price-font-size)}
-#costText{font-size:var(--cost-font-size);display:inline-block}
-#iconImg, #captureIconImg, #scaledCaptureIconImg{width:var(--icon-width);height:var(--icon-height);display:inline-block}
-.telegram-link{color:#7af5f0;font-size:var(--telegram-font-size);text-decoration:underline}
+        <div class="rarity-style-select">
+          <label for="rarityStyleSelect">Стиль редкости:</label>
+          <select id="rarityStyleSelect">
+            <option value="rare">Rare</option>
+            <option value="super-rare">Super Rare</option>
+            <option value="ultimate">Ultimate</option>
+            <option value="spotlight">Spotlight</option>
+            <option value="conquest-reward">Conquest Reward</option>
+            <option value="bundle">Bundle</option>
+            <option value="webshop-reward">Webshop Reward</option>
+          </select>
+        </div>
 
-/* controls */
-.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(max-width:600px){.controls{grid-template-columns:1fr}}
-.controls input,.controls button,.controls label,.controls select{padding:10px;font-size:16px;font-family:Roboto;border:2px solid #9801e7;background:#333;color:#fff;border-radius:5px}
-.custom-file-button{width:100%;cursor:pointer}
-.input-value{position:relative}
-.input-value.active::after{content:'x';position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+        <div class="input-value">
+          <input id="authorInput" type="text" placeholder="Художник" />
+        </div>
 
-/* capture offscreen */
-.capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;padding-top:70px;flex-direction:column;align-items:center}
-.capture-container .capture-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
-.capture-container #captureIconImg{width:var(--icon-width);height:var(--icon-height)}
+        <label><input id="priceLabelCheckbox" type="checkbox" checked /> Показывать «Цена:»</label>
+        <label><input id="iconCheckbox" type="checkbox" checked /> Показывать иконку</label>
 
-/* scaled container (final render) */
-.scaled-capture-container{position:absolute;left:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:10px solid #9801e7;border-radius:40px;overflow:hidden;padding:20px;padding-top:80px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-.scaled-capture-container.visible{position:static;left:auto}
-.scaled-capture-container .capture-image{width:100%;min-height:var(--scaled-image-min-height);object-fit:cover}
-.scaled-capture-container #scaledCaptureIconImg{width:var(--scaled-icon-width);height:var(--scaled-icon-height);display:inline-block}
-.scaled-capture-container .telegram-link{font-size:var(--scaled-telegram-font-size)}
+        <select id="iconSelect">
+          <option value="./img/icons/gold-icon.webp">Золото</option>
+          <option value="./img/icons/usd-icon2.webp">Доллары</option>
+          <option value="./img/icons/tokens_big.webp">Токены</option>
+          <option value="./img/icons/credits_big1.webp">Кредиты</option>
+        </select>
 
-/* container border colors by rarity */
-.preview-container.rare,.capture-container.rare,.scaled-capture-container.rare{border-color:#e800fe}
-.preview-container.super-rare,.capture-container.super-rare,.scaled-capture-container.super-rare{border-color:#69e0e4}
-.preview-container.ultimate,.capture-container.ultimate,.scaled-capture-container.ultimate{border-color:#db2a24}
-.preview-container.spotlight,.capture-container.spotlight,.scaled-capture-container.spotlight{border-color:#0027d5}
-.preview-container.conquest-reward,.capture-container.conquest-reward,.scaled-capture-container.conquest-reward{border-color:#1a821a}
-.preview-container.bundle,.capture-container.bundle,.scaled-capture-container.bundle{border-color:#ffd700}
-.preview-container.webshop-reward,.capture-container.webshop-reward,.scaled-capture-container.webshop-reward{border-color:#db8216}
+        <label><input id="authorLabelCheckbox" type="checkbox" checked /> Показывать «Художник:»</label>
+
+        <button id="resetButton" type="button">Сбросить</button>
+        <button id="downloadButton" type="button">Скачать PNG</button>
+        <button id="downloadGifButton" type="button" disabled>Скачать GIF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capture container (hidden offscreen) -->
+  <div class="capture-container rare" id="captureContainer">
+    <img id="captureImage" class="capture-image" src="./img/card-preview.webp" alt="capture" />
+
+    <div id="captureRarityText" class="rarity-block rare"><span>Rare</span></div>
+
+    <div class="capture-data">
+      <div id="captureAuthorText" class="author-text">
+        <span class="author-label">Художник:</span>
+        <span class="author-name">Kim Jacinto</span>
+      </div>
+
+      <div id="captureCostWrapper" class="cost-wrapper">
+        <span class="price-label">Цена:</span>
+        <span id="captureCostText">1200</span>
+        <img id="captureIconImg" src="./img/icons/gold-icon.webp" alt="icon" />
+      </div>
+
+      <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
+    </div>
+  </div>
+
+  <!-- Scaled container for output (615x850) -->
+  <div id="scaledCaptureContainer" class="scaled-capture-container rare">
+    <img id="scaledCaptureImage" class="capture-image" src="./img/card-preview.webp" alt="scaled" />
+
+    <div id="scaledRarityText" class="rarity-block rare"><span>Rare</span></div>
+
+    <div class="capture-data">
+      <div id="scaledAuthorText" class="author-text">
+        <span class="author-label">Художник:</span>
+        <span class="author-name">Kim Jacinto</span>
+      </div>
+
+      <div id="scaledCostWrapper" class="cost-wrapper">
+        <span class="price-label">Цена:</span>
+        <span id="scaledCaptureCostText">1200</span>
+        <img id="scaledCaptureIconImg" src="./img/icons/gold-icon.webp" alt="icon" />
+      </div>
+
+      <a class="telegram-link" href="#" target="_blank">@tgmarvelsnap</a>
+    </div>
+  </div>
