@@ -288,66 +288,57 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   downloadButton.addEventListener('click', () => {
-    const scaledContainerElement = document.getElementById('scaledCaptureContainer')
+  const scaledContainerElement = document.getElementById('scaledCaptureContainer')
 
-    scaledImage.src = previewImage.src
-    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    scaledRarityText.className = rarityText.className
-    scaledAuthorLabel.style.display = authorLabel.style.display
-    scaledAuthorName.textContent = authorName.textContent
-    scaledCostText.textContent = costText.textContent
-    scaledIconImg.src = iconImg.src
-    scaledIconImg.style.display = iconImg.style.display
-    scaledPriceLabel.style.display = priceLabel.style.display
-    scaledCostWrapper.style.display = costWrapper.style.display
-    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
+  // сначала синхронизируем scaledContainer с превью
+  updateCaptureContainer()
 
-    const originalDisplay = scaledContainerElement.style.display
-    const originalPosition = scaledContainerElement.style.position
-    const originalLeft = scaledContainerElement.style.left
-    const originalTop = scaledContainerElement.style.top
+  const originalDisplay = scaledContainerElement.style.display
+  const originalPosition = scaledContainerElement.style.position
+  const originalLeft = scaledContainerElement.style.left
+  const originalTop = scaledContainerElement.style.top
 
-    scaledContainerElement.style.display = 'flex'
-    scaledContainerElement.style.position = 'absolute'
-    scaledContainerElement.style.left = '-9999px'
-    scaledContainerElement.style.top = '-9999px'
+  scaledContainerElement.style.display = 'flex'
+  scaledContainerElement.style.position = 'absolute'
+  scaledContainerElement.style.left = '-9999px'
+  scaledContainerElement.style.top = '-9999px'
 
-    html2canvas(scaledContainerElement, {
-      scale: 1,
-      width: 615,
-      height: 850,
-      backgroundColor: '#9801e7',
-      useCORS: true,
-    })
-      .then((canvas) => {
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
-
-        const now = new Date()
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const year = now.getFullYear()
-        const time = `${hours}:${minutes}`
-        const date = `${day}.${month}.${year}`
-        let artist = authorName.textContent || 'Unknown'
-        artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
-        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
-
-        const link = document.createElement('a')
-        link.download = fileName
-        link.href = canvas.toDataURL('image/png')
-        link.click()
-      })
-      .catch((err) => {
-        console.error('Ошибка при рендеринге:', err)
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
-      })
+  html2canvas(scaledContainerElement, {
+    scale: 1,
+    width: 615,
+    height: 850,
+    backgroundColor: null, // убираем фон, будет прозрачный
+    useCORS: true,
   })
+    .then((canvas) => {
+      // восстанавливаем стили
+      scaledContainerElement.style.display = originalDisplay
+      scaledContainerElement.style.position = originalPosition
+      scaledContainerElement.style.left = originalLeft
+      scaledContainerElement.style.top = originalTop
+
+      const now = new Date()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const year = now.getFullYear()
+      const time = `${hours}-${minutes}`
+      const date = `${day}.${month}.${year}`
+      let artist = authorName.textContent || 'Unknown'
+      artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
+      const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
+
+      const link = document.createElement('a')
+      link.download = fileName
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    })
+    .catch((err) => {
+      console.error('Ошибка при рендеринге:', err)
+      scaledContainerElement.style.display = originalDisplay
+      scaledContainerElement.style.position = originalPosition
+      scaledContainerElement.style.left = originalLeft
+      scaledContainerElement.style.top = originalTop
+    })
 })
