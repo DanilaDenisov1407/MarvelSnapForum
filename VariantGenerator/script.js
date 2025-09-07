@@ -290,14 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
   downloadButton.addEventListener('click', () => {
   const scaledContainerElement = document.getElementById('scaledCaptureContainer')
 
-  // сначала синхронизируем scaledContainer с превью
+  // Сначала синхронизируем scaledContainer с превью
   updateCaptureContainer()
 
+  // Сохраним оригинальные стили, чтобы восстановить их позже
   const originalDisplay = scaledContainerElement.style.display
   const originalPosition = scaledContainerElement.style.position
   const originalLeft = scaledContainerElement.style.left
   const originalTop = scaledContainerElement.style.top
 
+  // Временно выводим контейнер вне экрана
   scaledContainerElement.style.display = 'flex'
   scaledContainerElement.style.position = 'absolute'
   scaledContainerElement.style.left = '-9999px'
@@ -307,11 +309,11 @@ document.addEventListener('DOMContentLoaded', () => {
     scale: 1,
     width: 615,
     height: 850,
-    backgroundColor: null, // убираем фон, будет прозрачный
+    backgroundColor: null, // прозрачный фон
     useCORS: true,
   })
     .then((canvas) => {
-      // восстанавливаем стили
+      // Восстанавливаем исходные стили
       scaledContainerElement.style.display = originalDisplay
       scaledContainerElement.style.position = originalPosition
       scaledContainerElement.style.left = originalLeft
@@ -325,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const year = now.getFullYear()
       const time = `${hours}-${minutes}`
       const date = `${day}.${month}.${year}`
-      let artist = authorName.textContent || 'Unknown'
+      let artist = document.querySelector('.author-name').textContent || 'Unknown'
       artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
       const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
 
@@ -336,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch((err) => {
       console.error('Ошибка при рендеринге:', err)
+      // Восстанавливаем исходные стили даже при ошибке
       scaledContainerElement.style.display = originalDisplay
       scaledContainerElement.style.position = originalPosition
       scaledContainerElement.style.left = originalLeft
