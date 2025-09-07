@@ -1,586 +1,279 @@
-/* Reset styles Start */
-* {
-  padding: 0;
-  margin: 0;
-  border: 0;
-}
-*,
-:before,
-:after {
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-}
-:focus,
-:active {
-  outline: none;
-}
-a:focus,
-a:active {
-  outline: none;
-}
-nav,
-footer,
-header,
-aside {
-  display: block;
-}
-html {
-  height: 100%;
-  width: 100%;
-}
-input,
-button,
-textarea {
-  font-family: inherit;
-}
-input::-ms-clear {
-  display: none;
-}
-button {
-  cursor: pointer;
-}
-button::-moz-focus-inner {
-  padding: 0;
-  border: 0;
-}
-a,
-a:visited {
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: none;
-}
-ul li {
-  list-style: none;
-}
-img {
-  vertical-align: top;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-size: inherit;
-  font-weight: inherit;
-}
-/* Reset styles END */
+document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
 
-@font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 900;
-  src: url('fonts/Roboto-Black.ttf') format('ttf');
-}
-@font-face {
-  font-family: 'Roboto';
-  font-style: italic;
-  font-weight: 900;
-  src: url('fonts/Roboto-BlackItalic.ttf') format('ttf');
-}
+  const $id = id => document.getElementById(id);
+  const $sel = sel => document.querySelector(sel);
 
-@font-face {
-  font-family: 'Comicraft';
-  font-style: italic;
-  font-weight: 900;
-  src: url('fonts/Comicraft-CCUltimatum-Bold-Italic.woff2') format('woff2');
-}
-
-body {
-  background-color: #20252b;
-  color: white;
-  font-family: Roboto, sans-serif;
-  font-weight: 900;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-.wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  max-width: 1200px;
-}
-.preview-container {
-  --container-padding: 25px;
-  --container-border-width: 5px;
-  --container-border-radius: 20px;
-  --container-gap: 10px;
-  --container-min-width: 300px;
-  --container-max-width: 360px;
-  --image-min-height: 330px;
-  --rarity-padding-y: 5px;
-  --rarity-padding-x: 15px;
-  --rarity-font-size: 16px;
-  --rarity-border-width: 5px;
-  --rarity-border-radius: 15px;
-  --rarity-text-shadow-x: 1px;
-  --rarity-text-shadow-y: 1px;
-  --author-font-size: 18px;
-  --cost-gap: 5px;
-  --price-font-size: 18px;
-  --cost-font-size: 18px;
-  --icon-width: 20px;
-  --icon-height: 20px;
-  --telegram-font-size: 18px;
-  --source-padding-y: 5px;
-  --source-padding-x: 10px;
-  --source-font-size: 14px;
-  --source-border-width: 3px;
-  --source-border-radius: 10px;
-  --source-text-shadow-x: 1px;
-  --source-text-shadow-y: 1px;
-
-  display: flex;
-  flex-direction: column;
-  gap: var(--container-gap);
-  min-width: var(--container-min-width);
-  max-width: var(--container-max-width);
-  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
-  border: var(--container-border-width) solid #9801e7;
-  border-radius: var(--container-border-radius);
-  overflow: hidden;
-  padding: var(--container-padding);
-}
-.preview-image {
-  min-height: var(--image-min-height);
-  width: 100%;
-  object-fit: cover;
-}
-.preview-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--container-gap);
-  text-align: center;
-}
-
-.rarity-block {
-  display: inline-block;
-  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
-  color: white;
-  padding: var(--rarity-padding-y) var(--rarity-padding-x);
-  font-size: var(--rarity-font-size);
-  text-transform: uppercase;
-  transform: skew(-20deg);
-  position: relative;
-  border: var(--rarity-border-width) solid transparent;
-  border-right-color: rgba(0, 0, 0, 0);
-  border-left-color: rgba(0, 0, 0, 0);
-  border-top-right-radius: var(--rarity-border-radius);
-  border-bottom-left-radius: var(--rarity-border-radius);
-}
-
-.rarity-block.rare {
-  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
-}
-.rarity-block.super-rare {
-  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
-}
-.rarity-block.ultimate {
-  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
-}
-.rarity-block.spotlight {
-  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
-}
-
-.rarity-block span {
-  display: inline-block;
-  font-family: 'Comicraft', sans-serif;
-  font-weight: 900;
-  font-style: italic;
-  transform: skew(15deg);
-  color: #fff;
-  text-shadow: var(--rarity-text-shadow-x) var(--rarity-text-shadow-y) 0
-    rgba(0, 0, 0, 0.5);
-}
-
-.source-block {
-  display: inline-block;
-  background: linear-gradient(180deg, #7af5f0, #4ac7c3, #1a5e5b);
-  color: #20252b;
-  padding: var(--source-padding-y) var(--source-padding-x);
-  font-size: var(--source-font-size);
-  text-transform: uppercase;
-  position: relative;
-  border: var(--source-border-width) solid transparent;
-  border-right-color: rgba(0, 0, 0, 0);
-  border-left-color: rgba(0, 0, 0, 0);
-  border-top-left-radius: var(--source-border-radius);
-  border-bottom-right-radius: var(--source-border-radius);
-}
-
-.source-block span {
-  display: inline-block;
-  font-family: 'Roboto', sans-serif;
-  font-weight: 900;
-  color: #20252b;
-  text-shadow: var(--source-text-shadow-x) var(--source-text-shadow-y) 0
-    rgba(255, 255, 255, 0.3);
-}
-
-.author-text {
-  font-size: var(--author-font-size);
-}
-.cost-wrapper {
-  display: flex;
-  align-items: end;
-  gap: var(--cost-gap);
-}
-.price-label {
-  font-size: var(--price-font-size);
-}
-#costText {
-  font-size: var(--cost-font-size);
-}
-#iconImg {
-  width: var(--icon-width);
-  height: var(--icon-height);
-}
-.telegram-link {
-  color: #7af5f0;
-  font-size: var(--telegram-font-size);
-  text-decoration: underline;
-}
-.controls {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-@media (max-width: 600px) {
-  .controls {
-    grid-template-columns: 1fr;
+  function capitalizeWords(str = ''){return String(str).trim().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
+  function getDeclension(number, words=['золото','золота','золота']){
+    const n=Math.abs(Number(number))%100; const n1=n%10; if(n>10 && n<20) return words[2]; if(n1>1 && n1<5) return words[1]; if(n1===1) return words[0]; return words[2];
   }
-}
+  function safeSetText(el, text){ if(el) el.textContent = text }
+  function safeSetSrc(el, src){ if(el) el.src = src }
+  function safeSetDisplay(el, value){ if(el) el.style.display = value }
 
-.controls-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  // DOM
+  const previewContainer = $id('previewContainer');
+  const captureContainer = $id('captureContainer');
+  const scaledCaptureContainer = $id('scaledCaptureContainer');
 
-.controls input,
-.controls button,
-.controls label,
-.controls select {
-  padding: 10px;
-  font-size: 16px;
-  font-family: Roboto, sans-serif;
-  font-weight: 900;
-  border: 2px solid #9801e7;
-  background-color: #333;
-  color: white;
-  border-radius: 5px;
-}
-.controls button {
-  background-color: #9801e7;
-  border: none;
-  cursor: pointer;
-}
-.input-value {
-  position: relative;
-}
-.input-value input {
-  width: 100%;
-}
-.input-value.active::after {
-  content: 'x';
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-}
-.file-input-wrapper {
-  position: relative;
-}
-.custom-file-button {
-  padding: 10px;
-  font-size: 16px;
-  font-family: Roboto, sans-serif;
-  font-weight: 900;
-  border: 2px solid #9801e7;
-  background-color: #333;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-}
-.custom-file-button:hover {
-  background-color: #9801e7;
-}
+  const imageInput = $id('imageInput');
+  const previewImage = $id('previewImage');
+  const rarityInput = $id('rarityInput');
+  const authorInput = $id('authorInput');
+  const priceInput = $id('priceInput');
+  const iconCheckbox = $id('iconCheckbox');
+  const iconSelect = $id('iconSelect');
+  const authorLabelCheckbox = $id('authorLabelCheckbox');
+  const priceLabelCheckbox = $id('priceLabelCheckbox');
+  const rarityText = $id('rarityText');
+  const authorLabel = $sel('.author-label');
+  const authorName = $sel('.author-name');
+  const costText = $id('costText');
+  const iconImg = $id('iconImg');
+  const priceLabel = $sel('.price-label');
+  const resetButton = $id('resetButton');
+  const downloadButton = $id('downloadButton');
+  const costWrapper = $id('costWrapper');
+  const customFileButton = $sel('.custom-file-button');
+  const rarityStyleSelect = $id('rarityStyleSelect');
 
-.rarity-style-select {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
+  // capture elements
+  const captureImage = $id('captureImage');
+  const captureRarityText = $id('captureRarityText');
+  const captureAuthorLabel = $sel('#captureAuthorText .author-label');
+  const captureAuthorName = $sel('#captureAuthorText .author-name');
+  const captureCostText = $id('captureCostText');
+  const captureIconImg = $id('captureIconImg');
+  const capturePriceLabel = $sel('#captureCostWrapper .price-label');
+  const captureCostWrapper = $id('captureCostWrapper');
 
-.rarity-style-select label {
-  font-size: 16px;
-  color: white;
-}
+  const scaledImage = $id('scaledCaptureImage');
+  const scaledRarityText = $id('scaledRarityText');
+  const scaledAuthorLabel = $sel('#scaledAuthorText .author-label');
+  const scaledAuthorName = $sel('#scaledAuthorText .author-name');
+  const scaledCostText = $id('scaledCaptureCostText');
+  const scaledIconImg = $id('scaledCaptureIconImg');
+  const scaledPriceLabel = $sel('#scaledCostWrapper .price-label');
+  const scaledCostWrapper = $id('scaledCostWrapper');
 
-.rarity-style-select select {
-  padding: 10px;
-  font-size: 16px;
-  font-family: Roboto, sans-serif;
-  font-weight: 900;
-  border: 2px solid #9801e7;
-  background-color: #333;
-  color: white;
-  border-radius: 5px;
-}
+  // defaults
+  const defaultPrice = '1200';
+  const defaultAuthor = 'Kim Jacinto';
+  const suffixes = {
+    './img/icons/gold-icon.webp':['золото','золота','золота'],
+    './img/icons/usd-icon2.webp':['доллар','доллара','долларов'],
+    './img/icons/tokens_big.webp':['жетон','жетона','жетонов'],
+    './img/icons/credits_big1.webp':['кредит','кредита','кредитов']
+  };
+  const rarityStyles = { rare:'Rare','super-rare':'Super Rare', ultimate:'Ultimate', spotlight:'Spotlight', 'conquest-reward':'Conquest Reward', bundle:'Bundle', 'webshop-reward':'Webshop Reward' };
+  const allowedRarityClasses = Object.keys(rarityStyles);
 
-.capture-container {
-  display: none;
-  position: absolute;
-  left: -9999px;
-  width: 615px;
-  height: 850px;
-  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
-  border: var(--container-border-width) solid #9801e7;
-  border-radius: var(--container-border-radius);
-  overflow: hidden;
-  padding: 10px;
-  flex-direction: column;
-  align-items: center;
-}
+  // Helpers
+  function setImgSrcSafe(img, src){
+    if(!img) return;
+    try{ img.removeAttribute('crossorigin'); }catch{};
+    if(typeof src === 'string' && /^https?:\/\//i.test(src)){
+      try{ img.crossOrigin = 'anonymous'; }catch{}
+    }
+    img.src = src || '';
+  }
 
-.capture-container .rarity-block.rare {
-  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
-}
-.capture-container .rarity-block.super-rare {
-  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
-}
-.capture-container .rarity-block.ultimate {
-  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
-}
-.capture-container .rarity-block.spotlight {
-  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
-}
+  function renderCost(){
+    const base = (priceInput && priceInput.value !== undefined) ? String(priceInput.value).trim() : defaultPrice;
+    const textValue = base || defaultPrice;
+    const number = parseInt(String(base).replace(/\s+/g, ''), 10) || 0;
 
-.capture-container .source-block {
-  padding: var(--source-padding-y) var(--source-padding-x);
-  font-size: var(--source-font-size);
-  border: var(--source-border-width) solid transparent;
-  border-right-color: rgba(0, 0, 0, 0);
-  border-left-color: rgba(0, 0, 0, 0);
-  border-top-left-radius: var(--source-border-radius);
-  border-bottom-right-radius: var(--source-border-radius);
-}
+    if(iconCheckbox && iconCheckbox.checked){
+      safeSetText(costText, textValue);
+      if(iconSelect && iconImg) setImgSrcSafe(iconImg, iconSelect.value);
+      if(iconImg) iconImg.style.display = 'inline-block';
+    } else {
+      const suffixArray = (iconSelect && suffixes[iconSelect.value]) ? suffixes[iconSelect.value] : ['золото','золота','золота'];
+      safeSetText(costText, textValue + ' ' + getDeclension(number, suffixArray));
+      if(iconImg) iconImg.style.display = 'none';
+    }
+    updateCostWrapperVisibility();
+  }
 
-.capture-image {
-  width: 100%;
-  min-height: 330px;
-  height: auto;
-  object-fit: cover;
-}
-.capture-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--container-gap);
-  text-align: center;
-  width: 100%;
-}
-.capture-container #captureIconImg {
-  width: var(--icon-width);
-  height: var(--icon-height);
-}
+  function renderAuthor(){
+    const name = (authorInput && authorInput.value) ? authorInput.value : defaultAuthor;
+    safeSetText(authorName, capitalizeWords(name));
+  }
 
-.scaled-capture-container {
-  --scaled-container-border-width: 10px;
-  --scaled-container-border-radius: 40px;
-  --scaled-container-padding: 20px;
-  --scaled-container-gap: 10px;
-  --scaled-rarity-padding-y: 5px;
-  --scaled-rarity-padding-x: 10px;
-  --scaled-rarity-font-size: 30px;
-  --scaled-rarity-border-width: 10px;
-  --scaled-rarity-border-radius: 25.5px;
-  --scaled-rarity-text-shadow-x: 1.7px;
-  --scaled-rarity-text-shadow-y: 1.7px;
-  --scaled-author-font-size: 36px;
-  --scaled-cost-gap: 10px;
-  --scaled-cost-padding: 0;
-  --scaled-cost-font-size: 30px;
-  --scaled-price-font-size: 36px;
-  --scaled-icon-width: 40px;
-  --scaled-icon-height: 40px;
-  --scaled-telegram-font-size: 36px;
-  --scaled-image-min-height: 560px;
-  --scaled-source-padding-y: 8.5px;
-  --scaled-source-padding-x: 17px;
-  --scaled-source-font-size: 23.8px;
-  --scaled-source-border-width: 5.1px;
-  --scaled-source-border-radius: 17px;
-  --scaled-source-text-shadow-x: 1.7px;
-  --scaled-source-text-shadow-y: 1.7px;
+  function updateLabelsVisibility(){
+    if(authorLabel) authorLabel.style.display = (authorLabelCheckbox && authorLabelCheckbox.checked) ? 'inline' : 'none';
+    if(priceLabel) priceLabel.style.display = (priceLabelCheckbox && priceLabelCheckbox.checked) ? 'inline' : 'none';
+    updateCostWrapperVisibility();
+  }
 
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: absolute;
-  left: -9999px;
-  width: 615px;
-  height: 850px;
-  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
-  border: var(--scaled-container-border-width) solid #9801e7;
-  border-radius: var(--scaled-container-border-radius);
-  overflow: hidden;
-  padding: var(--scaled-container-padding);
-  align-items: center;
-}
+  function updateCostWrapperVisibility(){
+    const hasPrice = (priceInput && String(priceInput.value || '').trim() !== '');
+    if(costWrapper){
+      costWrapper.style.display = (hasPrice || (priceLabelCheckbox && priceLabelCheckbox.checked) || (iconCheckbox && iconCheckbox.checked)) ? 'flex' : 'none';
+    }
+  }
 
-.scaled-capture-container.visible {
-  display: flex;
-  position: static;
-  left: auto;
-}
+  function toggleActiveClass(input){ if(!input) return; const parent=input.closest('.input-value'); if(parent) parent.classList.toggle('active', String(input.value||'').trim() !== ''); }
 
-.scaled-capture-container .rarity-block {
-  padding: var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);
-  font-size: var(--scaled-rarity-font-size);
-  border: var(--scaled-rarity-border-width) solid transparent;
-  border-right-color: rgba(0, 0, 0, 0);
-  border-left-color: rgba(0, 0, 0, 0);
-  border-top-right-radius: var(--scaled-rarity-border-radius);
-  border-bottom-left-radius: var(--scaled-rarity-border-radius);
-}
+  function clearInput(input){ if(!input) return; input.value=''; toggleActiveClass(input); input.dispatchEvent(new Event('input',{bubbles:true})); if(input===rarityInput && rarityStyleSelect){ const style = rarityStyleSelect.value || 'rare'; if(rarityText) safeSetText(rarityText.querySelector('span'), rarityStyles[style]); if(captureRarityText) safeSetText(captureRarityText.querySelector('span'), rarityStyles[style]); if(scaledRarityText) safeSetText(scaledRarityText.querySelector('span'), rarityStyles[style]); } }
 
-.scaled-capture-container .rarity-block.rare {
-  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
-}
-.scaled-capture-container .rarity-block.super-rare {
-  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
-}
-.scaled-capture-container .rarity-block.ultimate {
-  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
-}
-.scaled-capture-container .rarity-block.spotlight {
-  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
-}
+  function updateRarityStyle(){
+    const style = (rarityStyleSelect && rarityStyleSelect.value) ? rarityStyleSelect.value : 'rare';
+    if(rarityText) rarityText.className = 'rarity-block ' + style;
+    if(captureRarityText) captureRarityText.className = 'rarity-block ' + style;
+    if(scaledRarityText) scaledRarityText.className = 'rarity-block ' + style;
 
-.scaled-capture-container .rarity-block span {
-  text-shadow: var(--scaled-rarity-text-shadow-x)
-    var(--scaled-rarity-text-shadow-y) 0 rgba(0, 0, 0, 0.5);
-}
+    [previewContainer, captureContainer, scaledCaptureContainer].forEach(container=>{
+      if(!container) return;
+      allowedRarityClasses.forEach(c=>container.classList.remove(c));
+      container.classList.add(style);
+    });
 
-.scaled-capture-container .source-block {
-  padding: var(--scaled-source-padding-y) var(--scaled-source-padding-x);
-  font-size: var(--scaled-source-font-size);
-  border: var(--scaled-source-border-width) solid transparent;
-  border-right-color: rgba(0, 0, 0, 0);
-  border-left-color: rgba(0, 0, 0, 0);
-  border-top-left-radius: var(--scaled-source-border-radius);
-  border-bottom-right-radius: var(--scaled-source-border-radius);
-}
+    if(rarityInput && String(rarityInput.value||'').trim()===''){
+      const mapped = rarityStyles[style] || capitalizeWords(style);
+      if(rarityText) safeSetText(rarityText.querySelector('span'), mapped);
+      if(captureRarityText) safeSetText(captureRarityText.querySelector('span'), mapped);
+      if(scaledRarityText) safeSetText(scaledRarityText.querySelector('span'), mapped);
+    }
+  }
 
-.scaled-capture-container .source-block span {
-  text-shadow: var(--scaled-source-text-shadow-x)
-    var(--scaled-source-text-shadow-y) 0 rgba(255, 255, 255, 0.3);
-}
+  // update capture copies
+  function updateCaptureContainer(){
+    if(previewImage && captureImage) setImgSrcSafe(captureImage, previewImage.src || '');
+    if(previewImage && scaledImage) setImgSrcSafe(scaledImage, previewImage.src || '');
 
-.scaled-capture-container .capture-image {
-  width: 100%;
-  min-height: var(--scaled-image-min-height);
-  height: auto;
-  object-fit: cover;
-}
+    if(rarityText && captureRarityText){ const spanText = rarityText.querySelector('span') ? rarityText.querySelector('span').textContent : ''; safeSetText(captureRarityText.querySelector('span'), spanText); captureRarityText.className = rarityText.className; }
+    if(rarityText && scaledRarityText){ const spanText = rarityText.querySelector('span') ? rarityText.querySelector('span').textContent : ''; safeSetText(scaledRarityText.querySelector('span'), spanText); scaledRarityText.className = rarityText.className; }
 
-.scaled-capture-container .capture-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--scaled-container-gap);
-  text-align: center;
-  width: 100%;
-  flex-grow: 1;
-}
+    if(authorLabel && captureAuthorLabel) captureAuthorLabel.style.display = authorLabel.style.display;
+    if(authorName && captureAuthorName) captureAuthorName.textContent = authorName.textContent || '';
+    if(authorLabel && scaledAuthorLabel) scaledAuthorLabel.style.display = authorLabel.style.display;
+    if(authorName && scaledAuthorName) scaledAuthorName.textContent = authorName.textContent || '';
 
-.scaled-capture-container .author-text {
-  font-size: var(--scaled-author-font-size);
-}
-.scaled-capture-container .cost-wrapper {
-  display: flex;
-  align-items: end;
-  gap: var(--scaled-cost-gap);
-  padding: var(--scaled-cost-padding);
-}
-.scaled-capture-container .cost-wrapper span {
-  font-size: var(--scaled-cost-font-size);
-}
-.scaled-capture-container .price-label {
-  font-size: var(--scaled-price-font-size);
-}
-.scaled-capture-container #captureCostText {
-  font-size: var(--scaled-cost-font-size);
-}
-.scaled-capture-container .telegram-link {
-  color: #7af5f0;
-  font-size: var(--scaled-telegram-font-size);
-  text-decoration: underline;
-}
-.scaled-capture-container #scaledCaptureIconImg {
-  width: var(--scaled-icon-width);
-  height: var(--scaled-icon-height);
-}
-/* Рамка в зависимости от редкости */
-.preview-container.rare,
-.capture-container.rare,
-.scaled-capture-container.rare {
-  border-color: #e800fe; /* Фиолетовый */
-}
+    if(costText && captureCostText) captureCostText.textContent = costText.textContent || '';
+    if(iconImg && captureIconImg) setImgSrcSafe(captureIconImg, iconImg.src || '');
+    if(priceLabel && capturePriceLabel) capturePriceLabel.style.display = priceLabel.style.display;
+    if(costWrapper && captureCostWrapper) captureCostWrapper.style.display = costWrapper.style.display;
 
-.preview-container.super-rare,
-.capture-container.super-rare,
-.scaled-capture-container.super-rare {
-  border-color: #69e0e4; /* Голубой */
-}
+    if(costText && scaledCostText) scaledCostText.textContent = costText.textContent || '';
+    if(iconImg && scaledIconImg) setImgSrcSafe(scaledIconImg, iconImg.src || '');
+    if(priceLabel && scaledPriceLabel) scaledPriceLabel.style.display = priceLabel.style.display;
+    if(costWrapper && scaledCostWrapper) scaledCostWrapper.style.display = costWrapper.style.display;
 
-.preview-container.ultimate,
-.capture-container.ultimate,
-.scaled-capture-container.ultimate {
-  border-color: #db2a24; /* Красный */
-}
+    const previewTelegram = $sel('.preview-container .telegram-link');
+    const captureTelegram = $sel('#captureContainer .telegram-link');
+    const scaledTelegram = $sel('#scaledCaptureContainer .telegram-link');
+    if(previewTelegram && captureTelegram) captureTelegram.textContent = previewTelegram.textContent;
+    if(previewTelegram && scaledTelegram) scaledTelegram.textContent = previewTelegram.textContent;
+  }
 
-.preview-container.spotlight,
-.capture-container.spotlight,
-.scaled-capture-container.spotlight {
-  border-color: #0027d5; /* Синий */
-}
+  // Wait for images + fonts
+  function waitForImages(container, timeout = 4000){
+    const imgs = Array.from(container.querySelectorAll('img'));
+    if(imgs.length===0) return Promise.resolve();
+    return Promise.all(imgs.map(img=> new Promise(resolve=>{
+      if(img.complete && img.naturalWidth && img.naturalHeight) return resolve();
+      const t = setTimeout(() => resolve(), timeout);
+      img.addEventListener('load', ()=>{ clearTimeout(t); resolve(); }, {once:true});
+      img.addEventListener('error', ()=>{ clearTimeout(t); resolve(); }, {once:true});
+    })));
+  }
 
-/* Новые */
-.preview-container.conquest-reward,
-.capture-container.conquest-reward,
-.scaled-capture-container.conquest-reward {
-  border-color: #1a821a; /* Зелёный */
-}
+  // Events
+  if(customFileButton && imageInput){
+    customFileButton.addEventListener('click', e=>{ e.preventDefault(); imageInput.click(); });
+  }
 
-.preview-container.bundle,
-.capture-container.bundle,
-.scaled-capture-container.bundle {
-  border-color: #ffd700; /* Золотой */
-}
+  [rarityInput, authorInput, priceInput].filter(Boolean).forEach(input=>{
+    input.addEventListener('input', ()=>{ toggleActiveClass(input); updatePreview(); });
+    toggleActiveClass(input);
+  });
 
-.preview-container.webshop-reward,
-.capture-container.webshop-reward,
-.scaled-capture-container.webshop-reward {
-  border-color: #db8216; /* Оранжевый */
-}
+  document.querySelectorAll('.input-value').forEach(wrapper=>{
+    wrapper.addEventListener('click', e=>{
+      const input = wrapper.querySelector('input'); if(!input) return;
+      if(wrapper.classList.contains('active') && (e.offsetX > wrapper.offsetWidth - 30)){
+        clearInput(input);
+      }
+    });
+  });
+
+  if(imageInput){
+    imageInput.addEventListener('change', e=>{
+      const file = e.target.files && e.target.files[0]; if(!file) return;
+      const url = URL.createObjectURL(file);
+      if(previewImage) { previewImage.removeAttribute('crossorigin'); previewImage.src = url; }
+      if(captureImage) { captureImage.removeAttribute('crossorigin'); captureImage.src = url; }
+      if(scaledImage) { scaledImage.removeAttribute('crossorigin'); scaledImage.src = url; }
+      updateCaptureContainer();
+    });
+  }
+
+  if(iconCheckbox){ iconCheckbox.addEventListener('change', ()=>{ if(iconSelect) iconSelect.disabled = !iconCheckbox.checked; updatePreview(); }); }
+  if(iconSelect) iconSelect.addEventListener('change', updatePreview);
+  if(authorLabelCheckbox) authorLabelCheckbox.addEventListener('change', updatePreview);
+  if(priceLabelCheckbox) priceLabelCheckbox.addEventListener('change', updatePreview);
+  if(rarityStyleSelect) rarityStyleSelect.addEventListener('change', ()=>{ updateRarityStyle(); updatePreview(); });
+
+  function updatePreview(){
+    if(rarityInput && String(rarityInput.value||'').trim() !== ''){
+      const text = capitalizeWords(rarityInput.value);
+      if(rarityText && rarityText.querySelector('span')) safeSetText(rarityText.querySelector('span'), text);
+      if(captureRarityText && captureRarityText.querySelector('span')) safeSetText(captureRarityText.querySelector('span'), text);
+      if(scaledRarityText && scaledRarityText.querySelector('span')) safeSetText(scaledRarityText.querySelector('span'), text);
+    }
+    renderCost();
+    renderAuthor();
+    updateLabelsVisibility();
+    updateCaptureContainer();
+  }
+
+  // init
+  try{ renderCost(); renderAuthor(); updateLabelsVisibility(); updateRarityStyle(); updateCaptureContainer(); }catch(err){ console.warn('Init warning:', err); }
+
+  if(resetButton){
+    resetButton.addEventListener('click', ()=>{
+      if(imageInput) imageInput.value='';
+      if(previewImage) previewImage.src='./img/card-preview.webp';
+      if(captureImage) captureImage.src='./img/card-preview.webp';
+      if(scaledImage) scaledImage.src='./img/card-preview.webp';
+      if(rarityInput) rarityInput.value='';
+      if(rarityStyleSelect) rarityStyleSelect.value='rare';
+      if(rarityText && rarityText.querySelector('span')) safeSetText(rarityText.querySelector('span'), rarityStyles['rare']);
+      if(authorInput) authorInput.value='';
+      if(priceInput) priceInput.value='';
+      if(iconCheckbox) iconCheckbox.checked = true;
+      if(iconSelect){ iconSelect.disabled = false; iconSelect.value = './img/icons/gold-icon.webp'; }
+      if(authorLabelCheckbox) authorLabelCheckbox.checked = true;
+      if(priceLabelCheckbox) priceLabelCheckbox.checked = true;
+      updateRarityStyle(); renderCost(); renderAuthor(); updateLabelsVisibility(); updateCaptureContainer();
+      [rarityInput, authorInput, priceInput].filter(Boolean).forEach(input=> toggleActiveClass(input));
+    });
+  }
+
+  // Download PNG
+  if(downloadButton){
+    downloadButton.addEventListener('click', async ()=>{
+      if(!scaledCaptureContainer) return;
+      scaledCaptureContainer.classList.add('visible');
+      updateCaptureContainer();
+
+      try{
+        const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+        await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
+      }catch(e){ console.warn('Resources load timeout', e); }
+
+      html2canvas(scaledCaptureContainer, { scale:1, width:615, height:850, backgroundColor:'#050505', useCORS:true }).then(canvas=>{
+        const now = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        const hours = pad(now.getHours()); const minutes = pad(now.getMinutes()); const day = pad(now.getDate()); const month = pad(now.getMonth()+1); const year = now.getFullYear();
+        let artist = (authorName && authorName.textContent) ? authorName.textContent : 'Unknown'; artist = String(artist).replace(/[<>"'\/\\|?*]/g,'').trim();
+        const fileName = `Artist_-_${artist}_${hours}-${minutes}_${day}.${month}.${year}.png`.replace(/\s+/g,'_');
+        const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL('image/png'); link.click();
+      }).catch(err=>{ console.error('html2canvas error:', err); }).finally(()=>{
+        scaledCaptureContainer.classList.remove('visible');
+      });
+    });
+  }
+});
