@@ -45,15 +45,17 @@
     .wrapper{display:flex;gap:20px;max-width:1200px;flex-wrap:wrap}
 
     /* preview container */
-    .preview-container{display:flex;flex-direction:column;gap:var(--container-gap);min-width:300px;max-width:360px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:var(--container-padding);padding-top:60px;position:relative}
+    .preview-container{display:flex;flex-direction:column;gap:var(--container-gap);min-width:300px;max-width:360px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:var(--container-padding);position:relative}
     .preview-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
     .preview-data{display:flex;flex-direction:column;align-items:center;gap:var(--container-gap);text-align:center}
+    .capture-data{display:flex;flex-direction:column;align-items:center;gap:var(--container-gap);text-align:center;width:100%}
 
     /* rarity */
-    .rarity-block{position:absolute;top:15px;left:50%;transform:translateX(-50%) skew(-20deg);z-index:20;display:inline-block;background:linear-gradient(180deg,#e800fe,#9500d0,#380274);color:#fff;padding:var(--rarity-padding-y) var(--rarity-padding-x);font-size:var(--rarity-font-size);text-transform:uppercase;border:var(--rarity-border-width) solid transparent;border-top-right-radius:var(--rarity-border-radius);border-bottom-left-radius:var(--rarity-border-radius)}
-    .rarity-block span{display:inline-block;font-family:Comicraft, sans-serif;font-weight:900;font-style:italic;transform:skew(15deg)}
+    .rarity-block{position:relative;display:inline-block;background:linear-gradient(180deg,#e800fe,#9500d0,#380274);color:#fff;padding:var(--rarity-padding-y) var(--rarity-padding-x);font-size:var(--rarity-font-size);text-transform:uppercase;transform:skew(-20deg);z-index:20;border:var(--rarity-border-width) solid transparent;border-top-right-radius:var(--rarity-border-radius);border-bottom-left-radius:var(--rarity-border-radius)}
+    .rarity-block span{display:inline-block;font-family:Comicraft, sans-serif;font-weight:900;font-style:italic;transform:skew(15deg);text-shadow:1px 1px 0 rgba(0,0,0,0.5)}
 
     /* variants */
+    .rarity-block.rare{background:linear-gradient(180deg,#e800fe,#9500d0,#380274)}
     .rarity-block.super-rare{background:linear-gradient(180deg,#69e0e4,#4cbcc7,#17596f)}
     .rarity-block.ultimate{background:linear-gradient(180deg,#db2a24,#a81b14,#680d0a)}
     .rarity-block.spotlight{background:linear-gradient(180deg,#0027d5,#0549f4,#041abd)}
@@ -62,10 +64,10 @@
     .rarity-block.webshop-reward{background:linear-gradient(180deg,#ffb066,#db8216,#8a4b00)}
 
     .author-text{font-size:var(--author-font-size)}
-    .cost-wrapper{display:flex;align-items:center;gap:var(--cost-gap)} /* <-- fixed from invalid 'end' */
+    .cost-wrapper{display:flex;align-items:baseline;gap:var(--cost-gap)}
     .price-label{font-size:var(--price-font-size)}
     #costText{font-size:var(--cost-font-size);display:inline-block}
-    #iconImg, #captureIconImg, #scaledCaptureIconImg{width:var(--icon-width);height:var(--icon-height);display:inline-block}
+    #iconImg, #captureIconImg{width:var(--icon-width);height:var(--icon-height);display:inline-block}
 
     .telegram-link{color:#7af5f0;font-size:var(--telegram-font-size);text-decoration:underline}
 
@@ -78,16 +80,44 @@
     .input-value.active::after{content:'x';position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center}
 
     /* capture offscreen */
-    .capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;padding-top:70px;flex-direction:column;align-items:center}
+    .capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;display:flex;flex-direction:column;align-items:center}
     .capture-container .capture-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
     .capture-container #captureIconImg{width:var(--icon-width);height:var(--icon-height)}
 
     /* scaled container (final render) */
-    .scaled-capture-container{position:absolute;left:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:10px solid #9801e7;border-radius:40px;overflow:hidden;padding:20px;padding-top:80px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-    .scaled-capture-container.visible{position:static;left:auto}
+    .scaled-capture-container{
+      --scaled-container-border-width:10px;
+      --scaled-container-border-radius:40px;
+      --scaled-container-padding:20px;
+      --scaled-container-gap:10px;
+      --scaled-rarity-padding-y:8px;
+      --scaled-rarity-padding-x:25px;
+      --scaled-rarity-font-size:30px;
+      --scaled-rarity-border-width:10px;
+      --scaled-rarity-border-radius:25px;
+      --scaled-rarity-text-shadow-x:1.7px;
+      --scaled-rarity-text-shadow-y:1.7px;
+      --scaled-author-font-size:36px;
+      --scaled-cost-gap:10px;
+      --scaled-cost-font-size:30px;
+      --scaled-price-font-size:36px;
+      --scaled-icon-width:40px;
+      --scaled-icon-height:40px;
+      --scaled-telegram-font-size:36px;
+      --scaled-image-min-height:560px;
+
+      position:absolute;left:-9999px;top:-9999px;width:615px;height:850px;background:linear-gradient(90deg,#0d1521,#000,#070e18);border:var(--scaled-container-border-width) solid #9801e7;border-radius:var(--scaled-container-border-radius);overflow:hidden;padding:var(--scaled-container-padding);display:flex;flex-direction:column;align-items:center;justify-content:space-between
+    }
     .scaled-capture-container .capture-image{width:100%;min-height:var(--scaled-image-min-height);object-fit:cover}
+    .scaled-capture-container .capture-data{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--scaled-container-gap);text-align:center;width:100%;flex-grow:1}
     .scaled-capture-container #scaledCaptureIconImg{width:var(--scaled-icon-width);height:var(--scaled-icon-height);display:inline-block}
     .scaled-capture-container .telegram-link{font-size:var(--scaled-telegram-font-size)}
+    .scaled-capture-container .rarity-block{padding:var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);font-size:var(--scaled-rarity-font-size);border:var(--scaled-rarity-border-width) solid transparent;border-top-right-radius:var(--scaled-rarity-border-radius);border-bottom-left-radius:var(--scaled-rarity-border-radius)}
+    .scaled-capture-container .rarity-block span{text-shadow:var(--scaled-rarity-text-shadow-x) var(--scaled-rarity-text-shadow-y) 0 rgba(0,0,0,0.5)}
+    .scaled-capture-container .author-text{font-size:var(--scaled-author-font-size)}
+    .scaled-capture-container .cost-wrapper{display:flex;align-items:baseline;gap:var(--scaled-cost-gap)}
+    .scaled-capture-container .price-label{font-size:var(--scaled-price-font-size)}
+    .scaled-capture-container #scaledCaptureCostText{font-size:var(--scaled-cost-font-size);display:inline-block}
 
     /* container border colors by rarity */
     .preview-container.rare,.capture-container.rare,.scaled-capture-container.rare{border-color:#e800fe}
@@ -104,9 +134,10 @@
   <div class="wrapper">
     <!-- Preview -->
     <div class="preview-container rare" id="previewContainer">
+      <div class="preview-data">
+        <div id="rarityText" class="rarity-block rare"><span>Rare</span></div>
+      </div>
       <img id="previewImage" class="preview-image" src="./img/card-preview.webp" alt="Превью карты" />
-
-      <div id="rarityText" class="rarity-block rare"><span>Rare</span></div>
 
       <div class="preview-data">
         <div id="authorText" class="author-text">
@@ -178,9 +209,10 @@
 
   <!-- Capture container (hidden offscreen) -->
   <div class="capture-container rare" id="captureContainer">
+    <div class="capture-data">
+      <div id="captureRarityText" class="rarity-block rare"><span>Rare</span></div>
+    </div>
     <img id="captureImage" class="capture-image" src="./img/card-preview.webp" alt="capture" />
-
-    <div id="captureRarityText" class="rarity-block rare"><span>Rare</span></div>
 
     <div class="capture-data">
       <div id="captureAuthorText" class="author-text">
@@ -200,9 +232,10 @@
 
   <!-- Scaled container for output (615x850) -->
   <div id="scaledCaptureContainer" class="scaled-capture-container rare">
+    <div class="capture-data">
+      <div id="scaledRarityText" class="rarity-block rare"><span>Rare</span></div>
+    </div>
     <img id="scaledCaptureImage" class="capture-image" src="./img/card-preview.webp" alt="scaled" />
-
-    <div id="scaledRarityText" class="rarity-block rare"><span>Rare</span></div>
 
     <div class="capture-data">
       <div id="scaledAuthorText" class="author-text">
@@ -489,9 +522,19 @@
       if(downloadButton){
         downloadButton.addEventListener('click', async ()=>{
           if(!scaledCaptureContainer) return;
-          // show scaled container
-          scaledCaptureContainer.classList.add('visible');
           updateCaptureContainer();
+
+          // Temporarily set styles for rendering
+          const scaled = scaledCaptureContainer;
+          const originalDisplay = scaled.style.display;
+          const originalPosition = scaled.style.position;
+          const originalLeft = scaled.style.left;
+          const originalTop = scaled.style.top;
+
+          scaled.style.display = 'flex';
+          scaled.style.position = 'absolute';
+          scaled.style.left = '-9999px';
+          scaled.style.top = '-9999px';
 
           // wait fonts + images
           try{
@@ -499,7 +542,7 @@
             await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
           }catch(e){ console.warn('Resources load timeout', e); }
 
-          html2canvas(scaledCaptureContainer, { scale:1, width:615, height:850, backgroundColor:'#050505', useCORS:true }).then(canvas=>{
+          html2canvas(scaledCaptureContainer, { scale:1, width:615, height:850, backgroundColor:'#0d1521', useCORS:true }).then(canvas=>{
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
             const hours = pad(now.getHours()); const minutes = pad(now.getMinutes()); const day = pad(now.getDate()); const month = pad(now.getMonth()+1); const year = now.getFullYear();
@@ -507,7 +550,10 @@
             const fileName = `Artist_-_${artist}_${hours}-${minutes}_${day}.${month}.${year}.png`.replace(/\s+/g,'_');
             const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL('image/png'); link.click();
           }).catch(err=>{ console.error('html2canvas error:', err); }).finally(()=>{
-            scaledCaptureContainer.classList.remove('visible');
+            scaled.style.display = originalDisplay;
+            scaled.style.position = originalPosition;
+            scaled.style.left = originalLeft;
+            scaled.style.top = originalTop;
           });
         });
       }
