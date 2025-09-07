@@ -1,58 +1,75 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ====== Вспомогательные функции ======
+  
+  // Функция для капитализации слов
   function capitalizeWords(str) {
     return str
       .split(' ')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
+      .join(' ')
   }
 
-  // ----------------------- Элементы -----------------------
-  const imageInput = document.getElementById('imageInput');
-  const previewImage = document.getElementById('previewImage');
-  const rarityInput = document.getElementById('rarityInput');
-  const authorInput = document.getElementById('authorInput');
-  const priceInput = document.getElementById('priceInput');
-  const iconCheckbox = document.getElementById('iconCheckbox');
-  const iconSelect = document.getElementById('iconSelect');
-  const authorLabelCheckbox = document.getElementById('authorLabelCheckbox');
-  const priceLabelCheckbox = document.getElementById('priceLabelCheckbox');
-  const rarityText = document.getElementById('rarityText');
-  const authorLabel = document.querySelector('.author-label');
-  const authorName = document.querySelector('.author-name');
-  const costText = document.getElementById('costText');
-  const iconImg = document.getElementById('iconImg');
-  const priceLabel = document.querySelector('.price-label');
-  const resetButton = document.getElementById('resetButton');
-  const downloadButton = document.getElementById('downloadButton');
-  const costWrapper = document.getElementById('costWrapper');
-  const customFileButton = document.querySelector('.custom-file-button');
-  const rarityStyleSelect = document.getElementById('rarityStyleSelect');
+  // Склонение слов (например, золото/золота/золота)
+  function getDeclension(number, words) {
+    const n = Math.abs(number) % 100
+    const n1 = n % 10
+    if (n > 10 && n < 20) return words[2]
+    if (n1 > 1 && n1 < 5) return words[1]
+    if (n1 === 1) return words[0]
+    return words[2]
+  }
 
-  const captureImage = document.getElementById('captureImage');
-  const captureRarityText = document.getElementById('captureRarityText');
-  const captureAuthorLabel = document.querySelector('#captureAuthorText .author-label');
-  const captureAuthorName = document.querySelector('#captureAuthorText .author-name');
-  const captureCostText = document.getElementById('captureCostText');
-  const captureIconImg = document.getElementById('captureIconImg');
-  const capturePriceLabel = document.querySelector('#captureCostWrapper .price-label');
-  const captureCostWrapper = document.getElementById('captureCostWrapper');
+  // ====== Получение DOM элементов ======
+  const imageInput = document.getElementById('imageInput')
+  const previewImage = document.getElementById('previewImage')
+  const rarityInput = document.getElementById('rarityInput')
+  const authorInput = document.getElementById('authorInput')
+  const priceInput = document.getElementById('priceInput')
+  const iconCheckbox = document.getElementById('iconCheckbox')
+  const iconSelect = document.getElementById('iconSelect')
+  const authorLabelCheckbox = document.getElementById('authorLabelCheckbox')
+  const priceLabelCheckbox = document.getElementById('priceLabelCheckbox')
+  const rarityText = document.getElementById('rarityText')
+  const authorLabel = document.querySelector('.author-label')
+  const authorName = document.querySelector('.author-name')
+  const costText = document.getElementById('costText')
+  const iconImg = document.getElementById('iconImg')
+  const priceLabel = document.querySelector('.price-label')
+  const resetButton = document.getElementById('resetButton')
+  const downloadButton = document.getElementById('downloadButton')
+  const costWrapper = document.getElementById('costWrapper')
+  const customFileButton = document.querySelector('.custom-file-button')
+  const rarityStyleSelect = document.getElementById('rarityStyleSelect')
 
-  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer');
-  const scaledImage = scaledCaptureContainer.querySelector('#scaledCaptureImage');
-  const scaledRarityText = scaledCaptureContainer.querySelector('#scaledRarityText');
-  const scaledAuthorLabel = scaledCaptureContainer.querySelector('#scaledAuthorText .author-label');
-  const scaledAuthorName = scaledCaptureContainer.querySelector('#scaledAuthorText .author-name');
-  const scaledCostText = scaledCaptureContainer.querySelector('#scaledCaptureCostText');
-  const scaledIconImg = scaledCaptureContainer.querySelector('#scaledCaptureIconImg');
-  const scaledPriceLabel = scaledCaptureContainer.querySelector('#scaledCostWrapper .price-label');
-  const scaledCostWrapper = scaledCaptureContainer.querySelector('#scaledCostWrapper');
+  // Capture контейнеры для PNG
+  const captureImage = document.getElementById('captureImage')
+  const captureRarityText = document.getElementById('captureRarityText')
+  const captureAuthorLabel = document.querySelector('#captureAuthorText .author-label')
+  const captureAuthorName = document.querySelector('#captureAuthorText .author-name')
+  const captureCostText = document.getElementById('captureCostText')
+  const captureIconImg = document.getElementById('captureIconImg')
+  const capturePriceLabel = document.querySelector('#captureCostWrapper .price-label')
+  const captureCostWrapper = document.getElementById('captureCostWrapper')
 
-  const previewContainer = document.querySelector('.preview-container');
-  const captureContainer = document.querySelector('.capture-container');
-  const scaledContainer = document.querySelector('.scaled-capture-container');
+  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer')
+  const scaledImage = document.getElementById('scaledCaptureImage')
+  const scaledRarityText = document.getElementById('scaledRarityText')
+  const scaledAuthorLabel = document.querySelector('#scaledAuthorText .author-label')
+  const scaledAuthorName = document.querySelector('#scaledAuthorText .author-name')
+  const scaledCostText = document.getElementById('scaledCaptureCostText')
+  const scaledIconImg = document.getElementById('scaledCaptureIconImg')
+  const scaledPriceLabel = document.querySelector('#scaledCostWrapper .price-label')
+  const scaledCostWrapper = document.getElementById('scaledCostWrapper')
 
-  const defaultPrice = '1200';
-  const defaultAuthor = 'Kim Jacinto';
+  // ====== Настройки по умолчанию ======
+  const defaultPrice = '1200'
+  const defaultAuthor = 'Kim Jacinto'
+  const suffixes = {
+    './img/icons/gold-icon.webp': ['золото', 'золота', 'золота'],
+    './img/icons/usd-icon2.webp': ['доллар', 'доллара', 'долларов'],
+    './img/icons/tokens_big.webp': ['жетон', 'жетона', 'жетонов'],
+    './img/icons/credits_big1.webp': ['кредит', 'кредита', 'кредитов']
+  }
 
   const rarityStyles = {
     rare: 'Rare',
@@ -60,252 +77,209 @@ document.addEventListener('DOMContentLoaded', () => {
     ultimate: 'Ultimate',
     spotlight: 'Spotlight',
     'conquest-reward': 'Conquest Reward',
-    'webshop-reward': 'Webshop Reward',
     bundle: 'Bundle',
-  };
+    'webshop-reward': 'Webshop Reward'
+  }
 
-  const ALL_RARITY_CLASSES = [
-    'rare',
-    'super-rare',
-    'ultimate',
-    'spotlight',
-    'conquest-reward',
-    'webshop-reward',
-    'bundle',
-  ];
+  // ====== Функции обновления интерфейса ======
 
-  // ----------------------- Функции -----------------------
   function renderCost() {
-    const base = priceInput.value || defaultPrice;
-    costText.textContent = base;
-
+    const base = priceInput.value || defaultPrice
+    let text = base
     if (iconCheckbox.checked) {
-      iconImg.src = iconSelect.value;
-      iconImg.style.display = 'inline';
+      iconImg.src = iconSelect.value
+      iconImg.style.display = 'inline'
+      const number = parseInt(base, 10) || 0
+      const suffixArray = suffixes[iconSelect.value] || ['золото', 'золота', 'золота']
+      text += ' ' + getDeclension(number, suffixArray)
     } else {
-      iconImg.style.display = 'none';
+      iconImg.style.display = 'none'
     }
-
-    updateCostWrapperVisibility();
+    costText.textContent = text
+    updateCostWrapperVisibility()
   }
 
   function renderAuthor() {
-    const name = capitalizeWords(authorInput.value || defaultAuthor);
-    authorName.textContent = name;
+    authorName.textContent = capitalizeWords(authorInput.value || defaultAuthor)
   }
 
   function updateLabelsVisibility() {
-    authorLabel.style.display = authorLabelCheckbox.checked ? 'inline' : 'none';
-    priceLabel.style.display = priceLabelCheckbox.checked ? 'inline' : 'none';
-    updateCostWrapperVisibility();
+    authorLabel.style.display = authorLabelCheckbox.checked ? 'inline' : 'none'
+    priceLabel.style.display = priceLabelCheckbox.checked ? 'inline' : 'none'
+    updateCostWrapperVisibility()
   }
 
   function updateCostWrapperVisibility() {
-    const hasPrice = priceInput.value.trim() !== '';
-    const showPriceLabel = priceLabelCheckbox.checked;
-    const showIcon = iconCheckbox.checked;
-    const visible = hasPrice || showPriceLabel || showIcon;
-
-    costWrapper.style.display = visible ? 'flex' : 'none';
-    costWrapper.classList.toggle('with-border', visible);
-
-    captureCostWrapper.style.display = visible ? 'flex' : 'none';
-    captureCostWrapper.classList.toggle('with-border', visible);
-
-    scaledCostWrapper.style.display = visible ? 'flex' : 'none';
-    scaledCostWrapper.classList.toggle('with-border', visible);
+    const hasPrice = priceInput.value.trim() !== ''
+    costWrapper.style.display = (hasPrice || priceLabelCheckbox.checked || iconCheckbox.checked) ? 'flex' : 'none'
   }
 
   function toggleActiveClass(input) {
-    if (!input || !input.closest) return;
-    const parent = input.closest('.input-value');
-    if (parent) {
-      parent.classList.toggle('active', input.value.trim() !== '');
-    }
+    const parent = input.closest('.input-value')
+    if (parent) parent.classList.toggle('active', input.value.trim() !== '')
   }
 
   function clearInput(input) {
-    if (!input) return;
-    input.value = '';
-    toggleActiveClass(input);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = ''
+    toggleActiveClass(input)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
     if (input === rarityInput) {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value];
+      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
     }
   }
 
   function updateRarityStyle() {
-    const selectedStyle = rarityStyleSelect.value;
-
-    ALL_RARITY_CLASSES.forEach(c => {
-      rarityText.classList.remove(c);
-      captureRarityText.classList.remove(c);
-      previewContainer.classList.remove(c);
-      captureContainer.classList.remove(c);
-      scaledContainer.classList.remove(c);
-    });
-
-    if (selectedStyle && ALL_RARITY_CLASSES.includes(selectedStyle)) {
-      rarityText.classList.add(selectedStyle);
-      captureRarityText.classList.add(selectedStyle);
-      previewContainer.classList.add(selectedStyle);
-      captureContainer.classList.add(selectedStyle);
-      scaledContainer.classList.add(selectedStyle);
-    }
-
+    const style = rarityStyleSelect.value
+    rarityText.className = 'rarity-block ' + style
+    captureRarityText.className = 'rarity-block ' + style
     if (!rarityInput.value.trim()) {
-      rarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || '';
-      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || '';
+      rarityText.querySelector('span').textContent = rarityStyles[style]
+      captureRarityText.querySelector('span').textContent = rarityStyles[style]
     }
   }
 
   function updateCaptureContainer() {
-    captureImage.src = previewImage.src;
-    captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent;
-    captureRarityText.className = rarityText.className;
+    captureImage.src = previewImage.src
+    captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+    captureRarityText.className = rarityText.className
+    captureAuthorLabel.style.display = authorLabel.style.display
+    captureAuthorName.textContent = authorName.textContent
+    captureCostText.textContent = costText.textContent
+    captureIconImg.src = iconImg.src
+    captureIconImg.style.display = iconImg.style.display
+    capturePriceLabel.style.display = priceLabel.style.display
+    captureCostWrapper.style.display = costWrapper.style.display
 
-    captureAuthorLabel.style.display = authorLabel.style.display;
-    captureAuthorName.textContent = authorName.textContent;
-    captureCostText.textContent = costText.textContent;
-    captureIconImg.src = iconImg.src;
-    captureIconImg.style.display = iconImg.style.display;
-    capturePriceLabel.style.display = priceLabel.style.display;
-    captureCostWrapper.style.display = costWrapper.style.display;
-    captureCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'));
-  }
-
-  function updateScaledContainer() {
-    scaledImage.src = previewImage.src;
-    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent;
-    scaledRarityText.className = rarityText.className;
-    scaledAuthorLabel.style.display = authorLabel.style.display;
-    scaledAuthorName.textContent = authorName.textContent;
-    scaledCostText.textContent = costText.textContent;
-    scaledIconImg.src = iconImg.src;
-    scaledIconImg.style.display = iconImg.style.display;
-    scaledPriceLabel.style.display = priceLabel.style.display;
-    scaledCostWrapper.style.display = costWrapper.style.display;
-    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'));
+    if (scaledCaptureContainer.classList.contains('visible')) {
+      scaledImage.src = previewImage.src
+      scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
+      scaledRarityText.className = rarityText.className
+      scaledAuthorLabel.style.display = authorLabel.style.display
+      scaledAuthorName.textContent = authorName.textContent
+      scaledCostText.textContent = costText.textContent
+      scaledIconImg.src = iconImg.src
+      scaledIconImg.style.display = iconImg.style.display
+      scaledPriceLabel.style.display = priceLabel.style.display
+      scaledCostWrapper.style.display = costWrapper.style.display
+    }
   }
 
   function updatePreview() {
-    if (rarityInput.value) {
-      rarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value);
-    } else {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value];
+    if (rarityInput.value.trim()) {
+      rarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value)
+      captureRarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value)
     }
-    renderCost();
-    renderAuthor();
-    updateLabelsVisibility();
-    updateCaptureContainer();
+    renderCost()
+    renderAuthor()
+    updateLabelsVisibility()
+    updateCaptureContainer()
   }
 
-  // ----------------------- События -----------------------
-  customFileButton.addEventListener('click', () => imageInput.click());
+  // ====== События ======
 
+  // Кнопка выбора файла
+  customFileButton.addEventListener('click', () => imageInput.click())
+
+  // Ввод текста
   [rarityInput, authorInput, priceInput].forEach(input => {
-    if (input) {
-      input.addEventListener('input', () => {
-        toggleActiveClass(input);
-        updatePreview();
-      });
-      toggleActiveClass(input);
-    }
-  });
+    if (!input) return
+    input.addEventListener('input', () => {
+      toggleActiveClass(input)
+      updatePreview()
+    })
+    toggleActiveClass(input)
+  })
 
-  document.querySelectorAll('.input-value').forEach(inputValue => {
-    inputValue.addEventListener('click', e => {
-      if (inputValue.classList.contains('active')) {
-        const input = inputValue.querySelector('input');
-        if (input && e.offsetX > inputValue.offsetWidth - 30) clearInput(input);
+  // Крестик для очистки поля
+  document.querySelectorAll('.input-value').forEach(wrapper => {
+    wrapper.addEventListener('click', e => {
+      const input = wrapper.querySelector('input')
+      if (input && wrapper.classList.contains('active') && e.offsetX > wrapper.offsetWidth - 30) {
+        clearInput(input)
       }
-    });
-  });
+    })
+  })
 
+  // Загрузка изображения
   imageInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    previewImage.src = url;
-    captureImage.src = url;
-    updateCaptureContainer();
-  });
+    const file = e.target.files[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    previewImage.src = url
+    captureImage.src = url
+    updateCaptureContainer()
+  })
 
+  // Чекбоксы и селекты
   iconCheckbox.addEventListener('change', () => {
-    iconSelect.disabled = !iconCheckbox.checked;
-    updatePreview();
-  });
-  iconSelect.addEventListener('change', updatePreview);
-  authorLabelCheckbox.addEventListener('change', updatePreview);
-  priceLabelCheckbox.addEventListener('change', updatePreview);
+    iconSelect.disabled = !iconCheckbox.checked
+    updatePreview()
+  })
+  iconSelect.addEventListener('change', updatePreview)
+  authorLabelCheckbox.addEventListener('change', updatePreview)
+  priceLabelCheckbox.addEventListener('change', updatePreview)
   rarityStyleSelect.addEventListener('change', () => {
-    updateRarityStyle();
-    updatePreview();
-  });
+    updateRarityStyle()
+    updatePreview()
+  })
 
+  // ====== Инициализация ======
+  renderCost()
+  renderAuthor()
+  updateLabelsVisibility()
+  updateRarityStyle()
+  updateCaptureContainer()
+
+  // ====== Сброс ======
   resetButton.addEventListener('click', () => {
-    imageInput.value = '';
-    previewImage.src = './img/card-preview.webp';
-    captureImage.src = './img/card-preview.webp';
-    rarityInput.value = '';
-    rarityStyleSelect.value = 'rare';
-    rarityText.querySelector('span').textContent = rarityStyles['rare'];
-    authorInput.value = '';
-    priceInput.value = '';
-    iconCheckbox.checked = true;
-    iconSelect.disabled = false;
-    iconSelect.value = './img/icons/gold-icon.webp';
-    authorLabelCheckbox.checked = true;
-    priceLabelCheckbox.checked = true;
-    updateRarityStyle();
-    renderCost();
-    renderAuthor();
-    updateLabelsVisibility();
-    updateCaptureContainer();
-    [rarityInput, authorInput, priceInput].forEach(toggleActiveClass);
-  });
+    imageInput.value = ''
+    previewImage.src = './img/card-preview.webp'
+    captureImage.src = './img/card-preview.webp'
+    rarityInput.value = ''
+    rarityStyleSelect.value = 'rare'
+    rarityText.querySelector('span').textContent = rarityStyles['rare']
+    authorInput.value = ''
+    priceInput.value = ''
+    iconCheckbox.checked = true
+    iconSelect.disabled = false
+    iconSelect.value = './img/icons/gold-icon.webp'
+    authorLabelCheckbox.checked = true
+    priceLabelCheckbox.checked = true
+    updateRarityStyle()
+    renderCost()
+    renderAuthor()
+    updateLabelsVisibility()
+    updateCaptureContainer()
+    [rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
+  })
 
+  // ====== Скачивание PNG ======
   downloadButton.addEventListener('click', () => {
-    updateScaledContainer();
-    const scaledContainerElement = document.getElementById('scaledCaptureContainer');
-    const originalStyles = {
-      display: scaledContainerElement.style.display,
-      position: scaledContainerElement.style.position,
-      left: scaledContainerElement.style.left,
-      top: scaledContainerElement.style.top,
-    };
+    scaledCaptureContainer.classList.add('visible')
+    updateCaptureContainer()
 
-    scaledContainerElement.style.display = 'flex';
-    scaledContainerElement.style.position = 'absolute';
-    scaledContainerElement.style.left = '-9999px';
-    scaledContainerElement.style.top = '-9999px';
-
-    html2canvas(scaledContainerElement, {
+    html2canvas(scaledCaptureContainer, {
       scale: 1,
       width: 615,
       height: 850,
-      backgroundColor: null, // прозрачный фон
-      useCORS: true,
+      backgroundColor: '#050505',
+      useCORS: true
     }).then(canvas => {
-      Object.assign(scaledContainerElement.style, originalStyles);
+      const now = new Date()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const year = now.getFullYear()
+      let artist = authorName.textContent || 'Unknown'
+      artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
+      const fileName = `Artist_-_${artist}_${hours}-${minutes}_${day}.${month}.${year}.png`.replace(/\s+/g, '_')
 
-      const now = new Date();
-      const fileName = `Card_${now.getHours()}-${now.getMinutes()}_${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()}.png`;
+      const link = document.createElement('a')
+      link.download = fileName
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    }).finally(() => scaledCaptureContainer.classList.remove('visible'))
+  })
 
-      const link = document.createElement('a');
-      link.download = fileName;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }).catch(err => {
-      console.error('Ошибка при рендеринге:', err);
-      Object.assign(scaledContainerElement.style, originalStyles);
-    });
-  });
-
-  // ----------------------- Инициализация -----------------------
-  renderCost();
-  renderAuthor();
-  updateLabelsVisibility();
-  updateRarityStyle();
-  updateCaptureContainer();
-});
+})
