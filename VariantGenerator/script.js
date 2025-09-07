@@ -181,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
   customFileButton.addEventListener('click', () => imageInput.click())
 
   // Ввод текста
-  [rarityInput, authorInput, priceInput].forEach(input => {
-    if (!input) return
+[rarityInput, authorInput, priceInput]
+  .filter(Boolean) // убираем undefined/null, если вдруг элемент не найден
+  .forEach(input => {
     input.addEventListener('input', () => {
       toggleActiveClass(input)
       updatePreview()
