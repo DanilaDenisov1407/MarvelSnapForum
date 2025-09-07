@@ -1,353 +1,586 @@
-document.addEventListener('DOMContentLoaded', () => {
-  function capitalizeWords(str) {
-    return str
-      .split(' ')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ')
+/* Reset styles Start */
+* {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+*,
+:before,
+:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+:focus,
+:active {
+  outline: none;
+}
+a:focus,
+a:active {
+  outline: none;
+}
+nav,
+footer,
+header,
+aside {
+  display: block;
+}
+html {
+  height: 100%;
+  width: 100%;
+}
+input,
+button,
+textarea {
+  font-family: inherit;
+}
+input::-ms-clear {
+  display: none;
+}
+button {
+  cursor: pointer;
+}
+button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+a,
+a:visited {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: none;
+}
+ul li {
+  list-style: none;
+}
+img {
+  vertical-align: top;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+/* Reset styles END */
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 900;
+  src: url('fonts/Roboto-Black.ttf') format('ttf');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: italic;
+  font-weight: 900;
+  src: url('fonts/Roboto-BlackItalic.ttf') format('ttf');
+}
+
+@font-face {
+  font-family: 'Comicraft';
+  font-style: italic;
+  font-weight: 900;
+  src: url('fonts/Comicraft-CCUltimatum-Bold-Italic.woff2') format('woff2');
+}
+
+body {
+  background-color: #20252b;
+  color: white;
+  font-family: Roboto, sans-serif;
+  font-weight: 900;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  max-width: 1200px;
+}
+.preview-container {
+  --container-padding: 25px;
+  --container-border-width: 5px;
+  --container-border-radius: 20px;
+  --container-gap: 10px;
+  --container-min-width: 300px;
+  --container-max-width: 360px;
+  --image-min-height: 330px;
+  --rarity-padding-y: 5px;
+  --rarity-padding-x: 15px;
+  --rarity-font-size: 16px;
+  --rarity-border-width: 5px;
+  --rarity-border-radius: 15px;
+  --rarity-text-shadow-x: 1px;
+  --rarity-text-shadow-y: 1px;
+  --author-font-size: 18px;
+  --cost-gap: 5px;
+  --price-font-size: 18px;
+  --cost-font-size: 18px;
+  --icon-width: 20px;
+  --icon-height: 20px;
+  --telegram-font-size: 18px;
+  --source-padding-y: 5px;
+  --source-padding-x: 10px;
+  --source-font-size: 14px;
+  --source-border-width: 3px;
+  --source-border-radius: 10px;
+  --source-text-shadow-x: 1px;
+  --source-text-shadow-y: 1px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--container-gap);
+  min-width: var(--container-min-width);
+  max-width: var(--container-max-width);
+  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
+  border: var(--container-border-width) solid #9801e7;
+  border-radius: var(--container-border-radius);
+  overflow: hidden;
+  padding: var(--container-padding);
+}
+.preview-image {
+  min-height: var(--image-min-height);
+  width: 100%;
+  object-fit: cover;
+}
+.preview-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--container-gap);
+  text-align: center;
+}
+
+.rarity-block {
+  display: inline-block;
+  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
+  color: white;
+  padding: var(--rarity-padding-y) var(--rarity-padding-x);
+  font-size: var(--rarity-font-size);
+  text-transform: uppercase;
+  transform: skew(-20deg);
+  position: relative;
+  border: var(--rarity-border-width) solid transparent;
+  border-right-color: rgba(0, 0, 0, 0);
+  border-left-color: rgba(0, 0, 0, 0);
+  border-top-right-radius: var(--rarity-border-radius);
+  border-bottom-left-radius: var(--rarity-border-radius);
+}
+
+.rarity-block.rare {
+  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
+}
+.rarity-block.super-rare {
+  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
+}
+.rarity-block.ultimate {
+  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
+}
+.rarity-block.spotlight {
+  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
+}
+
+.rarity-block span {
+  display: inline-block;
+  font-family: 'Comicraft', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  transform: skew(15deg);
+  color: #fff;
+  text-shadow: var(--rarity-text-shadow-x) var(--rarity-text-shadow-y) 0
+    rgba(0, 0, 0, 0.5);
+}
+
+.source-block {
+  display: inline-block;
+  background: linear-gradient(180deg, #7af5f0, #4ac7c3, #1a5e5b);
+  color: #20252b;
+  padding: var(--source-padding-y) var(--source-padding-x);
+  font-size: var(--source-font-size);
+  text-transform: uppercase;
+  position: relative;
+  border: var(--source-border-width) solid transparent;
+  border-right-color: rgba(0, 0, 0, 0);
+  border-left-color: rgba(0, 0, 0, 0);
+  border-top-left-radius: var(--source-border-radius);
+  border-bottom-right-radius: var(--source-border-radius);
+}
+
+.source-block span {
+  display: inline-block;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 900;
+  color: #20252b;
+  text-shadow: var(--source-text-shadow-x) var(--source-text-shadow-y) 0
+    rgba(255, 255, 255, 0.3);
+}
+
+.author-text {
+  font-size: var(--author-font-size);
+}
+.cost-wrapper {
+  display: flex;
+  align-items: end;
+  gap: var(--cost-gap);
+}
+.price-label {
+  font-size: var(--price-font-size);
+}
+#costText {
+  font-size: var(--cost-font-size);
+}
+#iconImg {
+  width: var(--icon-width);
+  height: var(--icon-height);
+}
+.telegram-link {
+  color: #7af5f0;
+  font-size: var(--telegram-font-size);
+  text-decoration: underline;
+}
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .controls {
+    grid-template-columns: 1fr;
   }
+}
 
-  const imageInput = document.getElementById('imageInput')
-  const previewImage = document.getElementById('previewImage')
-  const rarityInput = document.getElementById('rarityInput')
-  const authorInput = document.getElementById('authorInput')
-  const priceInput = document.getElementById('priceInput')
-  const iconCheckbox = document.getElementById('iconCheckbox')
-  const iconSelect = document.getElementById('iconSelect')
-  const authorLabelCheckbox = document.getElementById('authorLabelCheckbox')
-  const priceLabelCheckbox = document.getElementById('priceLabelCheckbox')
-  const rarityText = document.getElementById('rarityText')
-  const authorLabel = document.querySelector('.author-label')
-  const authorName = document.querySelector('.author-name')
-  const costText = document.getElementById('costText')
-  const iconImg = document.getElementById('iconImg')
-  const priceLabel = document.querySelector('.price-label')
-  const resetButton = document.getElementById('resetButton')
-  const downloadButton = document.getElementById('downloadButton')
-  const costWrapper = document.getElementById('costWrapper')
-  const customFileButton = document.querySelector('.custom-file-button')
-  const rarityStyleSelect = document.getElementById('rarityStyleSelect')
+.controls-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  const captureImage = document.getElementById('captureImage')
-  const captureRarityText = document.getElementById('captureRarityText')
-  const captureAuthorLabel = document.querySelector('#captureAuthorText .author-label')
-  const captureAuthorName = document.querySelector('#captureAuthorText .author-name')
-  const captureCostText = document.getElementById('captureCostText')
-  const captureIconImg = document.getElementById('captureIconImg')
-  const capturePriceLabel = document.querySelector('#captureCostWrapper .price-label')
-  const captureCostWrapper = document.getElementById('captureCostWrapper')
+.controls input,
+.controls button,
+.controls label,
+.controls select {
+  padding: 10px;
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  font-weight: 900;
+  border: 2px solid #9801e7;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+}
+.controls button {
+  background-color: #9801e7;
+  border: none;
+  cursor: pointer;
+}
+.input-value {
+  position: relative;
+}
+.input-value input {
+  width: 100%;
+}
+.input-value.active::after {
+  content: 'x';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+}
+.file-input-wrapper {
+  position: relative;
+}
+.custom-file-button {
+  padding: 10px;
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  font-weight: 900;
+  border: 2px solid #9801e7;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.custom-file-button:hover {
+  background-color: #9801e7;
+}
 
-  const scaledCaptureContainer = document.getElementById('scaledCaptureContainer')
-  const scaledImage = scaledCaptureContainer.querySelector('#scaledCaptureImage')
-  const scaledRarityText = scaledCaptureContainer.querySelector('#scaledRarityText')
-  const scaledAuthorLabel = scaledCaptureContainer.querySelector('#scaledAuthorText .author-label')
-  const scaledAuthorName = scaledCaptureContainer.querySelector('#scaledAuthorText .author-name')
-  const scaledCostText = scaledCaptureContainer.querySelector('#scaledCaptureCostText')
-  const scaledIconImg = scaledCaptureContainer.querySelector('#scaledCaptureIconImg')
-  const scaledPriceLabel = scaledCaptureContainer.querySelector('#scaledCostWrapper .price-label')
-  const scaledCostWrapper = scaledCaptureContainer.querySelector('#scaledCostWrapper')
+.rarity-style-select {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 
-  const previewContainer = document.querySelector('.preview-container')
-  const captureContainer = document.querySelector('.capture-container')
-  const scaledContainer = document.querySelector('.scaled-capture-container')
+.rarity-style-select label {
+  font-size: 16px;
+  color: white;
+}
 
-  const defaultPrice = '1200'
-  const defaultAuthor = 'Kim Jacinto'
+.rarity-style-select select {
+  padding: 10px;
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  font-weight: 900;
+  border: 2px solid #9801e7;
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+}
 
-  // Добавил новые варианты: conquest-reward, webshop-reward, bundle
-  const rarityStyles = {
-    rare: 'Rare',
-    'super-rare': 'Super Rare',
-    ultimate: 'Ultimate',
-    spotlight: 'Spotlight',
-    'conquest-reward': 'Conquest Reward',
-    'webshop-reward': 'Webshop Reward',
-    bundle: 'Bundle',
-  }
+.capture-container {
+  display: none;
+  position: absolute;
+  left: -9999px;
+  width: 615px;
+  height: 850px;
+  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
+  border: var(--container-border-width) solid #9801e7;
+  border-radius: var(--container-border-radius);
+  overflow: hidden;
+  padding: 10px;
+  flex-direction: column;
+  align-items: center;
+}
 
-  function renderCost() {
-    const base = priceInput.value || defaultPrice
-    costText.textContent = base
+.capture-container .rarity-block.rare {
+  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
+}
+.capture-container .rarity-block.super-rare {
+  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
+}
+.capture-container .rarity-block.ultimate {
+  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
+}
+.capture-container .rarity-block.spotlight {
+  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
+}
 
-    if (iconCheckbox.checked) {
-      iconImg.src = iconSelect.value
-      iconImg.style.display = 'inline'
-    } else {
-      iconImg.style.display = 'none'
-    }
+.capture-container .source-block {
+  padding: var(--source-padding-y) var(--source-padding-x);
+  font-size: var(--source-font-size);
+  border: var(--source-border-width) solid transparent;
+  border-right-color: rgba(0, 0, 0, 0);
+  border-left-color: rgba(0, 0, 0, 0);
+  border-top-left-radius: var(--source-border-radius);
+  border-bottom-right-radius: var(--source-border-radius);
+}
 
-    updateCostWrapperVisibility()
-  }
+.capture-image {
+  width: 100%;
+  min-height: 330px;
+  height: auto;
+  object-fit: cover;
+}
+.capture-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--container-gap);
+  text-align: center;
+  width: 100%;
+}
+.capture-container #captureIconImg {
+  width: var(--icon-width);
+  height: var(--icon-height);
+}
 
-  function renderAuthor() {
-    const name = capitalizeWords(authorInput.value || defaultAuthor)
-    authorName.textContent = name
-  }
+.scaled-capture-container {
+  --scaled-container-border-width: 10px;
+  --scaled-container-border-radius: 40px;
+  --scaled-container-padding: 20px;
+  --scaled-container-gap: 10px;
+  --scaled-rarity-padding-y: 5px;
+  --scaled-rarity-padding-x: 10px;
+  --scaled-rarity-font-size: 30px;
+  --scaled-rarity-border-width: 10px;
+  --scaled-rarity-border-radius: 25.5px;
+  --scaled-rarity-text-shadow-x: 1.7px;
+  --scaled-rarity-text-shadow-y: 1.7px;
+  --scaled-author-font-size: 36px;
+  --scaled-cost-gap: 10px;
+  --scaled-cost-padding: 0;
+  --scaled-cost-font-size: 30px;
+  --scaled-price-font-size: 36px;
+  --scaled-icon-width: 40px;
+  --scaled-icon-height: 40px;
+  --scaled-telegram-font-size: 36px;
+  --scaled-image-min-height: 560px;
+  --scaled-source-padding-y: 8.5px;
+  --scaled-source-padding-x: 17px;
+  --scaled-source-font-size: 23.8px;
+  --scaled-source-border-width: 5.1px;
+  --scaled-source-border-radius: 17px;
+  --scaled-source-text-shadow-x: 1.7px;
+  --scaled-source-text-shadow-y: 1.7px;
 
-  function updateLabelsVisibility() {
-    authorLabel.style.display = authorLabelCheckbox.checked ? 'inline' : 'none'
-    priceLabel.style.display = priceLabelCheckbox.checked ? 'inline' : 'none'
-    updateCostWrapperVisibility()
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: absolute;
+  left: -9999px;
+  width: 615px;
+  height: 850px;
+  background: linear-gradient(90deg, #0d1521, #000000, #070e18);
+  border: var(--scaled-container-border-width) solid #9801e7;
+  border-radius: var(--scaled-container-border-radius);
+  overflow: hidden;
+  padding: var(--scaled-container-padding);
+  align-items: center;
+}
 
-  function updateCostWrapperVisibility() {
-    const hasPrice = priceInput.value.trim() !== ''
-    const showPriceLabel = priceLabelCheckbox.checked
-    const showIcon = iconCheckbox.checked
-    const visible = hasPrice || showPriceLabel || showIcon
+.scaled-capture-container.visible {
+  display: flex;
+  position: static;
+  left: auto;
+}
 
-    // превью
-    costWrapper.style.display = visible ? 'flex' : 'none'
-    costWrapper.classList.toggle('with-border', visible)
+.scaled-capture-container .rarity-block {
+  padding: var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);
+  font-size: var(--scaled-rarity-font-size);
+  border: var(--scaled-rarity-border-width) solid transparent;
+  border-right-color: rgba(0, 0, 0, 0);
+  border-left-color: rgba(0, 0, 0, 0);
+  border-top-right-radius: var(--scaled-rarity-border-radius);
+  border-bottom-left-radius: var(--scaled-rarity-border-radius);
+}
 
-    // capture
-    captureCostWrapper.style.display = visible ? 'flex' : 'none'
-    captureCostWrapper.classList.toggle('with-border', visible)
+.scaled-capture-container .rarity-block.rare {
+  background: linear-gradient(180deg, #e800fe, #9500d0, #380274);
+}
+.scaled-capture-container .rarity-block.super-rare {
+  background: linear-gradient(180deg, #69e0e4, #4cbcc7, #17596f);
+}
+.scaled-capture-container .rarity-block.ultimate {
+  background: linear-gradient(180deg, #db2a24, #a81b14, #680d0a);
+}
+.scaled-capture-container .rarity-block.spotlight {
+  background: linear-gradient(180deg, #0027d5, #0549f4, #041abd);
+}
 
-    // scaled
-    scaledCostWrapper.style.display = visible ? 'flex' : 'none'
-    scaledCostWrapper.classList.toggle('with-border', visible)
-  }
+.scaled-capture-container .rarity-block span {
+  text-shadow: var(--scaled-rarity-text-shadow-x)
+    var(--scaled-rarity-text-shadow-y) 0 rgba(0, 0, 0, 0.5);
+}
 
-  function toggleActiveClass(input) {
-    if (!input || !input.closest) return
-    const parent = input.closest('.input-value')
-    if (parent) {
-      parent.classList.toggle('active', input.value.trim() !== '')
-    }
-  }
+.scaled-capture-container .source-block {
+  padding: var(--scaled-source-padding-y) var(--scaled-source-padding-x);
+  font-size: var(--scaled-source-font-size);
+  border: var(--scaled-source-border-width) solid transparent;
+  border-right-color: rgba(0, 0, 0, 0);
+  border-left-color: rgba(0, 0, 0, 0);
+  border-top-left-radius: var(--scaled-source-border-radius);
+  border-bottom-right-radius: var(--scaled-source-border-radius);
+}
 
-  function clearInput(input) {
-    if (!input) return
-    input.value = ''
-    toggleActiveClass(input)
-    const event = new Event('input', { bubbles: true })
-    input.dispatchEvent(event)
-    if (input === rarityInput) {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
-    }
-  }
+.scaled-capture-container .source-block span {
+  text-shadow: var(--scaled-source-text-shadow-x)
+    var(--scaled-source-text-shadow-y) 0 rgba(255, 255, 255, 0.3);
+}
 
-  // Все возможные классы, которые мы будем переключать
-  const ALL_RARITY_CLASSES = [
-    'rare',
-    'super-rare',
-    'ultimate',
-    'spotlight',
-    'conquest-reward',
-    'webshop-reward',
-    'bundle',
-  ]
+.scaled-capture-container .capture-image {
+  width: 100%;
+  min-height: var(--scaled-image-min-height);
+  height: auto;
+  object-fit: cover;
+}
 
-  function updateRarityStyle() {
-    const selectedStyle = rarityStyleSelect.value
+.scaled-capture-container .capture-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--scaled-container-gap);
+  text-align: center;
+  width: 100%;
+  flex-grow: 1;
+}
 
-    // очистим все классы у блока rarityText и captureRarityText и добавим выбранный
-    ALL_RARITY_CLASSES.forEach((c) => {
-      rarityText.classList.remove(c)
-      captureRarityText.classList.remove(c)
-    })
-    if (selectedStyle && ALL_RARITY_CLASSES.includes(selectedStyle)) {
-      rarityText.classList.add(selectedStyle)
-      captureRarityText.classList.add(selectedStyle)
-    }
+.scaled-capture-container .author-text {
+  font-size: var(--scaled-author-font-size);
+}
+.scaled-capture-container .cost-wrapper {
+  display: flex;
+  align-items: end;
+  gap: var(--scaled-cost-gap);
+  padding: var(--scaled-cost-padding);
+}
+.scaled-capture-container .cost-wrapper span {
+  font-size: var(--scaled-cost-font-size);
+}
+.scaled-capture-container .price-label {
+  font-size: var(--scaled-price-font-size);
+}
+.scaled-capture-container #captureCostText {
+  font-size: var(--scaled-cost-font-size);
+}
+.scaled-capture-container .telegram-link {
+  color: #7af5f0;
+  font-size: var(--scaled-telegram-font-size);
+  text-decoration: underline;
+}
+.scaled-capture-container #scaledCaptureIconImg {
+  width: var(--scaled-icon-width);
+  height: var(--scaled-icon-height);
+}
+/* Рамка в зависимости от редкости */
+.preview-container.rare,
+.capture-container.rare,
+.scaled-capture-container.rare {
+  border-color: #e800fe; /* Фиолетовый */
+}
 
-    // если текст не задан вручную, ставим имя по выбранному стилю
-    if (!rarityInput.value.trim()) {
-      rarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
-      captureRarityText.querySelector('span').textContent = rarityStyles[selectedStyle] || ''
-    }
+.preview-container.super-rare,
+.capture-container.super-rare,
+.scaled-capture-container.super-rare {
+  border-color: #69e0e4; /* Голубой */
+}
 
-    // Теперь обновим рамки контейнеров (preview, capture, scaled)
-    // убираем все возможные классы и добавляем текущий
-    if (previewContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => previewContainer.classList.remove(c))
-      if (selectedStyle) previewContainer.classList.add(selectedStyle)
-    }
-    if (captureContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => captureContainer.classList.remove(c))
-      if (selectedStyle) captureContainer.classList.add(selectedStyle)
-    }
-    if (scaledContainer) {
-      ALL_RARITY_CLASSES.forEach((c) => scaledContainer.classList.remove(c))
-      if (selectedStyle) scaledContainer.classList.add(selectedStyle)
-    }
-  }
+.preview-container.ultimate,
+.capture-container.ultimate,
+.scaled-capture-container.ultimate {
+  border-color: #db2a24; /* Красный */
+}
 
-  function updateCaptureContainer() {
-    captureImage.src = previewImage.src
-    captureRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    // синхронизируем классы содержимого
-    captureRarityText.className = rarityText.className
+.preview-container.spotlight,
+.capture-container.spotlight,
+.scaled-capture-container.spotlight {
+  border-color: #0027d5; /* Синий */
+}
 
-    captureAuthorLabel.style.display = authorLabel.style.display
-    captureAuthorName.textContent = authorName.textContent
-    captureCostText.textContent = costText.textContent
-    captureIconImg.src = iconImg.src
-    captureIconImg.style.display = iconImg.style.display
-    capturePriceLabel.style.display = priceLabel.style.display
-    captureCostWrapper.style.display = costWrapper.style.display
-    captureCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
+/* Новые */
+.preview-container.conquest-reward,
+.capture-container.conquest-reward,
+.scaled-capture-container.conquest-reward {
+  border-color: #1a821a; /* Зелёный */
+}
 
-    if (scaledCaptureContainer.classList.contains('visible')) {
-      scaledImage.src = previewImage.src
-      scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-      scaledRarityText.className = rarityText.className
-      scaledAuthorLabel.style.display = authorLabel.style.display
-      scaledAuthorName.textContent = authorName.textContent
-      scaledCostText.textContent = costText.textContent
-      scaledIconImg.src = iconImg.src
-      scaledIconImg.style.display = iconImg.style.display
-      scaledPriceLabel.style.display = priceLabel.style.display
-      scaledCostWrapper.style.display = costWrapper.style.display
-      scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
-    }
-  }
+.preview-container.bundle,
+.capture-container.bundle,
+.scaled-capture-container.bundle {
+  border-color: #ffd700; /* Золотой */
+}
 
-  function updatePreview() {
-    if (rarityInput.value) {
-      rarityText.querySelector('span').textContent = capitalizeWords(rarityInput.value)
-    } else {
-      rarityText.querySelector('span').textContent = rarityStyles[rarityStyleSelect.value]
-    }
-    renderCost()
-    renderAuthor()
-    updateLabelsVisibility()
-    updateCaptureContainer()
-  }
-
-  customFileButton.addEventListener('click', () => imageInput.click())
-
-  ;[rarityInput, authorInput, priceInput].forEach((input) => {
-    if (input) {
-      input.addEventListener('input', () => {
-        toggleActiveClass(input)
-        updatePreview()
-      })
-      toggleActiveClass(input)
-    }
-  })
-
-  document.querySelectorAll('.input-value').forEach((inputValue) => {
-    inputValue.addEventListener('click', (e) => {
-      if (inputValue.classList.contains('active')) {
-        const input = inputValue.querySelector('input')
-        if (input && e.offsetX > inputValue.offsetWidth - 30) {
-          clearInput(input)
-        }
-      }
-    })
-  })
-
-  imageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    previewImage.src = url
-    captureImage.src = url
-    updateCaptureContainer()
-  })
-
-  iconCheckbox.addEventListener('change', () => {
-    iconSelect.disabled = !iconCheckbox.checked
-    updatePreview()
-  })
-  iconSelect.addEventListener('change', updatePreview)
-  authorLabelCheckbox.addEventListener('change', updatePreview)
-  priceLabelCheckbox.addEventListener('change', updatePreview)
-  rarityStyleSelect.addEventListener('change', () => {
-    updateRarityStyle()
-    updatePreview()
-  })
-
-  renderCost()
-  renderAuthor()
-  updateLabelsVisibility()
-  updateRarityStyle()
-  updateCaptureContainer()
-
-  resetButton.addEventListener('click', () => {
-    imageInput.value = ''
-    previewImage.src = './img/card-preview.webp'
-    captureImage.src = './img/card-preview.webp'
-    rarityInput.value = ''
-    rarityStyleSelect.value = 'rare'
-    rarityText.querySelector('span').textContent = rarityStyles['rare']
-    authorInput.value = ''
-    priceInput.value = ''
-    iconCheckbox.checked = true
-    iconSelect.disabled = false
-    iconSelect.value = './img/icons/gold-icon.webp'
-    authorLabelCheckbox.checked = true
-    priceLabelCheckbox.checked = true
-    updateRarityStyle()
-    renderCost()
-    renderAuthor()
-    updateLabelsVisibility()
-    updateCaptureContainer()
-    ;[rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
-  })
-
-  downloadButton.addEventListener('click', () => {
-    const scaledContainerElement = document.getElementById('scaledCaptureContainer')
-
-    scaledImage.src = previewImage.src
-    scaledRarityText.querySelector('span').textContent = rarityText.querySelector('span').textContent
-    scaledRarityText.className = rarityText.className
-    scaledAuthorLabel.style.display = authorLabel.style.display
-    scaledAuthorName.textContent = authorName.textContent
-    scaledCostText.textContent = costText.textContent
-    scaledIconImg.src = iconImg.src
-    scaledIconImg.style.display = iconImg.style.display
-    scaledPriceLabel.style.display = priceLabel.style.display
-    scaledCostWrapper.style.display = costWrapper.style.display
-    scaledCostWrapper.classList.toggle('with-border', costWrapper.classList.contains('with-border'))
-
-    const originalDisplay = scaledContainerElement.style.display
-    const originalPosition = scaledContainerElement.style.position
-    const originalLeft = scaledContainerElement.style.left
-    const originalTop = scaledContainerElement.style.top
-
-    scaledContainerElement.style.display = 'flex'
-    scaledContainerElement.style.position = 'absolute'
-    scaledContainerElement.style.left = '-9999px'
-    scaledContainerElement.style.top = '-9999px'
-
-    html2canvas(scaledContainerElement, {
-      scale: 1,
-      width: 615,
-      height: 850,
-      backgroundColor: '#9801e7',
-      useCORS: true,
-    })
-      .then((canvas) => {
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
-
-        const now = new Date()
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const year = now.getFullYear()
-        const time = `${hours}:${minutes}`
-        const date = `${day}.${month}.${year}`
-        let artist = authorName.textContent || 'Unknown'
-        artist = artist.replace(/[<>"'/\\|?*]/g, '').trim()
-        const fileName = `Artist_-_${artist}_${time}_${date}.png`.replace(/\s+/g, '_')
-
-        const link = document.createElement('a')
-        link.download = fileName
-        link.href = canvas.toDataURL('image/png')
-        link.click()
-      })
-      .catch((err) => {
-        console.error('Ошибка при рендеринге:', err)
-        scaledContainerElement.style.display = originalDisplay
-        scaledContainerElement.style.position = originalPosition
-        scaledContainerElement.style.left = originalLeft
-        scaledContainerElement.style.top = originalTop
-      })
-  })
-})
+.preview-container.webshop-reward,
+.capture-container.webshop-reward,
+.scaled-capture-container.webshop-reward {
+  border-color: #db8216; /* Оранжевый */
+}
