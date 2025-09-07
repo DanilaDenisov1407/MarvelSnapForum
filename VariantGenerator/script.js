@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAuthor()
     updateLabelsVisibility()
     updateCaptureContainer()
-    [rarityInput, authorInput, priceInput].forEach(toggleActiveClass)
+    [rarityInput, authorInput, priceInput].forEach(toggleActiveClass.bind(null))
   })
 
   // ====== Скачивание PNG ======
