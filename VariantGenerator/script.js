@@ -1,116 +1,82 @@
-// Элементы
-const imageInput = document.getElementById("imageInput");
-const previewImage = document.getElementById("previewImage");
-const captureImage = document.getElementById("captureImage");
-const scaledCaptureImage = document.getElementById("scaledCaptureImage");
+document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
 
-const rarityInput = document.getElementById("rarityInput");
-const rarityText = document.getElementById("rarityText");
-const captureRarityText = document.getElementById("captureRarityText");
-const scaledRarityText = document.getElementById("scaledRarityText");
+  const $id = id => document.getElementById(id);
+  const $sel = sel => document.querySelector(sel);
 
-const rarityStyleSelect = document.getElementById("rarityStyleSelect");
-
-const authorInput = document.getElementById("authorInput");
-const authorText = document.getElementById("authorText");
-const captureAuthorText = document.getElementById("captureAuthorText");
-const scaledAuthorText = document.getElementById("scaledAuthorText");
-
-const priceInput = document.getElementById("priceInput");
-const costText = document.getElementById("costText");
-const captureCostText = document.getElementById("captureCostText");
-const scaledCaptureCostText = document.getElementById("scaledCaptureCostText");
-
-const iconSelect = document.getElementById("iconSelect");
-const iconImg = document.getElementById("iconImg");
-const captureIconImg = document.getElementById("captureIconImg");
-const scaledCaptureIconImg = document.getElementById("scaledCaptureIconImg");
-
-const priceLabelCheckbox = document.getElementById("priceLabelCheckbox");
-const authorLabelCheckbox = document.getElementById("authorLabelCheckbox");
-const iconCheckbox = document.getElementById("iconCheckbox");
-
-const resetButton = document.getElementById("resetButton");
-const downloadButton = document.getElementById("downloadButton");
-
-// === Обновление всех контейнеров ===
-function updateCaptureContainers() {
-  // Редкость
-  const rarityValue = rarityInput.value || rarityStyleSelect.options[rarityStyleSelect.selectedIndex].text;
-  const rarityClass = rarityStyleSelect.value;
-
-  [rarityText, captureRarityText, scaledRarityText].forEach(el => {
-    el.textContent = rarityValue;
-    el.className = "rarity-block " + rarityClass;
-  });
-
-  // Автор
-  [authorText, captureAuthorText, scaledAuthorText].forEach(el => {
-    el.querySelector(".author-name").textContent = authorInput.value || "Kim Jacinto";
-    el.querySelector(".author-label").style.display = authorLabelCheckbox.checked ? "inline" : "none";
-  });
-
-  // Цена
-  [costText, captureCostText, scaledCaptureCostText].forEach(el => {
-    el.textContent = priceInput.value || "1200";
-  });
-
-  document.querySelectorAll(".price-label").forEach(el => {
-    el.style.display = priceLabelCheckbox.checked ? "inline" : "none";
-  });
-
-  // Иконка
-  [iconImg, captureIconImg, scaledCaptureIconImg].forEach(el => {
-    el.src = iconSelect.value;
-    el.style.display = iconCheckbox.checked ? "inline" : "none";
-  });
-}
-
-// === Слушатели ===
-imageInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = evt => {
-      previewImage.src = evt.target.result;
-      captureImage.src = evt.target.result;
-      scaledCaptureImage.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
+  function capitalizeWords(str=''){return String(str).trim().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
+  function getDeclension(number, words=['золото','золота','золота']){
+    const n=Math.abs(Number(number))%100; const n1=n%10; if(n>10 && n<20) return words[2]; if(n1>1 && n1<5) return words[1]; if(n1===1) return words[0]; return words[2];
   }
-});
+  function safeSetText(el, text){ if(el) el.textContent = text }
+  function safeSetSrc(el, src){ if(el) el.src = src }
+  function safeSetDisplay(el, value){ if(el) el.style.display = value }
 
-[rarityInput, rarityStyleSelect, authorInput, priceInput,
- iconSelect, priceLabelCheckbox, authorLabelCheckbox, iconCheckbox]
-.forEach(input => input.addEventListener("input", updateCaptureContainers));
+  // DOM
+  const previewContainer = $id('previewContainer');
+  const captureContainer = $id('captureContainer');
+  const scaledCaptureContainer = $id('scaledCaptureContainer');
 
-resetButton.addEventListener("click", () => {
-  rarityInput.value = "";
-  rarityStyleSelect.value = "rare";
-  authorInput.value = "";
-  priceInput.value = "";
-  priceLabelCheckbox.checked = true;
-  authorLabelCheckbox.checked = true;
-  iconCheckbox.checked = true;
-  iconSelect.value = "./img/icons/gold-icon.webp";
-  previewImage.src = "./img/card-preview.webp";
-  captureImage.src = "./img/card-preview.webp";
-  scaledCaptureImage.src = "./img/card-preview.webp";
-  updateCaptureContainers();
-});
+  const imageInput = $id('imageInput');
+  const previewImage = $id('previewImage');
+  const rarityInput = $id('rarityInput');
+  const authorInput = $id('authorInput');
+  const priceInput = $id('priceInput');
+  const iconCheckbox = $id('iconCheckbox');
+  const iconSelect = $id('iconSelect');
+  const authorLabelCheckbox = $id('authorLabelCheckbox');
+  const priceLabelCheckbox = $id('priceLabelCheckbox');
+  const rarityText = $id('rarityText');
+  const authorLabel = $sel('.author-label');
+  const authorName = $sel('.author-name');
+  const costText = $id('costText');
+  const iconImg = $id('iconImg');
+  const priceLabel = $sel('.price-label');
+  const resetButton = $id('resetButton');
+  const downloadButton = $id('downloadButton');
+  const costWrapper = $id('costWrapper');
+  const customFileButton = $sel('.custom-file-button');
+  const rarityStyleSelect = $id('rarityStyleSelect');
 
-// === Скачать PNG ===
-downloadButton.addEventListener("click", () => {
-  updateCaptureContainers();
-  const node = document.getElementById("scaledCaptureContainer");
+  const captureImage = $id('captureImage');
+  const captureRarityText = $id('captureRarityText');
+  const captureAuthorLabel = $sel('#captureAuthorText .author-label');
+  const captureAuthorName = $sel('#captureAuthorText .author-name');
+  const captureCostText = $id('captureCostText');
+  const captureIconImg = $id('captureIconImg');
+  const capturePriceLabel = $sel('#captureCostWrapper .price-label');
+  const captureCostWrapper = $id('captureCostWrapper');
 
-  html2canvas(node, { useCORS: true }).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "card.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
-});
+  const scaledImage = $id('scaledCaptureImage');
+  const scaledRarityText = $id('scaledRarityText');
+  const scaledAuthorLabel = $sel('#scaledAuthorText .author-label');
+  const scaledAuthorName = $sel('#scaledAuthorText .author-name');
+  const scaledCostText = $id('scaledCaptureCostText');
+  const scaledIconImg = $id('scaledCaptureIconImg');
+  const scaledPriceLabel = $sel('#scaledCostWrapper .price-label');
+  const scaledCostWrapper = $id('scaledCostWrapper');
 
-// Первичная инициализация
-updateCaptureContainers();
+  const defaultPrice = '1200';
+  const defaultAuthor = 'Kim Jacinto';
+  const suffixes = {
+    './img/icons/gold-icon.webp':['золото','золота','золота'],
+    './img/icons/usd-icon2.webp':['доллар','доллара','долларов'],
+    './img/icons/tokens_big.webp':['жетон','жетона','жетонов'],
+    './img/icons/credits_big1.webp':['кредит','кредита','кредитов']
+  };
+  const rarityStyles = { rare:'Rare','super-rare':'Super Rare', ultimate:'Ultimate', spotlight:'Spotlight', 'conquest-reward':'Conquest Reward', bundle:'Bundle', 'webshop-reward':'Webshop Reward' };
+  const allowedRarityClasses = Object.keys(rarityStyles);
+
+  function setImgSrcSafe(img, src){
+    if(!img) return;
+    try{ img.removeAttribute('crossorigin'); }catch{};
+    if(typeof src==='string' && /^https?:\/\//i.test(src)){
+      try{ img.crossOrigin = 'anonymous'; }catch{}
+    }
+    img.src = src||'';
+  }
+
+  function renderCost(){
+    const base = (priceInput && priceInput.value!==undefined) ? String(priceInput.value).trim() : defaultPrice;
+    const textValue = base||defaultPrice;
+    const number = parseInt(String(base).replace(/\s+/g,''),10)||0
