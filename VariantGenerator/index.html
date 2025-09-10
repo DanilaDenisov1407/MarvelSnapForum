@@ -75,7 +75,7 @@
     .rarity-block.ultimate{background:linear-gradient(180deg,#db2a24,#a81b14,#680d0a);}
     .rarity-block.spotlight{background:linear-gradient(180deg,#0027d5,#0549f4,#041abd);}
     .rarity-block.conquest-reward{background:linear-gradient(180deg,#39d25a,#1a821a,#0e4f0e);}
-    .rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400); color:#fff;} /* Изменен цвет текста на белый */
+    .rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400); color:#fff;}
     .rarity-block.webshop-reward{background:linear-gradient(180deg,#ffb066,#db8216,#8a4b00);}
 
     .author-text{font-size:var(--author-font-size);}
@@ -87,11 +87,66 @@
     .telegram-link{color:#7af5f0;font-size:var(--telegram-font-size);text-decoration:none;}
 
     /* controls */
-    .controls{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;}
-    .controls input,.controls button,.controls label,.controls select{padding:20px;font-size:18px;font-family:Roboto;border:2px solid #9801e7;background:#333;color:#fff;border-radius:5px;width:100%;min-height:50px;}
-    .custom-file-button{width:100%;cursor:pointer;padding:20px;font-size:18px;}
-    .input-value{position:relative;}
-    .input-value.active::after{content:'x';position:absolute;right:15px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+    .controls input,
+    .controls button,
+    .controls label,
+    .controls select {
+      padding: 10px 15px;   /* Чуть меньше, чтобы не растягивало */
+      font-size: 16px;      /* Оставляем 16px для компактности */
+      width: 100%;          /* Растягивается в ячейке сетки */
+      height: 50px;         /* 🔹 Одинаковая высота для всех */
+      line-height: 1.2;     /* Текст по центру */
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;  /* Выравнивание текста вертикально */
+    }
+    .custom-file-button {
+      width: 100%;
+      cursor: pointer;
+      padding: 10px 15px;   /* Синхронизация с остальными */
+      font-size: 16px;
+      height: 50px;         /* Одинаковая высота */
+      line-height: 1.2;
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-value {
+      position: relative;
+    }
+    .input-value.active::after {
+      content: 'x';
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     /* capture offscreen */
     .capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;display:flex;flex-direction:column;align-items:center;}
@@ -150,15 +205,14 @@
         width: 100%;
       }
 
-      .controls input, .controls button, .controls label, .controls select {
-        padding: 15px;
-        font-size: 16px;
-        min-height: 45px;
-      }
-
+      .controls input,
+      .controls button,
+      .controls label,
+      .controls select,
       .custom-file-button {
-        padding: 15px;
-        font-size: 16px;
+        padding: 8px 12px; /* Уменьшаем для мобильных */
+        font-size: 14px;
+        height: 45px; /* Чуть меньше для компактности */
       }
 
       .input-value.active::after {
@@ -203,15 +257,14 @@
         min-height: 200px;
       }
 
-      .controls input, .controls button, .controls label, .controls select {
-        padding: 12px;
-        font-size: 14px;
-        min-height: 40px;
-      }
-
+      .controls input,
+      .controls button,
+      .controls label,
+      .controls select,
       .custom-file-button {
-        padding: 12px;
-        font-size: 14px;
+        padding: 6px 10px; /* Еще меньше для маленьких экранов */
+        font-size: 12px;
+        height: 40px;
       }
 
       .rarity-block {
@@ -644,13 +697,25 @@
           scaled.style.left = '-9999px';
           scaled.style.top = '-9999px';
 
-          // wait fonts + images
+          // Устанавливаем фиксированные размеры перед рендерингом
+          scaled.style.width = '615px';
+          scaled.style.height = '850px';
+
+          // Wait for fonts + images
           try{
             const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
             await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
           }catch(e){ console.warn('Resources load timeout', e); }
 
-          html2canvas(scaledCaptureContainer, { scale:2, width:615, height:850, backgroundColor:null, useCORS:true }).then(canvas=>{
+          html2canvas(scaledCaptureContainer, {
+            scale: 2,
+            width: 615,
+            height: 850,
+            backgroundColor: null,
+            useCORS: true,
+            windowWidth: 615,
+            windowHeight: 850
+          }).then(canvas=>{
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
             const hours = pad(now.getHours()); const minutes = pad(now.getMinutes()); const day = pad(now.getDate()); const month = pad(now.getMonth()+1); const year = now.getFullYear();
@@ -662,6 +727,8 @@
             scaled.style.position = originalPosition;
             scaled.style.left = originalLeft;
             scaled.style.top = originalTop;
+            scaled.style.width = '';
+            scaled.style.height = '';
           });
         });
       }
