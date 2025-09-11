@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Card Generator — fixed</title>
 
   <style>
@@ -87,12 +87,66 @@
     .telegram-link{color:#7af5f0;font-size:var(--telegram-font-size);text-decoration:none}
 
     /* controls */
-    .controls{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
-    @media(max-width:600px){.controls{grid-template-columns:1fr}}
-    .controls input,.controls button,.controls label,.controls select{padding:20px;font-size:18px;font-family:Roboto;border:2px solid #9801e7;background:#333;color:#fff;border-radius:5px;width:100%}
-    .custom-file-button{width:100%;cursor:pointer}
-    .input-value{position:relative}
-    .input-value.active::after{content:'x';position:absolute;right:15px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+    .controls input,
+    .controls button,
+    .controls label,
+    .controls select {
+      padding: 10px 15px;   /* Чуть меньше, чтобы не растягивало */
+      font-size: 16px;      /* Оставляем 16px для компактности */
+      width: 100%;          /* Растягивается в ячейке сетки */
+      height: 50px;         /* 🔹 Одинаковая высота для всех */
+      line-height: 1.2;     /* Текст по центру */
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;  /* Выравнивание текста вертикально */
+    }
+    .custom-file-button {
+      width: 100%;
+      cursor: pointer;
+      padding: 10px 15px;   /* Синхронизация с остальными */
+      font-size: 16px;
+      height: 50px;         /* Одинаковая высота */
+      line-height: 1.2;
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-value {
+      position: relative;
+    }
+    .input-value.active::after {
+      content: 'x';
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     /* capture offscreen */
     .capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;display:flex;flex-direction:column;align-items:center}
@@ -124,6 +178,118 @@
     .preview-container.bundle,.capture-container.bundle,.scaled-capture-container.bundle{border-color:#c2bb0a}
     .preview-container.webshop-reward,.capture-container.webshop-reward,.scaled-capture-container.webshop-reward{border-color:#db8216}
 
+    /* Адаптив для мобильных */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .preview-container {
+        min-width: 100%;
+        max-width: 100%;
+        padding: 15px;
+      }
+
+      .preview-image {
+        min-height: 250px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .controls input,
+      .controls button,
+      .controls label,
+      .controls select,
+      .custom-file-button {
+        padding: 8px 12px; /* Уменьшаем для мобильных */
+        font-size: 14px;
+        height: 45px; /* Чуть меньше для компактности */
+      }
+
+      .input-value.active::after {
+        right: 10px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .rarity-block {
+        padding: 4px 12px;
+        font-size: 14px;
+      }
+
+      .author-text {
+        font-size: 16px;
+      }
+
+      .cost-wrapper {
+        gap: 4px;
+      }
+
+      .price-label, #costText {
+        font-size: 16px;
+      }
+
+      #iconImg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .telegram-link {
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .preview-container {
+        padding: 10px;
+      }
+
+      .preview-image {
+        min-height: 200px;
+      }
+
+      .controls input,
+      .controls button,
+      .controls label,
+      .controls select,
+      .custom-file-button {
+        padding: 6px 10px; /* Еще меньше для маленьких экранов */
+        font-size: 12px;
+        height: 40px;
+      }
+
+      .rarity-block {
+        padding: 3px 10px;
+        font-size: 12px;
+      }
+
+      .author-text {
+        font-size: 14px;
+      }
+
+      .price-label, #costText {
+        font-size: 14px;
+      }
+
+      #iconImg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .telegram-link {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -532,7 +698,7 @@
           scaled.style.left = '-9999px';
           scaled.style.top = '-9999px';
 
-          // Устанавливаем фиксированные размеры перед рендерингом
+          // Устанавливаем фиксированные размеры перед рenдером
           scaled.style.width = '615px';
           scaled.style.height = '850px';
 
@@ -546,7 +712,7 @@
             telegramLink.style.whiteSpace = 'normal';
           }
 
-          // wait fonts + images
+          // Wait for fonts + images
           try{
             const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
             await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
