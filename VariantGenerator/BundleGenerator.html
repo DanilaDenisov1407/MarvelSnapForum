@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bundle Generator</title>
+
+  <style>
+    /* ===== Reset ===== */
+    *{box-sizing:border-box;padding:0;margin:0}
+    html,body{height:100%}
+
+    @font-face{font-family:'Roboto';font-style:normal;font-weight:900;src:url('fonts/Roboto-Black.ttf') format('truetype')}
+    @font-face{font-family:'Comicraft';font-style:italic;font-weight:900;src:url('fonts/Comicraft-CCUltimatum-Bold-Italic.woff2') format('woff2')}
+
+    :root{
+      --container-padding:25px;
+      --container-border-width:5px;
+      --container-border-radius:20px;
+      --container-gap:10px;
+      --image-min-height:330px;
+      --rarity-padding-y:5px;
+      --rarity-padding-x:15px;
+      --rarity-font-size:16px;
+      --rarity-border-width:6px;
+      --rarity-border-radius:15px;
+      --author-font-size:18px;
+      --cost-gap:5px;
+      --price-font-size:18px;
+      --cost-font-size:18px;
+      --icon-width:20px;
+      --icon-height:20px;
+      --telegram-font-size:18px;
+
+      /* scaled */
+      --scaled-container-border-width:10px;
+      --scaled-container-border-radius:40px;
+      --scaled-container-padding:20px;
+      --scaled-container-gap:10px;
+      --scaled-rarity-padding-y:8px;
+      --scaled-rarity-padding-x:25px;
+      --scaled-rarity-font-size:30px;
+      --scaled-rarity-border-width:10px;
+      --scaled-rarity-border-radius:25px;
+      --scaled-rarity-text-shadow-x:1.7px;
+      --scaled-rarity-text-shadow-y:1.7px;
+      --scaled-author-font-size:36px;
+      --scaled-cost-gap:10px;
+      --scaled-cost-font-size:30px;
+      --scaled-price-font-size:36px;
+      --scaled-icon-width:40px;
+      --scaled-icon-height:40px;
+      --scaled-telegram-font-size:36px;
+      --scaled-image-min-height:560px;
+    }
+
+    body{
+      background:#20252b;color:#fff;font-family:Roboto, sans-serif;font-weight:900;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px
+    }
+    .wrapper{display:flex;gap:20px;max-width:1200px;flex-wrap:wrap}
+
+    /* preview container */
+    .preview-container{display:flex;flex-direction:column;gap:var(--container-gap);min-width:300px;max-width:360px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:var(--container-padding);position:relative}
+    .preview-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
+    .preview-data{display:flex;flex-direction:column;align-items:center;gap:var(--container-gap);text-align:center}
+    .capture-data{display:flex;flex-direction:column;align-items:center;gap:var(--container-gap);text-align:center;width:100%}
+
+    /* bundle layout */
+    .bundle-preview {
+      position: relative;
+      width: 100%;
+      min-height: 600px; /* Базовая высота для предпросмотра */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .bundle-image {
+      position: absolute;
+      max-width: 40%;
+      max-height: 80%;
+    }
+    #variantImage { left: 10%; }
+    #avatarImage { right: 10%; }
+    #boostersImage { top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 50%; }
+
+    /* rarity */
+    .rarity-block{position:relative;display:inline-block;background:linear-gradient(180deg,#e800fe,#9500d0,#380274);color:#fff;padding:var(--rarity-padding-y) var(--rarity-padding-x);font-size:var(--rarity-font-size);text-transform:uppercase;transform:skew(-20deg);z-index:20;border:var(--rarity-border-width) solid transparent;border-top-right-radius:var(--rarity-border-radius);border-bottom-left-radius:var(--rarity-border-radius)}
+    .rarity-block span{display:inline-block;font-family:Comicraft, sans-serif;font-weight:900;font-style:italic;transform:skew(15deg);text-shadow:1px 1px 0 rgba(0,0,0,0.5)}
+
+    /* variants */
+    .rarity-block.rare{background:linear-gradient(180deg,#e800fe,#9500d0,#380274)}
+    .rarity-block.super-rare{background:linear-gradient(180deg,#69e0e4,#4cbcc7,#17596f)}
+    .rarity-block.ultimate{background:linear-gradient(180deg,#db2a24,#a81b14,#680d0a)}
+    .rarity-block.spotlight{background:linear-gradient(180deg,#0027d5,#0549f4,#041abd)}
+    .rarity-block.conquest-reward{background:linear-gradient(180deg,#39d25a,#1a821a,#0e4f0e)}
+    .rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400);color:#fff}
+    .rarity-block.webshop-reward{background:linear-gradient(180deg,#ffb066,#db8216,#8a4b00)}
+
+    .author-text{font-size:var(--author-font-size)}
+    .cost-wrapper{display:flex;align-items:center;gap:var(--cost-gap)}
+    .price-label{font-size:var(--price-font-size)}
+    #costText{font-size:var(--cost-font-size);display:inline-block}
+    #iconImg, #captureIconImg{width:var(--icon-width);height:var(--icon-height);display:inline-block;image-rendering: pixelated}
+
+    .telegram-link{color:#7af5f0;font-size:var(--telegram-font-size);text-decoration:none}
+
+    /* controls */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+    .controls input,
+    .controls button,
+    .controls label,
+    .controls select {
+      padding: 10px 15px;
+      font-size: 16px;
+      width: 100%;
+      height: 50px;
+      line-height: 1.2;
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+    }
+    .custom-file-button {
+      width: 100%;
+      cursor: pointer;
+      padding: 10px 15px;
+      font-size: 16px;
+      height: 50px;
+      line-height: 1.2;
+      box-sizing: border-box;
+      font-family: Roboto;
+      border: 2px solid #9801e7;
+      background: #333;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-value {
+      position: relative;
+    }
+    .input-value.active::after {
+      content: 'x';
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* capture offscreen */
+    .capture-container{display:none;position:absolute;left:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--container-border-width) solid #9801e7;border-radius:var(--container-border-radius);overflow:hidden;padding:10px;display:flex;flex-direction:column;align-items:center}
+    .capture-container .capture-image{width:100%;min-height:var(--image-min-height);object-fit:cover}
+    .capture-container #captureIconImg{width:var(--icon-width);height:var(--icon-height);image-rendering: pixelated}
+
+    /* scaled container (final render) */
+    .scaled-capture-container{
+      position:absolute;left:-9999px;top:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--scaled-container-border-width) solid #9801e7;border-radius:var(--scaled-container-border-radius);overflow:hidden;padding:var(--scaled-container-padding);display:flex;flex-direction:column;align-items:center;justify-content:space-between; box-sizing:border-box;
+    }
+    .scaled-capture-container .bundle-preview {
+      position: relative;
+      width: 100%;
+      min-height: 850px; /* Увеличенная высота для бандла */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .scaled-capture-container .bundle-image {
+      position: absolute;
+      max-width: 40%;
+      max-height: 80%;
+    }
+    #scaledVariantImage { left: 10%; }
+    #scaledAvatarImage { right: 10%; }
+    #scaledBoostersImage { top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 50%; }
+    .scaled-capture-container .capture-data{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--scaled-container-gap);text-align:center;width:100%;flex-grow:1; padding: 0 10px;}
+    .scaled-capture-container #scaledCaptureIconImg{width:var(--scaled-icon-width);height:var(--scaled-icon-height);display:inline-block;image-rendering: pixelated}
+    .scaled-capture-container .telegram-link{font-size:var(--scaled-telegram-font-size);text-decoration:none; width:100%; text-align:center; word-break: break-word; max-width:90%; overflow-wrap: break-word; white-space: normal; margin-top:10px; padding:0 5px; box-sizing:border-box;}
+    .scaled-capture-container .telegram-link a {display:inline-block; width:100%;}
+    .scaled-capture-container .rarity-block{padding:var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);font-size:var(--scaled-rarity-font-size);border:var(--scaled-rarity-border-width) solid transparent;border-top-right-radius:var(--scaled-rarity-border-radius);border-bottom-left-radius:var(--scaled-rarity-border-radius)}
+    .scaled-capture-container .rarity-block span{text-shadow:var(--scaled-rarity-text-shadow-x) var(--scaled-rarity-text-shadow-y) 0 rgba(0,0,0,0.5)}
+    .scaled-capture-container .author-text{font-size:var(--scaled-author-font-size)}
+    .scaled-capture-container .cost-wrapper{display:flex;align-items:center;gap:var(--scaled-cost-gap)}
+    .scaled-capture-container .price-label{font-size:var(--scaled-price-font-size)}
+    .scaled-capture-container #scaledCaptureCostText{font-size:var(--scaled-cost-font-size);display:inline-block}
+
+    /* container border colors by rarity */
+    .preview-container.rare,.capture-container.rare,.scaled-capture-container.rare{border-color:#e800fe}
+    .preview-container.super-rare,.capture-container.super-rare,.scaled-capture-container.super-rare{border-color:#69e0e4}
+    .preview-container.ultimate,.capture-container.ultimate,.scaled-capture-container.ultimate{border-color:#db2a24}
+    .preview-container.spotlight,.capture-container.spotlight,.scaled-capture-container.spotlight{border-color:#0027d5}
+    .preview-container.conquest-reward,.capture-container.conquest-reward,.scaled-capture-container.conquest-reward{border-color:#1a821a}
+    .preview-container.bundle,.capture-container.bundle,.scaled-capture-container.bundle{border-color:#c2bb0a}
+    .preview-container.webshop-reward,.capture-container.webshop-reward,.scaled-capture-container.webshop-reward{border-color:#db8216}
+
+    /* Адаптив для мобильных */
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .wrapper { flex-direction: column; align-items: center; gap: 15px; }
+      .preview-container { min-width: 100%; max-width: 100%; padding: 15px; }
+      .bundle-preview { min-height: 400px; }
+      .bundle-image { max-width: 35%; max-height: 70%; }
+      #variantImage { left: 5%; }
+      #avatarImage { right: 5%; }
+      #boostersImage { max-width: 45%; }
+      .controls { grid-template-columns: 1fr; gap: 10px; width: 100%; }
+      .controls input, .controls button, .controls label, .controls select, .custom-file-button {
+        padding: 8px 12px; font-size: 14px; height: 45px;
+      }
+      .input-value.active::after { right: 10px; width: 18px; height: 18px; }
+    }
+
+    @media (max-width: 480px) {
+      .preview-container { padding: 10px; }
+      .bundle-preview { min-height: 300px; }
+      .bundle-image { max-width: 30%; max-height: 60%; }
+      #variantImage { left: 2%; }
+      #avatarImage { right: 2%; }
+      #boostersImage { max-width: 40%; }
+      .controls input, .controls button, .controls label, .controls select, .custom-file-button {
+        padding: 6px 10px; font-size: 12px; height: 40px;
+      }
+    }
+
+    /* Кастомизация чекбоксов */
+    .controls input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      background: #333;
+      border: 2px solid #9801e7;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      vertical-align: middle;
+    }
+    .controls input[type="checkbox"]:checked::after {
+      content: '✔';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      color: #fff;
+    }
+    @media (max-width: 768px) {
+      .controls input[type="checkbox"] { width: 18px; height: 18px; }
+      .controls input[type="checkbox"]:checked::after { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      .controls input[type="checkbox"] { width: 16px; height: 16px; }
+      .controls input[type="checkbox"]:checked::after { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Preview -->
+    <div class="preview-container bundle" id="previewContainer">
+      <div class="bundle-preview">
+        <img id="variantImage" class="bundle-image" src="./img/card-preview.webp" alt="Variant" />
+        <img id="avatarImage" class="bundle-image" src="./img/avatar-preview.webp" alt="Avatar" />
+        <img id="boostersImage" class="bundle-image" src="./img/boosters-preview.webp" alt="Boosters" />
+      </div>
+      <div class="preview-data">
+        <div id="costWrapper" class="cost-wrapper">
+          <span class="price-label">Цена:</span>
+          <span id="costText">1200</span>
+          <img id="iconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты" />
+        </div>
+        <div id="itemsWrapper" class="cost-wrapper"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-wrapper">
+      <div class="controls">
+        <div class="file-input-wrapper">
+          <button type="button" class="custom-file-button">Загрузить Вариант</button>
+          <input id="variantInput" type="file" accept="image/*" style="display:none" />
+        </div>
+        <div class="file-input-wrapper">
+          <button type="button" class="custom-file-button">Загрузить Аватарку</button>
+          <input id="avatarInput" type="file" accept="image/*" style="display:none" />
+        </div>
+        <div class="file-input-wrapper">
+          <button type="button" class="custom-file-button">Загрузить Бустеры</button>
+          <input id="boostersInput" type="file" accept="image/*" style="display:none" />
+        </div>
+
+        <select id="currencySelect">
+          <option value="./img/icons/gold-icon.webp">Золото</option>
+          <option value="./img/icons/usd-icon2.webp">Доллары</option>
+        </select>
+
+        <div class="input-value">
+          <label><input id="creditsCheckbox" type="checkbox" /> Кредиты <input id="creditsInput" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="creditsIcon" src="./img/icons/credits_big1.webp" alt="Credits Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+        <div class="input-value">
+          <label><input id="goldCheckbox" type="checkbox" /> Золото <input id="goldInput" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="goldIcon" src="./img/icons/gold-icon.webp" alt="Gold Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+        <div class="input-value">
+          <label><input id="tokensCheckbox" type="checkbox" /> Токены <input id="tokensInput" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="tokensIcon" src="./img/icons/tokens_big.webp" alt="Tokens Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+        <div class="input-value">
+          <label><input id="boostersCheckbox" type="checkbox" /> Бустеры <input id="boostersInputValue" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="boostersIcon" src="./img/icons/boosters-icon.webp" alt="Boosters Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+        <div class="input-value">
+          <label><input id="variantCheckbox" type="checkbox" /> Карта/Вариант <input id="variantInputValue" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="variantIcon" src="./img/icons/gold-icon.webp" alt="Variant Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+        <div class="input-value">
+          <label><input id="avatarCheckbox" type="checkbox" /> Аватар <input id="avatarInputValue" type="text" placeholder="0.00" style="width: 60px; margin-left: 10px;" /></label>
+          <img id="avatarIcon" src="./img/icons/gold-icon.webp" alt="Avatar Icon" style="width: 20px; height: 20px; margin-left: 5px; display: none;" />
+        </div>
+
+        <button id="resetButton" type="button">Сбросить</button>
+        <button id="downloadButton" type="button">Скачать PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capture container (hidden offscreen) -->
+  <div class="capture-container bundle" id="captureContainer">
+    <div class="bundle-preview">
+      <img id="captureVariantImage" class="bundle-image" src="./img/card-preview.webp" alt="Variant" />
+      <img id="captureAvatarImage" class="bundle-image" src="./img/avatar-preview.webp" alt="Avatar" />
+      <img id="captureBoostersImage" class="bundle-image" src="./img/boosters-preview.webp" alt="Boosters" />
+    </div>
+    <div class="capture-data">
+      <div id="captureCostWrapper" class="cost-wrapper">
+        <span class="price-label">Цена:</span>
+        <span id="captureCostText">1200</span>
+        <img id="captureIconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты" />
+      </div>
+      <div id="captureItemsWrapper" class="cost-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- Scaled container for output (615x850) -->
+  <div id="scaledCaptureContainer" class="scaled-capture-container bundle">
+    <div class="bundle-preview">
+      <img id="scaledVariantImage" class="bundle-image" src="./img/card-preview.webp" alt="Variant" />
+      <img id="scaledAvatarImage" class="bundle-image" src="./img/avatar-preview.webp" alt="Avatar" />
+      <img id="scaledBoostersImage" class="bundle-image" src="./img/boosters-preview.webp" alt="Boosters" />
+    </div>
+    <div class="capture-data">
+      <div id="scaledCostWrapper" class="cost-wrapper">
+        <span class="price-label">Цена:</span>
+        <span id="scaledCaptureCostText">1200</span>
+        <img id="scaledCaptureIconImg" src="./img/icons/gold-icon.webp" alt="Иконка валюты" />
+      </div>
+      <div id="scaledItemsWrapper" class="cost-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      'use strict';
+
+      const $id = id => document.getElementById(id);
+      const $sel = sel => document.querySelector(sel);
+
+      function capitalizeWords(str = ''){return String(str).trim().split(/\s+/).map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
+      function safeSetText(el, text){ if(el) el.textContent = text }
+      function safeSetSrc(el, src){ if(el) el.src = src }
+      function safeSetDisplay(el, value){ if(el) el.style.display = value }
+
+      // DOM
+      const previewContainer = $id('previewContainer');
+      const captureContainer = $id('captureContainer');
+      const scaledCaptureContainer = $id('scaledCaptureContainer');
+
+      const variantInput = $id('variantInput');
+      const avatarInput = $id('avatarInput');
+      const boostersInput = $id('boostersInput');
+      const variantImage = $id('variantImage');
+      const avatarImage = $id('avatarImage');
+      const boostersImage = $id('boostersImage');
+      const currencySelect = $id('currencySelect');
+      const costText = $id('costText');
+      const iconImg = $id('iconImg');
+      const costWrapper = $id('costWrapper');
+      const itemsWrapper = $id('itemsWrapper');
+      const customFileButtons = document.querySelectorAll('.custom-file-button');
+      const resetButton = $id('resetButton');
+      const downloadButton = $id('downloadButton');
+
+      // Capture elements
+      const captureVariantImage = $id('captureVariantImage');
+      const captureAvatarImage = $id('captureAvatarImage');
+      const captureBoostersImage = $id('captureBoostersImage');
+      const captureCostText = $id('captureCostText');
+      const captureIconImg = $id('captureIconImg');
+      const captureCostWrapper = $id('captureCostWrapper');
+      const captureItemsWrapper = $id('captureItemsWrapper');
+
+      // Scaled elements
+      const scaledVariantImage = $id('scaledVariantImage');
+      const scaledAvatarImage = $id('scaledAvatarImage');
+      const scaledBoostersImage = $id('scaledBoostersImage');
+      const scaledCaptureCostText = $id('scaledCaptureCostText');
+      const scaledCaptureIconImg = $id('scaledCaptureIconImg');
+      const scaledCostWrapper = $id('scaledCostWrapper');
+      const scaledItemsWrapper = $id('scaledItemsWrapper');
+
+      // Checkbox and input elements
+      const checkboxes = {
+        credits: $id('creditsCheckbox'),
+        gold: $id('goldCheckbox'),
+        tokens: $id('tokensCheckbox'),
+        boosters: $id('boostersCheckbox'),
+        variant: $id('variantCheckbox'),
+        avatar: $id('avatarCheckbox')
+      };
+      const inputs = {
+        credits: $id('creditsInput'),
+        gold: $id('goldInput'),
+        tokens: $id('tokensInput'),
+        boosters: $id('boostersInputValue'),
+        variant: $id('variantInputValue'),
+        avatar: $id('avatarInputValue')
+      };
+      const icons = {
+        credits: $id('creditsIcon'),
+        gold: $id('goldIcon'),
+        tokens: $id('tokensIcon'),
+        boosters: $id('boostersIcon'),
+        variant: $id('variantIcon'),
+        avatar: $id('avatarIcon')
+      };
+
+      // Defaults
+      const defaultPrice = '1200';
+      const currencyIcons = {
+        './img/icons/gold-icon.webp': '₽',
+        './img/icons/usd-icon2.webp': '$'
+      };
+
+      // Helpers
+      function setImgSrcSafe(img, src){
+        if(!img) return;
+        try{ img.removeAttribute('crossorigin'); }catch{};
+        if(typeof src === 'string' && /^https?:\/\//i.test(src)){
+          try{ img.crossOrigin = 'anonymous'; }catch{}
+        }
+        img.src = src || '';
+      }
+
+      function updateCost(){
+        const price = defaultPrice; // Пока фиксированная цена, можно добавить ввод
+        safeSetText(costText, price);
+        if(currencySelect && iconImg) setImgSrcSafe(iconImg, currencySelect.value);
+        updateCaptureContainer();
+      }
+
+      function updateItems(){
+        itemsWrapper.innerHTML = '';
+        Object.keys(checkboxes).forEach(key => {
+          if(checkboxes[key].checked && inputs[key].value.trim()) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cost-wrapper';
+            const label = document.createElement('span');
+            label.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}: `;
+            const value = document.createElement('span');
+            value.textContent = inputs[key].value;
+            const icon = document.createElement('img');
+            icon.src = currencySelect.value;
+            icon.style.width = '20px';
+            icon.style.height = '20px';
+            icon.style.marginLeft = '5px';
+            wrapper.appendChild(label);
+            wrapper.appendChild(value);
+            wrapper.appendChild(icon);
+            itemsWrapper.appendChild(wrapper);
+          }
+        });
+        updateCaptureContainer();
+      }
+
+      function toggleActiveClass(input){ if(!input) return; const parent=input.closest('.input-value'); if(parent) parent.classList.toggle('active', String(input.value||'').trim() !== ''); }
+
+      function clearInput(input){ if(!input) return; input.value=''; toggleActiveClass(input); input.dispatchEvent(new Event('input',{bubbles:true})); }
+
+      function updateCaptureContainer(){
+        // Images
+        if(variantImage && captureVariantImage) setImgSrcSafe(captureVariantImage, variantImage.src || '');
+        if(avatarImage && captureAvatarImage) setImgSrcSafe(captureAvatarImage, avatarImage.src || '');
+        if(boostersImage && captureBoostersImage) setImgSrcSafe(captureBoostersImage, boostersImage.src || '');
+        if(variantImage && scaledVariantImage) setImgSrcSafe(scaledVariantImage, variantImage.src || '');
+        if(avatarImage && scaledAvatarImage) setImgSrcSafe(scaledAvatarImage, avatarImage.src || '');
+        if(boostersImage && scaledBoostersImage) setImgSrcSafe(scaledBoostersImage, boostersImage.src || '');
+
+        // Cost
+        if(costText && captureCostText) captureCostText.textContent = costText.textContent || '';
+        if(iconImg && captureIconImg) setImgSrcSafe(captureIconImg, iconImg.src || '');
+        if(costWrapper && captureCostWrapper) captureCostWrapper.style.display = costWrapper.style.display;
+        if(costText && scaledCaptureCostText) scaledCaptureCostText.textContent = costText.textContent || '';
+        if(iconImg && scaledCaptureIconImg) setImgSrcSafe(scaledCaptureIconImg, iconImg.src || '');
+        if(costWrapper && scaledCostWrapper) scaledCostWrapper.style.display = costWrapper.style.display;
+
+        // Items
+        captureItemsWrapper.innerHTML = itemsWrapper.innerHTML;
+        scaledItemsWrapper.innerHTML = itemsWrapper.innerHTML;
+      }
+
+      function waitForImages(container, timeout = 4000){
+        const imgs = Array.from(container.querySelectorAll('img'));
+        if(imgs.length===0) return Promise.resolve();
+        return Promise.all(imgs.map(img=> new Promise(resolve=>{
+          if(img.complete && img.naturalWidth && img.naturalHeight) return resolve();
+          const t = setTimeout(() => resolve(), timeout);
+          img.addEventListener('load', ()=>{ clearTimeout(t); resolve(); }, {once:true});
+          img.addEventListener('error', ()=>{ clearTimeout(t); resolve(); }, {once:true});
+        })));
+      }
+
+      // Events
+      customFileButtons.forEach((button, index) => {
+        const inputs = [variantInput, avatarInput, boostersInput];
+        button.addEventListener('click', e => { e.preventDefault(); inputs[index].click(); });
+      });
+
+      [variantInput, avatarInput, boostersInput].forEach((input, index) => {
+        input.addEventListener('change', e => {
+          const files = e.target.files;
+          if(files && files[0]) {
+            const url = URL.createObjectURL(files[0]);
+            const images = [variantImage, avatarImage, boostersImage];
+            setImgSrcSafe(images[index], url);
+            updateCaptureContainer();
+          }
+        });
+      });
+
+      Object.values(checkboxes).forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const key = checkbox.id.replace('Checkbox', '');
+          const input = inputs[key];
+          const icon = icons[key];
+          if(checkbox.checked) {
+            input.style.display = 'inline-block';
+            icon.style.display = 'inline-block';
+          } else {
+            input.style.display = 'none';
+            icon.style.display = 'none';
+            clearInput(input);
+          }
+          updateItems();
+        });
+      });
+
+      Object.values(inputs).forEach(input => {
+        input.addEventListener('input', () => {
+          toggleActiveClass(input);
+          updateItems();
+        });
+      });
+
+      if(currencySelect) currencySelect.addEventListener('change', () => {
+        setImgSrcSafe(iconImg, currencySelect.value);
+        Object.values(icons).forEach(icon => setImgSrcSafe(icon, currencySelect.value));
+        updateCaptureContainer();
+      });
+
+      document.querySelectorAll('.input-value').forEach(wrapper => {
+        wrapper.addEventListener('click', e => {
+          const input = wrapper.querySelector('input[type="text"]');
+          if(!input) return;
+          if(wrapper.classList.contains('active') && (e.offsetX > wrapper.offsetWidth - 30)) {
+            clearInput(input);
+          }
+        });
+      });
+
+      // Init
+      try {
+        updateCost();
+        updateItems();
+        updateCaptureContainer();
+      } catch(err) { console.warn('Init warning:', err); }
+
+      if(resetButton) {
+        resetButton.addEventListener('click', () => {
+          [variantInput, avatarInput, boostersInput].forEach(input => input.value = '');
+          setImgSrcSafe(variantImage, './img/card-preview.webp');
+          setImgSrcSafe(avatarImage, './img/avatar-preview.webp');
+          setImgSrcSafe(boostersImage, './img/boosters-preview.webp');
+          currencySelect.value = './img/icons/gold-icon.webp';
+          setImgSrcSafe(iconImg, currencySelect.value);
+          Object.values(checkboxes).forEach(cb => cb.checked = false);
+          Object.values(inputs).forEach(input => { clearInput(input); input.style.display = 'none'; });
+          Object.values(icons).forEach(icon => icon.style.display = 'none');
+          updateCaptureContainer();
+        });
+      }
+
+      // Download PNG
+      if(downloadButton) {
+        downloadButton.addEventListener('click', async () => {
+          if(!scaledCaptureContainer) return;
+          updateCaptureContainer();
+
+          const scaled = scaledCaptureContainer;
+          const originalDisplay = scaled.style.display;
+          const originalPosition = scaled.style.position;
+          const originalLeft = scaled.style.left;
+          const originalTop = scaled.style.top;
+          const originalBackground = scaled.style.background;
+
+          scaled.style.display = 'flex';
+          scaled.style.position = 'absolute';
+          scaled.style.left = '-9999px';
+          scaled.style.top = '-9999px';
+          scaled.style.width = '615px';
+          scaled.style.height = '850px';
+          scaled.style.background = 'transparent';
+
+          const telegramLink = scaled.querySelector('.telegram-link');
+          if(telegramLink) {
+            telegramLink.style.width = '90%';
+            telegramLink.style.maxWidth = '90%';
+            telegramLink.style.wordBreak = 'break-word';
+            telegramLink.style.overflowWrap = 'break-word';
+            telegramLink.style.whiteSpace = 'normal';
+          }
+
+          try {
+            const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+            await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
+          } catch(e) { console.warn('Resources load timeout', e); }
+
+          html2canvas(scaledCaptureContainer, {
+            scale: 2,
+            width: 615,
+            height: 850,
+            backgroundColor: '#000000',
+            useCORS: true,
+            windowWidth: 615,
+            windowHeight: 850,
+            letterRendering: true,
+            useOverflow: true
+          }).then(canvas => {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const day = pad(now.getDate());
+            const month = pad(now.getMonth() + 1);
+            const year = now.getFullYear();
+            const fileName = `Bundle_${hours}-${minutes}_${day}.${month}.${year}.png`.replace(/\s+/g, '_');
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+          }).catch(err => { console.error('html2canvas error:', err); }).finally(() => {
+            scaled.style.display = originalDisplay;
+            scaled.style.position = originalPosition;
+            scaled.style.left = originalLeft;
+            scaled.style.top = originalTop;
+            scaled.style.width = '';
+            scaled.style.height = '';
+            scaled.style.background = originalBackground;
+            if(telegramLink) {
+              telegramLink.style.width = '';
+              telegramLink.style.maxWidth = '';
+              telegramLink.style.wordBreak = '';
+              telegramLink.style.overflowWrap = '';
+              telegramLink.style.whiteSpace = '';
+            }
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
