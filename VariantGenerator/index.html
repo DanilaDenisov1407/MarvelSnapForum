@@ -75,7 +75,7 @@
     .rarity-block.ultimate{background:linear-gradient(180deg,#db2a24,#a81b14,#680d0a)}
     .rarity-block.spotlight{background:linear-gradient(180deg,#0027d5,#0549f4,#041abd)}
     .rarity-block.conquest-reward{background:linear-gradient(180deg,#39d25a,#1a821a,#0e4f0e)}
-    .rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400)}
+    .rarity-block.bundle{background:linear-gradient(180deg,#fff2a6,#ffd700,#b89400);color:#fff}
     .rarity-block.webshop-reward{background:linear-gradient(180deg,#ffb066,#db8216,#8a4b00)}
 
     .author-text{font-size:var(--author-font-size)}
@@ -101,12 +101,13 @@
 
     /* scaled container (final render) */
     .scaled-capture-container{
-      position:absolute;left:-9999px;top:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--scaled-container-border-width) solid #9801e7;border-radius:var(--scaled-container-border-radius);overflow:hidden;padding:var(--scaled-container-padding);display:flex;flex-direction:column;align-items:center;justify-content:space-between
+      position:absolute;left:-9999px;top:-9999px;width:615px;height:850px;background:#000 url('img/9372e881397e867c7f2bca42c3fdd1e9.jpg') repeat; border:var(--scaled-container-border-width) solid #9801e7;border-radius:var(--scaled-container-border-radius);overflow:hidden;padding:var(--scaled-container-padding);display:flex;flex-direction:column;align-items:center;justify-content:space-between; box-sizing:border-box;
     }
     .scaled-capture-container .capture-image{width:100%;min-height:var(--scaled-image-min-height);object-fit:cover}
-    .scaled-capture-container .capture-data{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--scaled-container-gap);text-align:center;width:100%;flex-grow:1}
+    .scaled-capture-container .capture-data{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--scaled-container-gap);text-align:center;width:100%;flex-grow:1; padding: 0 10px;}
     .scaled-capture-container #scaledCaptureIconImg{width:var(--scaled-icon-width);height:var(--scaled-icon-height);display:inline-block;image-rendering: pixelated}
-    .scaled-capture-container .telegram-link{font-size:var(--scaled-telegram-font-size);text-decoration:none}
+    .scaled-capture-container .telegram-link{font-size:var(--scaled-telegram-font-size);text-decoration:none; width:100%; text-align:center; word-break: break-word; max-width:90%; overflow-wrap: break-word; white-space: normal; margin-top:10px; padding:0 5px; box-sizing:border-box;}
+    .scaled-capture-container .telegram-link a {display:inline-block; width:100%;}
     .scaled-capture-container .rarity-block{padding:var(--scaled-rarity-padding-y) var(--scaled-rarity-padding-x);font-size:var(--scaled-rarity-font-size);border:var(--scaled-rarity-border-width) solid transparent;border-top-right-radius:var(--scaled-rarity-border-radius);border-bottom-left-radius:var(--scaled-rarity-border-radius)}
     .scaled-capture-container .rarity-block span{text-shadow:var(--scaled-rarity-text-shadow-x) var(--scaled-rarity-text-shadow-y) 0 rgba(0,0,0,0.5)}
     .scaled-capture-container .author-text{font-size:var(--scaled-author-font-size)}
@@ -531,13 +532,27 @@
           scaled.style.left = '-9999px';
           scaled.style.top = '-9999px';
 
+          // Устанавливаем фиксированные размеры перед рендерингом
+          scaled.style.width = '615px';
+          scaled.style.height = '850px';
+
+          // Принудительно применяем стили для текста
+          const telegramLink = scaled.querySelector('.telegram-link');
+          if (telegramLink) {
+            telegramLink.style.width = '90%';
+            telegramLink.style.maxWidth = '90%';
+            telegramLink.style.wordBreak = 'break-word';
+            telegramLink.style.overflowWrap = 'break-word';
+            telegramLink.style.whiteSpace = 'normal';
+          }
+
           // wait fonts + images
           try{
             const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
             await Promise.all([fontsReady, waitForImages(scaledCaptureContainer, 4000)]);
           }catch(e){ console.warn('Resources load timeout', e); }
 
-          html2canvas(scaledCaptureContainer, { scale:2, width:615, height:850, backgroundColor:null, useCORS:true }).then(canvas=>{
+          html2canvas(scaledCaptureContainer, { scale:2, width:615, height:850, backgroundColor:null, useCORS:true, windowWidth:615, windowHeight:850, letterRendering:true, useOverflow:true }).then(canvas=>{
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
             const hours = pad(now.getHours()); const minutes = pad(now.getMinutes()); const day = pad(now.getDate()); const month = pad(now.getMonth()+1); const year = now.getFullYear();
@@ -549,6 +564,15 @@
             scaled.style.position = originalPosition;
             scaled.style.left = originalLeft;
             scaled.style.top = originalTop;
+            scaled.style.width = '';
+            scaled.style.height = '';
+            if (telegramLink) {
+              telegramLink.style.width = '';
+              telegramLink.style.maxWidth = '';
+              telegramLink.style.wordBreak = '';
+              telegramLink.style.overflowWrap = '';
+              telegramLink.style.whiteSpace = '';
+            }
           });
         });
       }
