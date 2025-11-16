@@ -20,7 +20,7 @@ body {
     padding: 20px;
     text-align: center;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    max-width: 800px; /* Увеличено */
+    max-width: 800px;
     width: 90%;
 }
 
@@ -33,11 +33,11 @@ h1 {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
-    height: 200px; /* Увеличено */
+    height: 200px;
 }
 
 .slot {
-    width: 160px; /* Увеличено */
+    width: 160px;
     height: 200px;
     border: 2px solid white;
     border-radius: 10px;
@@ -57,11 +57,11 @@ h1 {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    will-change: transform; /* Для плавной анимации */
+    will-change: transform;
 }
 
 .symbol {
-    height: 200px; /* Увеличено */
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
