@@ -20,7 +20,7 @@ body {
     padding: 20px;
     text-align: center;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    max-width: 800px;
+    max-width: 800px; /* Увеличено */
     width: 90%;
 }
 
@@ -33,11 +33,11 @@ h1 {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
-    height: 200px;
+    height: 200px; /* Увеличено */
 }
 
 .slot {
-    width: 160px;
+    width: 160px; /* Увеличено */
     height: 200px;
     border: 2px solid white;
     border-radius: 10px;
@@ -57,16 +57,11 @@ h1 {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    will-change: transform;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth ease-out для снижения дерганий */
-}
-
-.reel.spinning {
-    animation: spin linear infinite;
+    will-change: transform; /* Для плавной анимации */
 }
 
 .symbol {
-    height: 200px;
+    height: 200px; /* Увеличено */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -106,11 +101,6 @@ h1 {
     min-height: 1.5em;
 }
 
-@keyframes spin {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-4000px); } /* Длинная петля для плавности, ~20 символов * 200px */
-}
-
 /* Адаптив для мобильных (<480px) */
 @media (max-width: 480px) {
     .slot-machine {
@@ -140,14 +130,6 @@ h1 {
         padding: 12px 24px;
         font-size: 1em;
     }
-    
-    .reel {
-        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    @keyframes spin {
-        100% { transform: translateY(-2400px); } /* Адаптация для 120px */
-    }
 }
 
 /* Планшеты (481-768px) */
@@ -167,9 +149,5 @@ h1 {
     
     .symbol {
         height: 160px;
-    }
-    
-    @keyframes spin {
-        100% { transform: translateY(-3200px); }
     }
 }
