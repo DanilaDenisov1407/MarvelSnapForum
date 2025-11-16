@@ -19,7 +19,7 @@ function preloadImages(urls) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = resolve;
-                img.onerror = () => resolve();
+                img.onerror = () => resolve(); // Продолжить даже при ошибке
                 img.src = url;
             });
         })
@@ -65,8 +65,11 @@ async function initReels() {
             reel.style.transform = `translateY(${positions[index]}px)`;
         });
         
-        btn.disabled = false;
-        btn.textContent = 'Крутить!';
+        // Дополнительная задержка 1с для полной загрузки после preload
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Крутить!';
+        }, 1000);
     } catch (error) {
         console.error('Ошибка загрузки Cards.json:', error);
         // Fallback на эмодзи
@@ -89,19 +92,21 @@ async function initReels() {
             reel.style.transform = `translateY(${positions[index]}px)`;
         });
         
-        btn.disabled = false;
-        btn.textContent = 'Крутить!';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Крутить!';
+        }, 1000);
     }
 }
 
-// Анимация с RAF (улучшено: адаптивные параметры для мобильных)
+// Анимация с RAF (адаптивные параметры для мобильных)
 function startReelAnimation(index) {
     const reel = document.getElementById(reels[index]);
     let lastTime = performance.now();
     let speed = 0;
     const isMobile = window.innerWidth < 480;
-    const accel = isMobile ? 4 : 6; // Меньше ускорение на мобильных
-    const maxSpeed = isMobile ? 18 : 25; // Меньше скорость на мобильных для плавности
+    const accel = isMobile ? 4 : 6;
+    const maxSpeed = isMobile ? 18 : 25;
     let stopped = false;
 
     function animate(currentTime) {
@@ -111,7 +116,6 @@ function startReelAnimation(index) {
         if (!isSpinning[index]) {
             if (!stopped) {
                 stopped = true;
-                // Точный снап с округлением
                 const stopIndex = Math.floor(Math.random() * baseSymbols.length);
                 positions[index] = Math.round(- (stopIndex * symbolHeight));
                 reel.style.transform = `translateY(${positions[index]}px)`;
@@ -125,7 +129,6 @@ function startReelAnimation(index) {
         speed = Math.min(maxSpeed, speed + accel);
         positions[index] -= speed * (delta / 16.67);
 
-        // Петля с округлением
         positions[index] %= -reelHeight;
         if (positions[index] > 0) positions[index] -= reelHeight;
         positions[index] = Math.round(positions[index]);
@@ -151,18 +154,21 @@ function spin() {
     result.textContent = '';
     finalSymbols = [];
 
-    reels.forEach((_, index) => {
-        isSpinning[index] = true;
-        positions[index] = 0;
-        if (animationIds[index]) cancelAnimationFrame(animationIds[index]);
-        startReelAnimation(index);
-    });
+    // Небольшая задержка перед стартом анимации (200ms)
+    setTimeout(() => {
+        reels.forEach((_, index) => {
+            isSpinning[index] = true;
+            positions[index] = 0;
+            if (animationIds[index]) cancelAnimationFrame(animationIds[index]);
+            startReelAnimation(index);
+        });
 
-    const isMobile = window.innerWidth < 480;
-    const delays = isMobile ? [1000, 1500, 2000] : [1500, 2200, 2900]; // Короткие задержки на мобильных для меньше лагов
-    setTimeout(() => stopReel(0), delays[0]);
-    setTimeout(() => stopReel(1), delays[1]);
-    setTimeout(() => stopReel(2), delays[2]);
+        const isMobile = window.innerWidth < 480;
+        const delays = isMobile ? [1000, 1500, 2000] : [1500, 2200, 2900];
+        setTimeout(() => stopReel(0), delays[0]);
+        setTimeout(() => stopReel(1), delays[1]);
+        setTimeout(() => stopReel(2), delays[2]);
+    }, 200);
 
     // Force finish после 4s
     setTimeout(() => {
@@ -219,7 +225,7 @@ window.addEventListener('load', async () => {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (!spinning) initReels(); // Re-init при ресайзе для обновления height
+            if (!spinning) initReels();
         }, 250);
     });
 });
