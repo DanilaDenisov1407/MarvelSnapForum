@@ -1,6 +1,6 @@
 const reels = ['reel1', 'reel2', 'reel3'];
 let spinning = false;
-let animationIds = []; // Для RAF
+let animationIds = [];
 let positions = [0, 0, 0];
 let isSpinning = [false, false, false];
 let finalSymbols = [];
@@ -39,7 +39,7 @@ async function initReels() {
         
         await preloadImages(baseSymbols);
         
-        symbols = [...baseSymbols, ...baseSymbols]; // 2x для петли
+        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols]; // 4x для ещё более длинной петли
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
         reelHeight = symbols.length * symbolHeight;
 
@@ -69,7 +69,7 @@ async function initReels() {
         console.error('Ошибка загрузки Cards.json:', error);
         // Fallback на эмодзи
         baseSymbols = ['🍋', '🍒', '🍊', '🍇', '🔔', '7️⃣'];
-        symbols = [...baseSymbols, ...baseSymbols];
+        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols];
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
         reelHeight = symbols.length * symbolHeight;
         
@@ -92,13 +92,13 @@ async function initReels() {
     }
 }
 
-// Анимация с RAF (улучшено: простая скорость, instant stop с transition)
+// Анимация с RAF (улучшено: быстрее, длиннее, точный снап)
 function startReelAnimation(index) {
     const reel = document.getElementById(reels[index]);
     let lastTime = performance.now();
     let speed = 0;
-    const accel = 2; // Медленное ускорение для плавности
-    const maxSpeed = 8; // Низкая скорость для меньше лагов
+    const accel = 6; // Ещё быстрее ускорение
+    const maxSpeed = 25; // Выше скорость для динамики
     let stopped = false;
 
     function animate(currentTime) {
@@ -108,7 +108,7 @@ function startReelAnimation(index) {
         if (!isSpinning[index]) {
             if (!stopped) {
                 stopped = true;
-                // Instant stop, CSS transition handles smooth
+                // Точный снап к случайному базовому символу
                 const stopIndex = Math.floor(Math.random() * baseSymbols.length);
                 positions[index] = - (stopIndex * symbolHeight);
                 reel.style.transform = `translateY(${positions[index]}px)`;
@@ -116,12 +116,11 @@ function startReelAnimation(index) {
                 animationIds[index] = null;
                 return;
             }
-            animationIds[index] = null;
             return;
         }
 
         speed = Math.min(maxSpeed, speed + accel);
-        positions[index] -= speed * (delta / 16.67); // 60fps
+        positions[index] -= speed * (delta / 16.67);
 
         // Петля
         positions[index] %= -reelHeight;
@@ -155,14 +154,15 @@ function spin() {
         startReelAnimation(index);
     });
 
-    setTimeout(() => stopReel(0), 800);
-    setTimeout(() => stopReel(1), 1200);
-    setTimeout(() => stopReel(2), 1600);
+    // Ещё более длинные задержки для анимации
+    setTimeout(() => stopReel(0), 1500);
+    setTimeout(() => stopReel(1), 2200);
+    setTimeout(() => stopReel(2), 2900);
 
-    // Force finish после 3s
+    // Force finish после 4s
     setTimeout(() => {
         if (spinning) finishSpin();
-    }, 3000);
+    }, 4000);
 }
 
 // Stop
