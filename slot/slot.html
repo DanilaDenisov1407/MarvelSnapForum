@@ -1,47 +1,38 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>🎰 Слот Машина</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шуточная Слот-Машина</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🎰 Слот Машина</h1>
-
-  <div class="machine-container">
-    <!-- SVG твоя рамка автомата -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" class="slot-frame">
-      <defs>
-        <clipPath id="arcClip">
-          <path d="M120,200 Q600,-60 1080,200 L1080,760 Q1080,820 1020,840 L180,840 Q120,820 120,760 Z"/>
-        </clipPath>
-      </defs>
-
-      <!-- корпус -->
-      <path fill="#b80022" d="M120,200 Q600,-60 1080,200 L1080,760 Q1080,820 1020,840 L180,840 Q120,820 120,760 Z"/>
-
-      <!-- внутренний фон -->
-      <g clip-path="url(#arcClip)">
-        <rect x="200" y="260" width="800" height="380" rx="28" fill="#132c8c"/>
-      </g>
-
-      <!-- окна -->
-      <rect x="230" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
-      <rect x="490" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
-      <rect x="750" y="360" width="220" height="320" rx="22" fill="transparent" stroke="#fff"/>
-    </svg>
-
-    <!-- барабаны -->
-    <div class="reels-wrapper">
-      <div class="reel" id="r0"></div>
-      <div class="reel" id="r1"></div>
-      <div class="reel" id="r2"></div>
+    <div class="slot-machine">
+        <h1>🎰 Шуточная Слот-Машина</h1>
+        <p>Удачи! 😄</p>
+        
+        <div class="slots-container">
+            <div class="slot" id="slot1">
+                <div class="reel" id="reel1">
+                    <!-- Символы добавит JS -->
+                </div>
+            </div>
+            <div class="slot" id="slot2">
+                <div class="reel" id="reel2">
+                    <!-- Символы добавит JS -->
+                </div>
+            </div>
+            <div class="slot" id="slot3">
+                <div class="reel" id="reel3">
+                    <!-- Символы добавит JS -->
+                </div>
+            </div>
+        </div>
+        
+        <button class="spin-btn" id="spinBtn">Крутить!</button>
+        <div class="result" id="result"></div>
     </div>
-  </div>
 
-  <button id="spin">Крутить!</button>
-  <div id="result"></div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
