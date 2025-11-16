@@ -39,7 +39,9 @@ async function initReels() {
         
         await preloadImages(baseSymbols);
         
-        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols]; // 4x для ещё более длинной петли
+        // На мобильных уменьшаем повторения для снижения нагрузки
+        const isMobile = window.innerWidth < 480;
+        symbols = isMobile ? [...baseSymbols, ...baseSymbols] : [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols];
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
         reelHeight = symbols.length * symbolHeight;
 
@@ -92,13 +94,14 @@ async function initReels() {
     }
 }
 
-// Анимация с RAF (улучшено: быстрее, длиннее, точный снап)
+// Анимация с RAF (улучшено: адаптивные параметры для мобильных)
 function startReelAnimation(index) {
     const reel = document.getElementById(reels[index]);
     let lastTime = performance.now();
     let speed = 0;
-    const accel = 6; // Ещё быстрее ускорение
-    const maxSpeed = 25; // Выше скорость для динамики
+    const isMobile = window.innerWidth < 480;
+    const accel = isMobile ? 4 : 6; // Меньше ускорение на мобильных
+    const maxSpeed = isMobile ? 18 : 25; // Меньше скорость на мобильных для плавности
     let stopped = false;
 
     function animate(currentTime) {
@@ -108,9 +111,9 @@ function startReelAnimation(index) {
         if (!isSpinning[index]) {
             if (!stopped) {
                 stopped = true;
-                // Точный снап к случайному базовому символу
+                // Точный снап с округлением
                 const stopIndex = Math.floor(Math.random() * baseSymbols.length);
-                positions[index] = - (stopIndex * symbolHeight);
+                positions[index] = Math.round(- (stopIndex * symbolHeight));
                 reel.style.transform = `translateY(${positions[index]}px)`;
                 finalSymbols[index] = baseSymbols[stopIndex];
                 animationIds[index] = null;
@@ -122,9 +125,10 @@ function startReelAnimation(index) {
         speed = Math.min(maxSpeed, speed + accel);
         positions[index] -= speed * (delta / 16.67);
 
-        // Петля
+        // Петля с округлением
         positions[index] %= -reelHeight;
         if (positions[index] > 0) positions[index] -= reelHeight;
+        positions[index] = Math.round(positions[index]);
 
         reel.style.transform = `translateY(${positions[index]}px)`;
 
@@ -154,10 +158,11 @@ function spin() {
         startReelAnimation(index);
     });
 
-    // Ещё более длинные задержки для анимации
-    setTimeout(() => stopReel(0), 1500);
-    setTimeout(() => stopReel(1), 2200);
-    setTimeout(() => stopReel(2), 2900);
+    const isMobile = window.innerWidth < 480;
+    const delays = isMobile ? [1000, 1500, 2000] : [1500, 2200, 2900]; // Короткие задержки на мобильных для меньше лагов
+    setTimeout(() => stopReel(0), delays[0]);
+    setTimeout(() => stopReel(1), delays[1]);
+    setTimeout(() => stopReel(2), delays[2]);
 
     // Force finish после 4s
     setTimeout(() => {
@@ -214,7 +219,7 @@ window.addEventListener('load', async () => {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (!spinning) initReels();
+            if (!spinning) initReels(); // Re-init при ресайзе для обновления height
         }, 250);
     });
 });
