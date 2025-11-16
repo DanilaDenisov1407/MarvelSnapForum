@@ -58,6 +58,7 @@ h1 {
     flex-direction: column;
     justify-content: flex-start;
     will-change: transform; /* Для плавной анимации */
+    transition: transform 0.3s ease-out; /* Smooth stop для снижения дерганий */
 }
 
 .symbol {
@@ -130,9 +131,13 @@ h1 {
         padding: 12px 24px;
         font-size: 1em;
     }
+    
+    .reel {
+        transition: transform 0.2s ease-out; /* Быстрее на мобиле */
+    }
 }
 
-/* Планшеты (480-768px) */
+/* Планшеты (481-768px) */
 @media (min-width: 481px) and (max-width: 768px) {
     .slot-machine {
         max-width: 600px;
