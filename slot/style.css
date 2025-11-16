@@ -58,7 +58,7 @@ h1 {
     flex-direction: column;
     justify-content: flex-start;
     will-change: transform;
-    transition: transform 0.2s ease-out; /* Добавлено для плавной остановки на мобильных */
+    transition: transform 0.2s ease-out; /* Плавная остановка */
 }
 
 .symbol {
@@ -133,7 +133,7 @@ h1 {
     }
     
     .reel {
-        transition: transform 0.1s ease-out; /* Короткий transition для мобильных */
+        transition: transform 0.15s ease-out; /* Оптимизировано для мобильных */
     }
 }
 
@@ -154,5 +154,9 @@ h1 {
     
     .symbol {
         height: 160px;
+    }
+    
+    .reel {
+        transition: transform 0.2s ease-out;
     }
 }
