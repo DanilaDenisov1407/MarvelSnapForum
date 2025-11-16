@@ -58,6 +58,7 @@ h1 {
     flex-direction: column;
     justify-content: flex-start;
     will-change: transform;
+    transition: transform 0.2s ease-out; /* Добавлено для плавной остановки на мобильных */
 }
 
 .symbol {
@@ -129,6 +130,10 @@ h1 {
     .spin-btn {
         padding: 12px 24px;
         font-size: 1em;
+    }
+    
+    .reel {
+        transition: transform 0.1s ease-out; /* Короткий transition для мобильных */
     }
 }
 
