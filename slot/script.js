@@ -190,7 +190,7 @@ function finishSpin() {
     btn.textContent = 'Крутить!';
     const isWin = finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2];
     const result = document.getElementById('result');
-    result.textContent = isWin ? 'Выиграл! 🎉 (Шучу, попробуй ещё)' : 'Почти выиграл! 😅';
+    result.textContent = isWin ? 'ДжекПот! 🎉 (Все сопали)' : 'Проебали? 😅';
     if (checkInterval) {
         clearInterval(checkInterval);
         checkInterval = null;
