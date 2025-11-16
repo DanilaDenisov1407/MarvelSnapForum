@@ -215,7 +215,7 @@ window.addEventListener('load', async () => {
     checkInterval = setInterval(() => {
         if (spinning) {
             const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
-            if (stoppedCount === 3) {
+            if (stoppedCount === 4) {
                 finishSpin();
             }
         }
