@@ -1,156 +1,155 @@
-/***************** Настройки *****************/
-const JSON_PATH = "./Cards.json";      // файл рядом с этим HTML
-const REPEAT = 8;                      // сколько случайных карт перед финальной
-const BASE_DURATION = 1200;            // длительность анимации для 1-го барабана (мс)
-const STEP_DURATION = 900;             // дополнительная длительность для каждого следующего (мс)
-const BUFFER_AFTER = 120;              // буфер перед проверкой (мс)
-/*********************************************/
+const reels = ['reel1', 'reel2', 'reel3'];
+let spinning = false;
+let animationIds = []; // Для RAF
+let positions = [0, 0, 0]; // Текущие позиции для каждого ролика
+let isSpinning = [false, false, false]; // Флаг спина для каждого
+let finalSymbols = [];
+let baseSymbols = [];
+let symbols = [];
+let symbolHeight = 100;
+let reelHeight = 0;
 
-const reels = [
-  document.getElementById("r0"),
-  document.getElementById("r1"),
-  document.getElementById("r2")
-];
-const spinBtn = document.getElementById("spin");
-const resultEl = document.getElementById("result");
-let images = []; // массив строк-URL
+// Инициализация: загрузка JSON, добавление символов и случайный старт
+async function initReels() {
+    try {
+        const response = await fetch('Cards.json');
+        const jsonData = await response.json();
+        baseSymbols = jsonData;
+        symbols = [...jsonData, ...jsonData, ...jsonData, ...jsonData]; // 24 для петли (предполагая ~6 базовых)
+        symbolHeight = window.innerWidth < 480 ? 80 : 100;
+        reelHeight = symbols.length * symbolHeight;
 
-// блокируем кнопку пока не загрузим ссылки
-spinBtn.disabled = true;
+        reels.forEach((reelId, index) => {
+            const reel = document.getElementById(reelId);
+            symbols.forEach(sym => {
+                const symbolDiv = document.createElement('div');
+                symbolDiv.className = 'symbol';
+                symbolDiv.innerHTML = `<img src="${sym}" alt="" style="width:100%; height:100%; object-fit:contain;">`;
+                reel.appendChild(symbolDiv);
+            });
+            // Случайный стартовый символ (статичный, десинхронизируем)
+            const initIndex = Math.floor(Math.random() * baseSymbols.length);
+            positions[index] = - (initIndex * symbolHeight);
+            reel.style.transform = `translateY(${positions[index]}px)`;
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки Cards.json:', error);
+        // Fallback на эмодзи, если JSON не загрузился
+        baseSymbols = ['🍋', '🍒', '🍊', '🍇', '🔔', '7️⃣'];
+        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols];
+        // ... (повторить init с textContent вместо innerHTML)
+    }
+}
 
-async function loadCards() {
-  try {
-    if (location.protocol === "file:") {
-      resultEl.textContent = "⚠️ Запустите через локальный сервер (http://...), fetch с file:// не работает.";
-      spinBtn.disabled = true;
-      return;
+// Анимация одного ролика с RAF (плавная, без дёрганий)
+function startReelAnimation(index) {
+    const reel = document.getElementById(reels[index]);
+    let lastTime = 0;
+    let speed = 0; // Начальная скорость 0
+    const accel = 50; // Ускорение px/ms (adjusted)
+    const maxSpeed = 800; // Макс скорость px/ms
+
+    function animate(currentTime) {
+        if (!isSpinning[index]) {
+            // Остановка: замедление и снап
+            speed *= 0.95; // Фрикшн
+            if (Math.abs(speed) < 1) {
+                // Снап к ближайшему символу
+                const snapIndex = Math.round(Math.abs(positions[index]) / symbolHeight) % baseSymbols.length;
+                positions[index] = - (snapIndex * symbolHeight);
+                reel.style.transform = `translateY(${positions[index]}px)`;
+                finalSymbols[index] = baseSymbols[snapIndex];
+                return;
+            }
+        } else {
+            // Ускорение во время спина
+            speed = Math.min(maxSpeed, speed + accel * (currentTime - lastTime) / 1000);
+        }
+
+        positions[index] -= speed * (currentTime - lastTime) / 16; // ~60fps normalize
+        positions[index] = positions[index] % -reelHeight; // Петля (отриц для up)
+        if (positions[index] > 0) positions[index] -= reelHeight; // Fix wrap
+
+        reel.style.transform = `translateY(${positions[index]}px)`;
+
+        lastTime = currentTime;
+        animationIds[index] = requestAnimationFrame(animate);
     }
 
-    const res = await fetch(JSON_PATH, { cache: "no-cache" });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const raw = await res.json();
+    animationIds[index] = requestAnimationFrame(animate);
+}
 
-    if (!Array.isArray(raw)) throw new Error("Cards.json должен быть массивом");
+// Запуск спина
+function spin() {
+    if (spinning) return;
+    spinning = true;
+    const btn = document.getElementById('spinBtn');
+    const result = document.getElementById('result');
+    
+    btn.disabled = true;
+    btn.textContent = 'Крутит...';
+    result.textContent = '';
+    finalSymbols = [];
 
-    images = raw.map(item => {
-      if (typeof item === "string") return item;
-      if (item && typeof item === "object") {
-        return item.url || item.image || item.img || item.src || "";
-      }
-      return "";
-    }).filter(Boolean);
-
-    if (images.length === 0) {
-      resultEl.textContent = "⚠️ Cards.json пуст или в неправильном формате.";
-      spinBtn.disabled = true;
-      return;
-    }
-
-    // показать превью
-    reels.forEach(r => {
-      r.innerHTML = `<div class="track"><img src="${images[Math.floor(Math.random()*images.length)]}" alt=""></div>`;
+    // Запуск анимации для всех (с десинхрон: разная начальная скорость/pos)
+    reels.forEach((_, index) => {
+        isSpinning[index] = true;
+        positions[index] = 0; // Сброс для синхронного старта
+        if (animationIds[index]) cancelAnimationFrame(animationIds[index]);
+        startReelAnimation(index);
     });
 
-    // разрешаем крутить
-    spinBtn.disabled = false;
-    resultEl.textContent = "";
+    // Останавливаем по очереди (с задержками)
+    setTimeout(() => stopReel(0), 1000);
+    setTimeout(() => stopReel(1), 1600);
+    setTimeout(() => stopReel(2), 2200);
+}
 
-    // префетчим картинки
-    images.forEach(u => {
-      const img = new Image();
-      img.src = u;
+// Остановка конкретного ролика
+function stopReel(index) {
+    isSpinning[index] = false;
+    // Анимация сама замедлится и снапнется в RAF loop
+}
+
+// Очистка анимаций
+function stopAllAnimations() {
+    reels.forEach((_, index) => {
+        isSpinning[index] = false;
+        if (animationIds[index]) {
+            cancelAnimationFrame(animationIds[index]);
+        }
     });
-
-  } catch (err) {
-    console.error("Ошибка загрузки Cards.json:", err);
-    resultEl.textContent = "⚠️ Не удалось загрузить Cards.json (см. консоль)";
-    spinBtn.disabled = true;
-  }
 }
 
-function randUrl() {
-  return images[Math.floor(Math.random()*images.length)];
+// Завершение спина
+function finishSpin() {
+    stopAllAnimations();
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = false;
+    btn.textContent = 'Крутить!';
+    // Шуточный результат (сравниваем URL для выигрыша)
+    const isWin = finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2];
+    const result = document.getElementById('result');
+    result.textContent = isWin ? 'Выиграл! 🎉 (Шучу, попробуй ещё)' : 'Почти выиграл! 😅';
+    spinning = false;
 }
 
-function waitForImagesInTrack(track) {
-  const imgs = Array.from(track.querySelectorAll("img"));
-  if (imgs.length === 0) return Promise.resolve();
-  return new Promise(resolve => {
-    let loaded = 0;
-    function checkDone() {
-      loaded++;
-      if (loaded >= imgs.length) resolve();
-    }
-    imgs.forEach(img => {
-      if (img.complete) checkDone();
-      else {
-        img.addEventListener("load", checkDone, { once: true });
-        img.addEventListener("error", checkDone, { once: true });
-      }
-    });
-  });
-}
+// События
+document.getElementById('spinBtn').addEventListener('click', spin);
 
-async function buildTrack(reelEl, finalUrl) {
-  reelEl.innerHTML = "";
-  const track = document.createElement("div");
-  track.className = "track";
+// Инициализация при загрузке
+window.addEventListener('load', async () => {
+    await initReels();
+    // Завершить спин через макс время (на всякий)
+    setInterval(() => {
+        if (spinning) {
+            const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
+            if (stoppedCount === 3) {
+                finishSpin();
+            }
+        }
+    }, 100);
+});
 
-  for (let k = 0; k < REPEAT; k++) {
-    const img = document.createElement("img");
-    img.src = randUrl();
-    track.appendChild(img);
-  }
-
-  const finalImg = document.createElement("img");
-  finalImg.src = finalUrl;
-  finalImg.dataset.final = "1";
-  track.appendChild(finalImg);
-
-  reelEl.appendChild(track);
-
-  await waitForImagesInTrack(track);
-
-  const trackHeight = track.scrollHeight;
-  const viewH = reelEl.clientHeight;
-  const totalShift = Math.max(0, trackHeight - viewH);
-
-  return { track, totalShift };
-}
-
-async function spin() {
-  if (!images.length) {
-    resultEl.textContent = "⏳ Ссылки ещё не загрузились...";
-    return;
-  }
-
-  spinBtn.disabled = true;
-  resultEl.textContent = "";
-
-  const finals = [randUrl(), randUrl(), randUrl()];
-  const buildPromises = reels.map((r, i) => buildTrack(r, finals[i]));
-  const built = await Promise.all(buildPromises);
-
-  built.forEach(({ track, totalShift }, i) => {
-    const duration = BASE_DURATION + i * STEP_DURATION;
-
-    track.style.transition = "none";
-    track.style.transform = `translateY(0px)`;
-    track.getBoundingClientRect(); // форсируем релоад
-
-    requestAnimationFrame(() => {
-      track.style.transition = `transform ${duration}ms cubic-bezier(0.22,1,0.36,1)`;
-      track.style.transform = `translateY(-${totalShift}px)`;
-    });
-  });
-
-  const lastDuration = BASE_DURATION + (reels.length - 1) * STEP_DURATION;
-  await new Promise(res => setTimeout(res, lastDuration + BUFFER_AFTER));
-
-  const win = finals[0] && finals[0] === finals[1] && finals[1] === finals[2];
-  resultEl.textContent = win ? "🎉 Выиграли!" : "Проебали?";
-  spinBtn.disabled = false;
-}
-
-spinBtn.addEventListener("click", spin);
-loadCards();
+// Cleanup on unload
+window.addEventListener('beforeunload', stopAllAnimations);
