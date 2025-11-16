@@ -1,9 +1,16 @@
 const reels = ['reel1', 'reel2', 'reel3'];
 let spinning = false;
+let animationIds = []; // Для RAF
+let positions = [0, 0, 0];
+let isSpinning = [false, false, false];
+let finalSymbols = [];
 let baseSymbols = [];
 let symbols = [];
 let symbolHeight = 200;
+let reelHeight = 0;
 const POOL_SIZE = 20;
+let checkInterval;
+let spinStartTime;
 
 // Прелоад изображений
 function preloadImages(urls) {
@@ -27,16 +34,14 @@ async function initReels() {
         if (!response.ok) throw new Error('JSON не найден');
         const jsonData = await response.json();
         
-        // Выбор пула из 20
         const shuffled = [...jsonData].sort(() => 0.5 - Math.random());
         baseSymbols = shuffled.slice(0, POOL_SIZE);
         
-        // Прелоад
         await preloadImages(baseSymbols);
         
-        // symbols для петли: 3 повторения для длинной анимации
-        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols];
+        symbols = [...baseSymbols, ...baseSymbols]; // 2x для петли
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
+        reelHeight = symbols.length * symbolHeight;
 
         reels.forEach((reelId, index) => {
             const reel = document.getElementById(reelId);
@@ -53,19 +58,20 @@ async function initReels() {
                 symbolDiv.appendChild(img);
                 reel.appendChild(symbolDiv);
             });
-            // Случайный старт
             const initIndex = Math.floor(Math.random() * baseSymbols.length);
-            reel.style.transform = `translateY(${-initIndex * symbolHeight}px)`;
+            positions[index] = - (initIndex * symbolHeight);
+            reel.style.transform = `translateY(${positions[index]}px)`;
         });
         
         btn.disabled = false;
         btn.textContent = 'Крутить!';
     } catch (error) {
         console.error('Ошибка загрузки Cards.json:', error);
-        // Fallback
+        // Fallback на эмодзи
         baseSymbols = ['🍋', '🍒', '🍊', '🍇', '🔔', '7️⃣'];
-        symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols];
+        symbols = [...baseSymbols, ...baseSymbols];
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
+        reelHeight = symbols.length * symbolHeight;
         
         reels.forEach((reelId, index) => {
             const reel = document.getElementById(reelId);
@@ -77,7 +83,8 @@ async function initReels() {
                 reel.appendChild(symbolDiv);
             });
             const initIndex = Math.floor(Math.random() * baseSymbols.length);
-            reel.style.transform = `translateY(${-initIndex * symbolHeight}px)`;
+            positions[index] = - (initIndex * symbolHeight);
+            reel.style.transform = `translateY(${positions[index]}px)`;
         });
         
         btn.disabled = false;
@@ -85,75 +92,123 @@ async function initReels() {
     }
 }
 
-// Запуск спина (CSS анимация для плавности, без RAF лагов)
+// Анимация с RAF (улучшено: простая скорость, instant stop с transition)
+function startReelAnimation(index) {
+    const reel = document.getElementById(reels[index]);
+    let lastTime = performance.now();
+    let speed = 0;
+    const accel = 2; // Медленное ускорение для плавности
+    const maxSpeed = 8; // Низкая скорость для меньше лагов
+    let stopped = false;
+
+    function animate(currentTime) {
+        const delta = currentTime - lastTime;
+        lastTime = currentTime;
+
+        if (!isSpinning[index]) {
+            if (!stopped) {
+                stopped = true;
+                // Instant stop, CSS transition handles smooth
+                const stopIndex = Math.floor(Math.random() * baseSymbols.length);
+                positions[index] = - (stopIndex * symbolHeight);
+                reel.style.transform = `translateY(${positions[index]}px)`;
+                finalSymbols[index] = baseSymbols[stopIndex];
+                animationIds[index] = null;
+                return;
+            }
+            animationIds[index] = null;
+            return;
+        }
+
+        speed = Math.min(maxSpeed, speed + accel);
+        positions[index] -= speed * (delta / 16.67); // 60fps
+
+        // Петля
+        positions[index] %= -reelHeight;
+        if (positions[index] > 0) positions[index] -= reelHeight;
+
+        reel.style.transform = `translateY(${positions[index]}px)`;
+
+        animationIds[index] = requestAnimationFrame(animate);
+    }
+
+    animationIds[index] = requestAnimationFrame(animate);
+}
+
+// Спин
 function spin() {
     if (spinning) return;
     spinning = true;
+    spinStartTime = Date.now();
     const btn = document.getElementById('spinBtn');
     const result = document.getElementById('result');
     
     btn.disabled = true;
     btn.textContent = 'Крутит...';
     result.textContent = '';
+    finalSymbols = [];
 
-    // Сброс и запуск
-    reels.forEach(reelId => {
-        const reel = document.getElementById(reelId);
-        reel.style.transform = 'translateY(0px)';
-        reel.classList.remove('spinning');
-        // Force reflow
-        reel.offsetHeight;
-        reel.classList.add('spinning');
+    reels.forEach((_, index) => {
+        isSpinning[index] = true;
+        positions[index] = 0;
+        if (animationIds[index]) cancelAnimationFrame(animationIds[index]);
+        startReelAnimation(index);
     });
 
-    // Остановка по задержкам с random pos
     setTimeout(() => stopReel(0), 800);
     setTimeout(() => stopReel(1), 1200);
     setTimeout(() => stopReel(2), 1600);
 
-    // Локальный interval для check
-    const intervalId = setInterval(() => {
-        if (!spinning) {
-            clearInterval(intervalId);
-            return;
-        }
-        // Force finish после 3s
-        if (Date.now() - spinStartTime > 3000) {
-            finishSpin();
-            clearInterval(intervalId);
-        }
-    }, 100);
+    // Force finish после 3s
+    setTimeout(() => {
+        if (spinning) finishSpin();
+    }, 3000);
 }
 
-// Остановка ролика (random pos + smooth transition)
+// Stop
 function stopReel(index) {
-    const reelId = reels[index];
-    const reel = document.getElementById(reelId);
-    const stopIndex = Math.floor(Math.random() * symbols.length);
-    const offset = - (stopIndex * symbolHeight);
-    
-    reel.classList.remove('spinning');
-    reel.style.animation = 'none'; // Kill animation
-    reel.style.transform = `translateY(${offset}px)`; // Set pos with transition
+    isSpinning[index] = false;
 }
 
-// Завершение
+// Finish
 function finishSpin() {
     spinning = false;
+    stopAllAnimations();
     const btn = document.getElementById('spinBtn');
     btn.disabled = false;
     btn.textContent = 'Крутить!';
+    const isWin = finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2];
     const result = document.getElementById('result');
-    result.textContent = 'Почти выиграл! 😅'; // Простой, без win check для скорости
+    result.textContent = isWin ? 'Выиграл! 🎉 (Шучу, попробуй ещё)' : 'Почти выиграл! 😅';
+    if (checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+    }
 }
 
-// События
+function stopAllAnimations() {
+    reels.forEach((_, index) => {
+        isSpinning[index] = false;
+        if (animationIds[index]) {
+            cancelAnimationFrame(animationIds[index]);
+        }
+    });
+}
+
+// Events
 document.getElementById('spinBtn').addEventListener('click', spin);
 
 // Load
-let spinStartTime = 0;
 window.addEventListener('load', async () => {
     await initReels();
+    checkInterval = setInterval(() => {
+        if (spinning) {
+            const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
+            if (stoppedCount === 3) {
+                finishSpin();
+            }
+        }
+    }, 100);
     
     let resizeTimeout;
     window.addEventListener('resize', () => {
@@ -164,9 +219,4 @@ window.addEventListener('load', async () => {
     });
 });
 
-window.addEventListener('beforeunload', () => {
-    reels.forEach(reelId => {
-        const reel = document.getElementById(reelId);
-        reel.classList.remove('spinning');
-    });
-});
+window.addEventListener('beforeunload', stopAllAnimations);
