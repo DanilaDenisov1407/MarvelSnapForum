@@ -20,7 +20,7 @@ body {
     padding: 20px;
     text-align: center;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    max-width: 400px;
+    max-width: 800px; /* Увеличено в ~2 раза */
     width: 90%;
 }
 
@@ -33,12 +33,12 @@ h1 {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
-    height: 100px;
+    height: 200px; /* Увеличено пропорционально */
 }
 
 .slot {
-    width: 80px;
-    height: 100px;
+    width: 160px; /* Увеличено в 2 раза */
+    height: 200px;
     border: 2px solid white;
     border-radius: 10px;
     overflow: hidden;
@@ -61,7 +61,7 @@ h1 {
 }
 
 .symbol {
-    height: 100px;
+    height: 200px; /* Увеличено */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -86,7 +86,7 @@ h1 {
     transition: background 0.3s;
 }
 
-.spin-btn:hover {
+.spin-btn:hover:not(:disabled) {
     background: orange;
 }
 
@@ -101,19 +101,53 @@ h1 {
     min-height: 1.5em;
 }
 
+/* Адаптив для мобильных (<480px) */
 @media (max-width: 480px) {
+    .slot-machine {
+        max-width: 400px; /* Половина от десктопа для мобильных */
+        width: 95%;
+        padding: 15px;
+    }
+    
     .slots-container {
-        height: 80px;
+        height: 120px;
     }
+    
     .slot {
-        width: 60px;
-        height: 80px;
+        width: 80px;
+        height: 120px;
     }
+    
     .symbol {
-        height: 80px;
+        height: 120px;
     }
-    .symbol img {
-        width: 100%;
-        height: 100%;
+    
+    h1 {
+        font-size: 1.2em;
+    }
+    
+    .spin-btn {
+        padding: 12px 24px;
+        font-size: 1em;
+    }
+}
+
+/* Планшеты (480-768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .slot-machine {
+        max-width: 600px;
+    }
+    
+    .slots-container {
+        height: 160px;
+    }
+    
+    .slot {
+        width: 120px;
+        height: 160px;
+    }
+    
+    .symbol {
+        height: 160px;
     }
 }
