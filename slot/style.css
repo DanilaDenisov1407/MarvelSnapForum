@@ -20,7 +20,7 @@ body {
     padding: 20px;
     text-align: center;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    max-width: 800px; /* Увеличено в ~2 раза */
+    max-width: 800px;
     width: 90%;
 }
 
@@ -33,11 +33,11 @@ h1 {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
-    height: 200px; /* Увеличено пропорционально */
+    height: 200px;
 }
 
 .slot {
-    width: 160px; /* Увеличено в 2 раза */
+    width: 160px;
     height: 200px;
     border: 2px solid white;
     border-radius: 10px;
@@ -57,12 +57,16 @@ h1 {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    will-change: transform; /* Для плавной анимации */
-    transition: transform 0.3s ease-out; /* Smooth stop для снижения дерганий */
+    will-change: transform;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth ease-out для снижения дерганий */
+}
+
+.reel.spinning {
+    animation: spin linear infinite;
 }
 
 .symbol {
-    height: 200px; /* Увеличено */
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -102,10 +106,15 @@ h1 {
     min-height: 1.5em;
 }
 
+@keyframes spin {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-4000px); } /* Длинная петля для плавности, ~20 символов * 200px */
+}
+
 /* Адаптив для мобильных (<480px) */
 @media (max-width: 480px) {
     .slot-machine {
-        max-width: 400px; /* Половина от десктопа для мобильных */
+        max-width: 400px;
         width: 95%;
         padding: 15px;
     }
@@ -133,7 +142,11 @@ h1 {
     }
     
     .reel {
-        transition: transform 0.2s ease-out; /* Быстрее на мобиле */
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    @keyframes spin {
+        100% { transform: translateY(-2400px); } /* Адаптация для 120px */
     }
 }
 
@@ -154,5 +167,9 @@ h1 {
     
     .symbol {
         height: 160px;
+    }
+    
+    @keyframes spin {
+        100% { transform: translateY(-3200px); }
     }
 }
