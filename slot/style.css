@@ -12,7 +12,6 @@ body {
     color: white;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
-
 .slot-machine {
     background: rgba(0, 0, 0, 0.8);
     border: 3px solid gold;
@@ -23,19 +22,16 @@ body {
     max-width: 800px;
     width: 90%;
 }
-
 h1 {
     margin: 0 0 20px;
     font-size: 1.5em;
 }
-
 .slots-container {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
     height: 200px;
 }
-
 .slot {
     width: 160px;
     height: 200px;
@@ -48,7 +44,6 @@ h1 {
     align-items: center;
     justify-content: center;
 }
-
 .reel {
     position: absolute;
     top: 0;
@@ -60,7 +55,6 @@ h1 {
     will-change: transform;
     transition: transform 0.2s ease-out; /* Плавная остановка */
 }
-
 .symbol {
     height: 200px;
     display: flex;
@@ -68,13 +62,11 @@ h1 {
     justify-content: center;
     flex-shrink: 0;
 }
-
 .symbol img {
     width: 100%;
     height: 100%;
     object-fit: contain;
 }
-
 .spin-btn {
     background: gold;
     color: black;
@@ -86,22 +78,18 @@ h1 {
     margin: 10px;
     transition: background 0.3s;
 }
-
 .spin-btn:hover:not(:disabled) {
     background: orange;
 }
-
 .spin-btn:disabled {
     background: gray;
     cursor: not-allowed;
 }
-
 .result {
     margin-top: 20px;
     font-size: 1.1em;
     min-height: 1.5em;
 }
-
 /* Адаптив для мобильных (<480px) */
 @media (max-width: 480px) {
     .slot-machine {
@@ -109,53 +97,52 @@ h1 {
         width: 95%;
         padding: 15px;
     }
-    
+   
     .slots-container {
         height: 120px;
     }
-    
+   
     .slot {
         width: 80px;
         height: 120px;
     }
-    
+   
     .symbol {
         height: 120px;
     }
-    
+   
     h1 {
         font-size: 1.2em;
     }
-    
+   
     .spin-btn {
         padding: 12px 24px;
         font-size: 1em;
     }
-    
+   
     .reel {
         transition: transform 0.15s ease-out; /* Оптимизировано для мобильных */
     }
 }
-
 /* Планшеты (481-768px) */
 @media (min-width: 481px) and (max-width: 768px) {
     .slot-machine {
         max-width: 600px;
     }
-    
+   
     .slots-container {
         height: 160px;
     }
-    
+   
     .slot {
         width: 120px;
         height: 160px;
     }
-    
+   
     .symbol {
         height: 160px;
     }
-    
+   
     .reel {
         transition: transform 0.2s ease-out;
     }
