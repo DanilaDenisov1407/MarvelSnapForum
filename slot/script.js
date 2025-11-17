@@ -51,14 +51,24 @@ async function initReels() {
             }
         });
        
+        // Найти персонажей с >=3 вариантами для special
+        const candidates = Object.keys(characterMap).filter(id => characterMap[id].length >= 3);
+        if (candidates.length === 0) {
+            console.warn('Нет персонажей с >=3 вариантами. Использую fallback.');
+            // Fallback: взять любого и повторить
+            const fallbackId = Object.keys(characterMap)[0];
+            const fallbackVariants = [...characterMap[fallbackId], ...characterMap[fallbackId], ...characterMap[fallbackId]].slice(0, 3);
+            var specialVariants = fallbackVariants;
+            var specialId = fallbackId;
+        } else {
+            specialId = candidates[Math.floor(Math.random() * candidates.length)];
+            specialVariants = characterMap[specialId].sort(() => 0.5 - Math.random()).slice(0, 3);
+        }
+       
         // Выбор 18 разных персонажей (по одному варианту)
         const allIds = Object.keys(characterMap);
-        const shuffledIds = allIds.sort(() => 0.5 - Math.random()).slice(0, 18);
+        const shuffledIds = allIds.sort(() => 0.5 - Math.random()).filter(id => id !== specialId).slice(0, 18);
         const differentCharacters = shuffledIds.map(id => characterMap[id][Math.floor(Math.random() * characterMap[id].length)]);
-       
-        // Выбор одного персонажа с 3 вариантами
-        const specialId = allIds[Math.floor(Math.random() * allIds.length)];
-        const specialVariants = characterMap[specialId].sort(() => 0.5 - Math.random()).slice(0, 3);
        
         // Сбор baseSymbols: 18 разных + 3 варианта одного
         baseSymbols = [...differentCharacters, ...specialVariants].sort(() => 0.5 - Math.random());
@@ -172,7 +182,7 @@ function spin() {
     stopIndices = [];
    
     // Rigged шансы
-    if (Math.random() < 1 / 100) { // Джекпот ~1 к 10M
+    if (Math.random() < 1 / 100) { // Джекпот ~1 к 100
         const jackpotIndex = Math.floor(Math.random() * baseSymbols.length);
         stopIndices = [jackpotIndex, jackpotIndex, jackpotIndex];
     } else if (Math.random() < 0.5) { // Победа ~50%
@@ -252,7 +262,7 @@ window.addEventListener('load', async () => {
     checkInterval = setInterval(() => {
         if (spinning) {
             const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
-            if (stoppedCount === 4) {
+            if (stoppedCount === 3) {
                 finishSpin();
             }
         }
