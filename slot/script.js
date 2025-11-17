@@ -208,7 +208,7 @@ function finishSpin() {
     } else if (char0 && char0 === char1 && char1 === char2) {
         result.textContent = 'Победа! 🏆 (Совпали персонажи)';
     } else {
-        result.textContent = 'Почти выиграл! 😅';
+        result.textContent = 'Проебали? 😅';
     }
     if (checkInterval) {
         clearInterval(checkInterval);
