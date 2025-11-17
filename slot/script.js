@@ -182,10 +182,10 @@ function spin() {
     stopIndices = [];
    
     // Rigged шансы
-    if (Math.random() < 0.0000001) { // Джекпот ~1 к 100
+    if (Math.random() < 0.0000001) { // Джекпот ~0,000001%
         const jackpotIndex = Math.floor(Math.random() * baseSymbols.length);
         stopIndices = [jackpotIndex, jackpotIndex, jackpotIndex];
-    } else if (Math.random() < 0.005) { // Победа ~50%
+    } else if (Math.random() < 0.005) { // Победа ~0,5%
         // Найти персонажа с >=3 вариантами (specialVariants)
         const specialUrls = baseSymbols.filter(url => getCharacterId(url) === getCharacterId(baseSymbols[baseSymbols.length - 1])); // Предполагаем special в конце
         if (specialUrls.length >= 3) {
