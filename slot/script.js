@@ -8,9 +8,10 @@ let baseSymbols = [];
 let symbols = [];
 let symbolHeight = 200;
 let reelHeight = 0;
-const POOL_SIZE = 21; // Изменено на 21
+const POOL_SIZE = 21;
 let checkInterval;
 let spinStartTime;
+let stopIndices = [];
 
 // Прелоад изображений
 function preloadImages(urls) {
@@ -50,18 +51,17 @@ async function initReels() {
             }
         });
        
-        // Выбор 18 разных персонажей
+        // Выбор 18 разных персонажей (по одному варианту)
         const allIds = Object.keys(characterMap);
         const shuffledIds = allIds.sort(() => 0.5 - Math.random()).slice(0, 18);
+        const differentCharacters = shuffledIds.map(id => characterMap[id][Math.floor(Math.random() * characterMap[id].length)]);
        
-        // Выбор одного персонажа с 3 вариантами (если есть, иначе взять сколько есть)
+        // Выбор одного персонажа с 3 вариантами
         const specialId = allIds[Math.floor(Math.random() * allIds.length)];
-        const specialVariants = characterMap[specialId].slice(0, 3); // До 3 вариантов
+        const specialVariants = characterMap[specialId].sort(() => 0.5 - Math.random()).slice(0, 3);
        
         // Сбор baseSymbols: 18 разных + 3 варианта одного
-        baseSymbols = shuffledIds.flatMap(id => characterMap[id][Math.floor(Math.random() * characterMap[id].length)]);
-        baseSymbols = baseSymbols.concat(specialVariants);
-        baseSymbols = baseSymbols.sort(() => 0.5 - Math.random()); // Перемешать
+        baseSymbols = [...differentCharacters, ...specialVariants].sort(() => 0.5 - Math.random());
        
         await preloadImages(baseSymbols);
        
@@ -138,7 +138,7 @@ function startReelAnimation(index) {
         if (!isSpinning[index]) {
             if (!stopped) {
                 stopped = true;
-                const stopIndex = Math.floor(Math.random() * baseSymbols.length);
+                const stopIndex = stopIndices[index];
                 positions[index] = Math.round(- (stopIndex * symbolHeight));
                 reel.style.transform = `translateY(${positions[index]}px)`;
                 finalSymbols[index] = baseSymbols[stopIndex];
@@ -169,6 +169,27 @@ function spin() {
     btn.textContent = 'Крутит...';
     result.textContent = '';
     finalSymbols = [];
+    stopIndices = [];
+   
+    // Rigged шансы
+    if (Math.random() < 1 / 10000000) { // Джекпот ~1 к 10M
+        const jackpotIndex = Math.floor(Math.random() * baseSymbols.length);
+        stopIndices = [jackpotIndex, jackpotIndex, jackpotIndex];
+    } else if (Math.random() < 0.05) { // Победа ~5%
+        // Найти персонажа с >=3 вариантами (specialVariants)
+        const specialUrls = baseSymbols.filter(url => getCharacterId(url) === getCharacterId(baseSymbols[baseSymbols.length - 1])); // Предполагаем special в конце
+        if (specialUrls.length >= 3) {
+            const shuffledSpecial = specialUrls.sort(() => 0.5 - Math.random()).slice(0, 3);
+            stopIndices = shuffledSpecial.map(url => baseSymbols.indexOf(url));
+        } else {
+            // Fallback на random
+            stopIndices = Array.from({length: 3}, () => Math.floor(Math.random() * baseSymbols.length));
+        }
+    } else {
+        // Нормальный random
+        stopIndices = Array.from({length: 3}, () => Math.floor(Math.random() * baseSymbols.length));
+    }
+   
     // Небольшая задержка перед стартом анимации (200ms)
     setTimeout(() => {
         reels.forEach((_, index) => {
@@ -208,7 +229,7 @@ function finishSpin() {
     } else if (char0 && char0 === char1 && char1 === char2) {
         result.textContent = 'Победа! 🏆 (Совпали персонажи)';
     } else {
-        result.textContent = 'Проебали? 😅';
+        result.textContent = 'Почти выиграл! 😅';
     }
     if (checkInterval) {
         clearInterval(checkInterval);
@@ -231,7 +252,7 @@ window.addEventListener('load', async () => {
     checkInterval = setInterval(() => {
         if (spinning) {
             const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
-            if (stoppedCount === 4) {
+            if (stoppedCount === 3) {
                 finishSpin();
             }
         }
