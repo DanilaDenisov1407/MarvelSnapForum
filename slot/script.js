@@ -8,7 +8,7 @@ let baseSymbols = [];
 let symbols = [];
 let symbolHeight = 200;
 let reelHeight = 0;
-const POOL_SIZE = 20;
+const POOL_SIZE = 21; // Изменено на 21
 let checkInterval;
 let spinStartTime;
 
@@ -26,6 +26,12 @@ function preloadImages(urls) {
     );
 }
 
+// Функция для извлечения ID персонажа из URL
+function getCharacterId(url) {
+    const match = url.match(/cards\/(\d+)/);
+    return match ? match[1] : null;
+}
+
 // Инициализация
 async function initReels() {
     const btn = document.getElementById('spinBtn');
@@ -33,18 +39,37 @@ async function initReels() {
         const response = await fetch('Cards.json');
         if (!response.ok) throw new Error('JSON не найден');
         const jsonData = await response.json();
-        
-        const shuffled = [...jsonData].sort(() => 0.5 - Math.random());
-        baseSymbols = shuffled.slice(0, POOL_SIZE);
-        
+       
+        // Группировка по персонажам
+        const characterMap = {};
+        jsonData.forEach(url => {
+            const id = getCharacterId(url);
+            if (id) {
+                if (!characterMap[id]) characterMap[id] = [];
+                characterMap[id].push(url);
+            }
+        });
+       
+        // Выбор 18 разных персонажей
+        const allIds = Object.keys(characterMap);
+        const shuffledIds = allIds.sort(() => 0.5 - Math.random()).slice(0, 18);
+       
+        // Выбор одного персонажа с 3 вариантами (если есть, иначе взять сколько есть)
+        const specialId = allIds[Math.floor(Math.random() * allIds.length)];
+        const specialVariants = characterMap[specialId].slice(0, 3); // До 3 вариантов
+       
+        // Сбор baseSymbols: 18 разных + 3 варианта одного
+        baseSymbols = shuffledIds.flatMap(id => characterMap[id][Math.floor(Math.random() * characterMap[id].length)]);
+        baseSymbols = baseSymbols.concat(specialVariants);
+        baseSymbols = baseSymbols.sort(() => 0.5 - Math.random()); // Перемешать
+       
         await preloadImages(baseSymbols);
-        
+       
         // На мобильных уменьшаем повторения для снижения нагрузки
         const isMobile = window.innerWidth < 480;
         symbols = isMobile ? [...baseSymbols, ...baseSymbols] : [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols];
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
         reelHeight = symbols.length * symbolHeight;
-
         reels.forEach((reelId, index) => {
             const reel = document.getElementById(reelId);
             reel.innerHTML = '';
@@ -64,7 +89,7 @@ async function initReels() {
             positions[index] = - (initIndex * symbolHeight);
             reel.style.transform = `translateY(${positions[index]}px)`;
         });
-        
+       
         // Дополнительная задержка 1с для полной загрузки после preload
         setTimeout(() => {
             btn.disabled = false;
@@ -77,7 +102,7 @@ async function initReels() {
         symbols = [...baseSymbols, ...baseSymbols, ...baseSymbols, ...baseSymbols];
         symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
         reelHeight = symbols.length * symbolHeight;
-        
+       
         reels.forEach((reelId, index) => {
             const reel = document.getElementById(reelId);
             reel.innerHTML = '';
@@ -91,14 +116,13 @@ async function initReels() {
             positions[index] = - (initIndex * symbolHeight);
             reel.style.transform = `translateY(${positions[index]}px)`;
         });
-        
+       
         setTimeout(() => {
             btn.disabled = false;
             btn.textContent = 'Крутить!';
         }, 1000);
     }
 }
-
 // Анимация с RAF (адаптивные параметры для мобильных)
 function startReelAnimation(index) {
     const reel = document.getElementById(reels[index]);
@@ -108,11 +132,9 @@ function startReelAnimation(index) {
     const accel = isMobile ? 4 : 6;
     const maxSpeed = isMobile ? 18 : 25;
     let stopped = false;
-
     function animate(currentTime) {
         const delta = currentTime - lastTime;
         lastTime = currentTime;
-
         if (!isSpinning[index]) {
             if (!stopped) {
                 stopped = true;
@@ -125,22 +147,16 @@ function startReelAnimation(index) {
             }
             return;
         }
-
         speed = Math.min(maxSpeed, speed + accel);
         positions[index] -= speed * (delta / 16.67);
-
         positions[index] %= -reelHeight;
         if (positions[index] > 0) positions[index] -= reelHeight;
         positions[index] = Math.round(positions[index]);
-
         reel.style.transform = `translateY(${positions[index]}px)`;
-
         animationIds[index] = requestAnimationFrame(animate);
     }
-
     animationIds[index] = requestAnimationFrame(animate);
 }
-
 // Спин
 function spin() {
     if (spinning) return;
@@ -148,12 +164,11 @@ function spin() {
     spinStartTime = Date.now();
     const btn = document.getElementById('spinBtn');
     const result = document.getElementById('result');
-    
+   
     btn.disabled = true;
     btn.textContent = 'Крутит...';
     result.textContent = '';
     finalSymbols = [];
-
     // Небольшая задержка перед стартом анимации (200ms)
     setTimeout(() => {
         reels.forEach((_, index) => {
@@ -162,25 +177,21 @@ function spin() {
             if (animationIds[index]) cancelAnimationFrame(animationIds[index]);
             startReelAnimation(index);
         });
-
         const isMobile = window.innerWidth < 480;
         const delays = isMobile ? [1000, 1500, 2000] : [1500, 2200, 2900];
         setTimeout(() => stopReel(0), delays[0]);
         setTimeout(() => stopReel(1), delays[1]);
         setTimeout(() => stopReel(2), delays[2]);
     }, 200);
-
     // Force finish после 4s
     setTimeout(() => {
         if (spinning) finishSpin();
     }, 4000);
 }
-
 // Stop
 function stopReel(index) {
     isSpinning[index] = false;
 }
-
 // Finish
 function finishSpin() {
     spinning = false;
@@ -188,15 +199,22 @@ function finishSpin() {
     const btn = document.getElementById('spinBtn');
     btn.disabled = false;
     btn.textContent = 'Крутить!';
-    const isWin = finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2];
+    const char0 = getCharacterId(finalSymbols[0]);
+    const char1 = getCharacterId(finalSymbols[1]);
+    const char2 = getCharacterId(finalSymbols[2]);
     const result = document.getElementById('result');
-    result.textContent = isWin ? 'ДжекПот! 🎉 (Все сопали)' : 'Проебали? 😅';
+    if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
+        result.textContent = 'Джекпот! 🎉';
+    } else if (char0 && char0 === char1 && char1 === char2) {
+        result.textContent = 'Победа! 🏆 (Совпали персонажи)';
+    } else {
+        result.textContent = 'Почти выиграл! 😅';
+    }
     if (checkInterval) {
         clearInterval(checkInterval);
         checkInterval = null;
     }
 }
-
 function stopAllAnimations() {
     reels.forEach((_, index) => {
         isSpinning[index] = false;
@@ -205,22 +223,20 @@ function stopAllAnimations() {
         }
     });
 }
-
 // Events
 document.getElementById('spinBtn').addEventListener('click', spin);
-
 // Load
 window.addEventListener('load', async () => {
     await initReels();
     checkInterval = setInterval(() => {
         if (spinning) {
             const stoppedCount = finalSymbols.filter(s => s !== undefined).length;
-            if (stoppedCount === 4) {
+            if (stoppedCount === 3) {
                 finishSpin();
             }
         }
     }, 100);
-    
+   
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
@@ -229,5 +245,4 @@ window.addEventListener('load', async () => {
         }, 250);
     });
 });
-
 window.addEventListener('beforeunload', stopAllAnimations);
