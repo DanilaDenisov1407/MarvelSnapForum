@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0c14">
+<title>Domination</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0b0c14;
+  --panel:   #12141f;
+  --border:  #2a2d45;
+  --gold:    #d4a843;
+  --gold2:   #f0c060;
+  --red:     #c0392b;
+  --red2:    #e74c3c;
+  --blue:    #2980b9;
+  --blue2:   #3498db;
+  --green:   #27ae60;
+  --green2:  #2ecc71;
+  --text:    #c8cce0;
+  --muted:   #5a5f80;
+  --loc1:    #1a3a2a;
+  --loc2:    #1a1a3a;
+  --loc3:    #3a1a1a;
+  --energy:  #f39c12;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html,body { height:100%; overscroll-behavior:none; }
+
+body {
+  background: var(--bg);
+  font-family: 'Crimson Pro', serif;
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* bg stars */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 0%, #1a1060 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, #1a0a0a 0%, transparent 50%);
+  z-index:0; pointer-events:none;
+}
+
+/* ── HEADER ── */
+.header {
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(12,13,22,.9);
+  flex-shrink:0;
+}
+.game-title {
+  font-family:'Cinzel',serif; font-size:clamp(.9rem,2.5vw,1.2rem);
+  color:var(--gold); letter-spacing:.2em; text-shadow:0 0 20px rgba(212,168,67,.4);
+}
+.turn-info {
+  font-size:clamp(.7rem,2vw,.85rem); color:var(--muted);
+  display:flex; gap:12px; align-items:center;
+}
+.turn-badge {
+  background:var(--panel); border:1px solid var(--border);
+  padding:3px 10px; border-radius:20px; font-family:'Cinzel',serif;
+  font-size:clamp(.65rem,1.8vw,.8rem);
+}
+.turn-badge.active { border-color:var(--gold); color:var(--gold); }
+
+/* ── ENERGY BAR ── */
+.energy-bar {
+  display:flex; align-items:center; gap:4px;
+}
+.energy-pip {
+  width:14px; height:14px; border-radius:50%;
+  border:1.5px solid var(--energy);
+  transition: background .2s;
+}
+.energy-pip.filled { background:var(--energy); box-shadow:0 0 6px var(--energy); }
+
+/* ── MAIN LAYOUT ── */
+.game-area {
+  position:relative; z-index:1;
+  flex:1; display:flex; flex-direction:column;
+  gap:0; overflow:hidden;
+}
+
+/* ── HAND ── */
+.hand-zone {
+  flex-shrink:0;
+  padding: clamp(6px,1.5vh,12px) clamp(8px,2vw,16px);
+  display:flex; flex-direction:column; gap:6px;
+}
+.hand-label {
+  font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.15em;
+  color:var(--muted); text-transform:uppercase;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.cards-hand {
+  display:flex; gap:clamp(4px,1.2vw,8px);
+  flex-wrap:nowrap; overflow-x:auto; padding:4px 0 6px;
+  scrollbar-width:none;
+}
+.cards-hand::-webkit-scrollbar { display:none; }
+
+/* ── CARD ── */
+.card {
+  flex-shrink:0;
+  width:  clamp(60px,12vw,78px);
+  height: clamp(90px,18vw,112px);
+  border-radius:8px;
+  border: 1.5px solid var(--border);
+  background: linear-gradient(160deg, #1c1e30 0%, #12141f 100%);
+  display:flex; flex-direction:column;
+  cursor:pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  position:relative; overflow:hidden;
+  animation: cardIn .25s cubic-bezier(.22,.61,.36,1) both;
+  touch-action: manipulation;
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(20px) scale(.9); }
+  to   { opacity:1; transform:none; }
+}
+.card:active { transform:scale(.95); }
+@media(hover:hover){ .card:hover { transform:translateY(-6px); border-color:var(--gold); box-shadow:0 8px 24px rgba(212,168,67,.3); } }
+
+.card.selected {
+  border-color:var(--gold2) !important;
+  box-shadow:0 0 0 2px var(--gold2), 0 8px 30px rgba(240,192,96,.4) !important;
+  transform:translateY(-10px) !important;
+}
+.card.played { opacity:.35; pointer-events:none; filter:grayscale(1); }
+.card.cant-afford { opacity:.5; }
+.card.cant-afford::after {
+  content:''; position:absolute; inset:0;
+  background:rgba(0,0,0,.4);
+  border-radius:7px;
+}
+
+/* card inner */
+.card-art {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  font-size:clamp(1.4rem,3.5vw,2rem); user-select:none;
+  border-bottom:1px solid var(--border);
+  position:relative; overflow:hidden;
+}
+.card-art::before {
+  content:''; position:absolute; inset:0;
+  opacity:.15;
+}
+.card[data-faction="fire"]   .card-art { background:linear-gradient(135deg,#3a1010,#1c0808); }
+.card[data-faction="water"]  .card-art { background:linear-gradient(135deg,#0d1a3a,#080e1c); }
+.card[data-faction="earth"]  .card-art { background:linear-gradient(135deg,#1a2a0a,#0d1508); }
+.card[data-faction="shadow"] .card-art { background:linear-gradient(135deg,#1a0a2a,#0e0814); }
+
+.card-body {
+  padding:4px 5px 5px;
+  display:flex; flex-direction:column; gap:2px;
+}
+.card-name {
+  font-family:'Cinzel',serif;
+  font-size:clamp(.45rem,1.2vw,.62rem);
+  color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  letter-spacing:.02em;
+}
+.card-stats {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.stat { display:flex; align-items:center; gap:2px; font-size:clamp(.6rem,1.5vw,.75rem); font-weight:700; }
+.stat.power { color:#e74c3c; }
+.stat.cost  { color:var(--energy); }
+.stat-icon  { font-size:.6rem; opacity:.8; }
+
+/* enemy card (facedown style still shows stats — open info) */
+.card.enemy {
+  cursor:default;
+  border-color: #2a1a1a;
+  background: linear-gradient(160deg,#1f1520 0%,#140f18 100%);
+}
+.card.enemy .card-name { color:var(--red); }
+
+/* ── LOCATIONS ── */
+.locations-row {
+  flex:1; display:flex; gap:0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  min-height:0; overflow:hidden;
+}
+
+.location {
+  flex:1; display:flex; flex-direction:column;
+  border-right:1px solid var(--border);
+  position:relative; overflow:hidden;
+  transition: box-shadow .3s;
+  cursor:pointer;
+}
+.location:last-child { border-right:none; }
+
+/* Location backgrounds */
+.location[data-loc="0"] { background:linear-gradient(180deg,#0d2018 0%,#0b0c14 100%); }
+.location[data-loc="1"] { background:linear-gradient(180deg,#0d1028 0%,#0b0c14 100%); }
+.location[data-loc="2"] { background:linear-gradient(180deg,#280d0d 0%,#0b0c14 100%); }
+
+.location.targeted {
+  box-shadow:inset 0 0 0 2px var(--gold2);
+}
+.location.targeted::after {
+  content:'▼ СЫГРАТЬ';
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.1em;
+  color:var(--gold2); background:rgba(0,0,0,.7);
+  padding:6px 12px; border-radius:4px; pointer-events:none;
+  border:1px solid var(--gold2);
+  animation: pulse .8s ease-in-out infinite alternate;
+}
+@keyframes pulse { from{opacity:.7} to{opacity:1} }
+
+/* location header */
+.loc-header {
+  padding: 6px 8px 4px;
+  display:flex; flex-direction:column; gap:3px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  flex-shrink:0;
+}
+.loc-name {
+  font-family:'Cinzel',serif;
+  font-size:clamp(.55rem,1.6vw,.72rem);
+  letter-spacing:.08em;
+  text-align:center;
+}
+.location[data-loc="0"] .loc-name { color:#4fc87a; }
+.location[data-loc="1"] .loc-name { color:#5b8fd4; }
+.location[data-loc="2"] .loc-name { color:#d46b5b; }
+
+.loc-power-bar {
+  display:flex; gap:3px; align-items:center; justify-content:center;
+}
+.loc-power-val {
+  font-size:clamp(.7rem,2vw,.9rem); font-weight:700;
+  min-width:2ch; text-align:center;
+}
+.loc-power-val.player { color:var(--blue2); }
+.loc-power-val.enemy  { color:var(--red2); }
+.loc-power-sep { color:var(--muted); font-size:.7rem; }
+
+.loc-owner-badge {
+  text-align:center;
+  font-family:'Cinzel',serif;
+  font-size:.55rem; letter-spacing:.1em;
+  height:14px;
+}
+.loc-owner-badge.player { color:var(--blue2); }
+.loc-owner-badge.enemy  { color:var(--red2); }
+.loc-owner-badge.tie    { color:var(--muted); }
+
+/* cards in location */
+.loc-cards-area {
+  flex:1; display:flex; flex-direction:column;
+  gap:2px; padding:4px; overflow:hidden; min-height:0;
+}
+.loc-slot {
+  flex:1; display:flex; flex-wrap:wrap;
+  gap:3px; align-content:flex-start;
+  padding:3px; border-radius:4px;
+  min-height:0; overflow:hidden;
+}
+.loc-slot.player-slot {
+  border-top:1px solid rgba(52,152,219,.2);
+}
+.loc-slot.enemy-slot {
+  border-bottom:1px solid rgba(231,76,60,.2);
+}
+
+/* mini card in location */
+.mini-card {
+  width: clamp(34px,7vw,46px);
+  height:clamp(48px,9.5vw,62px);
+  border-radius:5px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:space-between;
+  padding:3px 2px;
+  font-size:clamp(.6rem,1.4vw,.75rem);
+  animation: miniIn .2s ease both;
+  flex-shrink:0;
+}
+@keyframes miniIn {
+  from{opacity:0;transform:scale(.5) rotate(-10deg);}
+  to  {opacity:1;transform:none;}
+}
+.mini-card.player-mini {
+  background:linear-gradient(160deg,#1a2540,#0f1828);
+  border:1px solid rgba(52,152,219,.5);
+  box-shadow:0 2px 8px rgba(52,152,219,.2);
+}
+.mini-card.enemy-mini {
+  background:linear-gradient(160deg,#2a1010,#180808);
+  border:1px solid rgba(231,76,60,.4);
+  box-shadow:0 2px 8px rgba(231,76,60,.15);
+}
+.mini-art   { font-size:clamp(.9rem,2vw,1.2rem); line-height:1; }
+.mini-power { font-weight:700; color:var(--red2); font-size:clamp(.55rem,1.2vw,.7rem); }
+.mini-name  { font-size:clamp(.38rem,.9vw,.5rem); color:var(--muted); text-align:center; white-space:nowrap; overflow:hidden; width:100%; text-overflow:ellipsis; }
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 14px;
+  background:rgba(12,13,22,.95);
+  border-top:1px solid var(--border);
+  gap:10px;
+  position:relative; z-index:10;
+}
+.btn-action {
+  font-family:'Cinzel',serif;
+  font-size:clamp(.65rem,2vw,.85rem);
+  letter-spacing:.08em;
+  padding: clamp(7px,1.5vh,10px) clamp(14px,3vw,22px);
+  border:none; border-radius:5px; cursor:pointer;
+  transition: transform .1s, opacity .15s, box-shadow .15s;
+  touch-action:manipulation; user-select:none;
+}
+.btn-action:active { transform:scale(.94); }
+.btn-action:disabled { opacity:.3; cursor:not-allowed; transform:none; }
+
+.btn-end-turn { background:linear-gradient(135deg,#d4a843,#8b6914); color:#000; box-shadow:0 3px 14px rgba(212,168,67,.35); }
+.btn-cancel   { background:rgba(255,255,255,.07); color:var(--muted); border:1px solid var(--border); }
+@media(hover:hover){
+  .btn-end-turn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 20px rgba(212,168,67,.5); }
+}
+
+.action-hint {
+  font-size:clamp(.6rem,1.8vw,.78rem); color:var(--muted);
+  text-align:center; flex:1;
+  font-style:italic;
+}
+
+/* ── SCORE ROW ── */
+.score-row {
+  display:flex; gap:8px; align-items:center;
+  font-family:'Cinzel',serif; font-size:clamp(.6rem,1.8vw,.78rem);
+}
+.score-badge {
+  padding:3px 8px; border-radius:12px;
+  border:1px solid var(--border);
+}
+.score-badge.player { border-color:var(--blue2); color:var(--blue2); }
+.score-badge.enemy  { border-color:var(--red2);  color:var(--red2);  }
+
+/* ── LOG ── */
+.log-area {
+  position:fixed; bottom:60px; right:10px;
+  width:clamp(160px,35vw,220px);
+  max-height:120px; overflow:hidden;
+  display:flex; flex-direction:column-reverse;
+  gap:2px; z-index:20; pointer-events:none;
+}
+.log-entry {
+  font-size:clamp(.55rem,1.5vw,.68rem); color:var(--muted);
+  background:rgba(11,12,20,.85); padding:2px 6px;
+  border-radius:3px; border-left:2px solid var(--border);
+  animation:logIn .2s ease both;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.log-entry.good  { border-color:var(--green);  color:var(--green2); }
+.log-entry.bad   { border-color:var(--red);    color:var(--red2); }
+.log-entry.event { border-color:var(--gold);   color:var(--gold2); }
+@keyframes logIn { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:none} }
+
+/* ── OVERLAY ── */
+.overlay {
+  position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,.85);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:20px;
+  backdrop-filter:blur(4px);
+}
+.overlay.hidden { display:none; }
+.overlay-title {
+  font-family:'Cinzel',serif;
+  font-size:clamp(1.5rem,6vw,2.5rem);
+  letter-spacing:.2em;
+  text-shadow:0 0 40px currentColor;
+}
+.overlay-title.win  { color:var(--gold2); }
+.overlay-title.lose { color:var(--red2); }
+.overlay-title.draw { color:var(--muted); }
+.overlay-sub {
+  font-size:clamp(.8rem,2.5vw,1rem); color:var(--text);
+  opacity:.7; text-align:center; padding:0 20px;
+}
+.btn-restart {
+  font-family:'Cinzel',serif; font-size:1rem; letter-spacing:.12em;
+  background:linear-gradient(135deg,#d4a843,#8b6914); color:#000;
+  border:none; padding:12px 32px; border-radius:6px; cursor:pointer;
+  box-shadow:0 4px 20px rgba(212,168,67,.4);
+  touch-action:manipulation;
+}
+
+/* ── PHASE BANNER ── */
+.phase-banner {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:50; pointer-events:none;
+  font-family:'Cinzel',serif; font-size:clamp(1rem,4vw,1.6rem);
+  letter-spacing:.2em; color:var(--gold2);
+  text-shadow:0 0 30px var(--gold);
+  background:rgba(0,0,0,.8); padding:12px 28px;
+  border-radius:6px; border:1px solid var(--gold);
+  opacity:0; transition:opacity .3s;
+  white-space:nowrap;
+}
+.phase-banner.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Phase banner -->
+<div class="phase-banner" id="phase-banner">ХОД ПРОТИВНИКА</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="game-title">⚔ DOMINATION</div>
+  <div class="turn-info">
+    <div class="energy-bar" id="energy-bar"></div>
+    <div class="turn-badge" id="turn-badge">Ход 1</div>
+  </div>
+  <div class="score-row">
+    <div class="score-badge player" id="score-player">0</div>
+    <span style="color:var(--muted);font-size:.7rem">⚔</span>
+    <div class="score-badge enemy"  id="score-enemy">0</div>
+  </div>
+</header>
+
+<!-- Enemy hand -->
+<div class="hand-zone" id="enemy-hand-zone">
+  <div class="hand-label">
+    <span>🤖 Противник</span>
+    <span id="enemy-cards-left">12 карт</span>
+  </div>
+  <div class="cards-hand" id="enemy-hand"></div>
+</div>
+
+<!-- Locations -->
+<div class="locations-row" id="locations-row">
+  <div class="location" data-loc="0" id="loc-0">
+    <div class="loc-header">
+      <div class="loc-name">🌿 ЛЕСНАЯ КРЕПОСТЬ</div>
+      <div class="loc-power-bar">
+        <div class="loc-power-val enemy"  id="loc-0-ep">0</div>
+        <div class="loc-power-sep">vs</div>
+        <div class="loc-power-val player" id="loc-0-pp">0</div>
+      </div>
+      <div class="loc-owner-badge tie" id="loc-0-owner">—</div>
+    </div>
+    <div class="loc-cards-area">
+      <div class="loc-slot enemy-slot"  id="loc-0-enemy-slot"></div>
+      <div class="loc-slot player-slot" id="loc-0-player-slot"></div>
+    </div>
+  </div>
+  <div class="location" data-loc="1" id="loc-1">
+    <div class="loc-header">
+      <div class="loc-name">🌊 МОРСКОЙ ПОРТ</div>
+      <div class="loc-power-bar">
+        <div class="loc-power-val enemy"  id="loc-1-ep">0</div>
+        <div class="loc-power-sep">vs</div>
+        <div class="loc-power-val player" id="loc-1-pp">0</div>
+      </div>
+      <div class="loc-owner-badge tie" id="loc-1-owner">—</div>
+    </div>
+    <div class="loc-cards-area">
+      <div class="loc-slot enemy-slot"  id="loc-1-enemy-slot"></div>
+      <div class="loc-slot player-slot" id="loc-1-player-slot"></div>
+    </div>
+  </div>
+  <div class="location" data-loc="2" id="loc-2">
+    <div class="loc-header">
+      <div class="loc-name">🔥 ВУЛКАННАЯ ЦИТАДЕЛЬ</div>
+      <div class="loc-power-bar">
+        <div class="loc-power-val enemy"  id="loc-2-ep">0</div>
+        <div class="loc-power-sep">vs</div>
+        <div class="loc-power-val player" id="loc-2-pp">0</div>
+      </div>
+      <div class="loc-owner-badge tie" id="loc-2-owner">—</div>
+    </div>
+    <div class="loc-cards-area">
+      <div class="loc-slot enemy-slot"  id="loc-2-enemy-slot"></div>
+      <div class="loc-slot player-slot" id="loc-2-player-slot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Player hand -->
+<div class="hand-zone">
+  <div class="hand-label">
+    <span>⚔ Ваши карты</span>
+    <span id="player-energy-text" style="color:var(--energy)">Энергия: 1/1</span>
+  </div>
+  <div class="cards-hand" id="player-hand"></div>
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <button class="btn-action btn-cancel hidden" id="btn-cancel" onclick="cancelSelection()">✕ Отмена</button>
+  <div class="action-hint" id="action-hint">Выберите карту из вашей руки</div>
+  <button class="btn-action btn-end-turn" id="btn-end-turn" onclick="endTurn()">Завершить ход →</button>
+</div>
+
+<!-- Log -->
+<div class="log-area" id="log-area"></div>
+
+<!-- Game over overlay -->
+<div class="overlay hidden" id="overlay">
+  <div class="overlay-title" id="overlay-title">ПОБЕДА</div>
+  <div class="overlay-sub"  id="overlay-sub">Вы захватили 2 из 3 локаций!</div>
+  <button class="btn-restart" onclick="initGame()">ИГРАТЬ СНОВА</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CARD DATA
+// ══════════════════════════════════════════
+const CARD_POOL = [
+  {id:'c1',  name:'Огненный маг',    emoji:'🧙',  power:7, cost:3, faction:'fire'},
+  {id:'c2',  name:'Дракон',          emoji:'🐉',  power:10,cost:5, faction:'fire'},
+  {id:'c3',  name:'Лучник',          emoji:'🏹',  power:4, cost:2, faction:'earth'},
+  {id:'c4',  name:'Каменный голем',  emoji:'🗿',  power:6, cost:3, faction:'earth'},
+  {id:'c5',  name:'Морской змей',    emoji:'🐍',  power:5, cost:2, faction:'water'},
+  {id:'c6',  name:'Русалка',         emoji:'🧜',  power:3, cost:1, faction:'water'},
+  {id:'c7',  name:'Тёмный рыцарь',  emoji:'🦇',  power:8, cost:4, faction:'shadow'},
+  {id:'c8',  name:'Призрак',         emoji:'👻',  power:2, cost:1, faction:'shadow'},
+  {id:'c9',  name:'Феникс',          emoji:'🦅',  power:9, cost:5, faction:'fire'},
+  {id:'c10', name:'Гном-воин',       emoji:'⛏',  power:3, cost:1, faction:'earth'},
+  {id:'c11', name:'Кракен',          emoji:'🦑',  power:11,cost:6, faction:'water'},
+  {id:'c12', name:'Вампир',          emoji:'🧛',  power:6, cost:3, faction:'shadow'},
+  {id:'c13', name:'Гоблин',          emoji:'👺',  power:2, cost:1, faction:'fire'},
+  {id:'c14', name:'Энт',             emoji:'🌳',  power:5, cost:2, faction:'earth'},
+  {id:'c15', name:'Ледяной маг',     emoji:'❄️',  power:6, cost:3, faction:'water'},
+  {id:'c16', name:'Некромант',       emoji:'💀',  power:7, cost:4, faction:'shadow'},
+  {id:'c17', name:'Гриф',            emoji:'🦁',  power:4, cost:2, faction:'earth'},
+  {id:'c18', name:'Саламандра',      emoji:'🔥',  power:3, cost:1, faction:'fire'},
+];
+
+const TOTAL_TURNS = 6;
+
+let state = {};
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function initGame(){
+  document.getElementById('overlay').classList.add('hidden');
+  const deck = shuffle(CARD_POOL);
+  const playerDeck = deck.slice(0,12);
+  const enemyDeck  = deck.slice(12,24).map(c=>({...c, id:'e'+c.id}));
+
+  state = {
+    turn: 1,
+    maxTurns: TOTAL_TURNS,
+    energy: 1,
+    maxEnergy: 1,
+    selectedCard: null,
+    playerTurnDone: false,
+    animating: false,
+    playerHand: playerDeck.map(c=>({...c, played:false})),
+    enemyHand:  enemyDeck.map(c=>({...c, played:false})),
+    locations: [
+      {id:0, playerCards:[], enemyCards:[]},
+      {id:1, playerCards:[], enemyCards:[]},
+      {id:2, playerCards:[], enemyCards:[]},
+    ],
+  };
+  clearLog();
+  log('Игра началась! Захватите 2 из 3 локаций.','event');
+  render();
+}
+
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+function render(){
+  renderEnergyBar();
+  renderHands();
+  renderLocations();
+  renderUI();
+}
+
+function renderEnergyBar(){
+  const bar = document.getElementById('energy-bar');
+  bar.innerHTML='';
+  for(let i=1;i<=state.maxEnergy;i++){
+    const pip=document.createElement('div');
+    pip.className='energy-pip'+(i<=state.energy?' filled':'');
+    bar.appendChild(pip);
+  }
+  document.getElementById('player-energy-text').textContent =
+    `Энергия: ${state.energy}/${state.maxEnergy}`;
+  document.getElementById('turn-badge').textContent = `Ход ${state.turn}/${state.maxTurns}`;
+}
+
+function renderHands(){
+  // Player
+  const ph = document.getElementById('player-hand');
+  ph.innerHTML='';
+  state.playerHand.forEach((card,idx)=>{
+    const el=mkHandCard(card, false, idx);
+    ph.appendChild(el);
+  });
+
+  // Enemy (show stats openly)
+  const eh = document.getElementById('enemy-hand');
+  eh.innerHTML='';
+  const remaining = state.enemyHand.filter(c=>!c.played);
+  document.getElementById('enemy-cards-left').textContent = remaining.length+' карт';
+  remaining.slice(0,8).forEach(card=>{
+    const el=mkHandCard(card, true, 0);
+    eh.appendChild(el);
+  });
+}
+
+function mkHandCard(card, isEnemy, idx){
+  const el=document.createElement('div');
+  el.className='card'+(isEnemy?' enemy':'');
+  el.dataset.faction=card.faction;
+  if(!isEnemy){
+    if(card.played) el.classList.add('played');
+    else if(card.cost > state.energy) el.classList.add('cant-afford');
+    else if(!state.animating){
+      el.onclick=()=>selectCard(idx);
+    }
+    if(state.selectedCard===idx) el.classList.add('selected');
+  }
+
+  el.innerHTML=`
+    <div class="card-art">${card.emoji}</div>
+    <div class="card-body">
+      <div class="card-name">${card.name}</div>
+      <div class="card-stats">
+        <div class="stat power"><span class="stat-icon">⚔</span>${card.power}</div>
+        <div class="stat cost"><span class="stat-icon">⚡</span>${card.cost}</div>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+function renderLocations(){
+  state.locations.forEach(loc=>{
+    const pp = loc.playerCards.reduce((s,c)=>s+c.power,0);
+    const ep = loc.enemyCards.reduce((s,c)=>s+c.power,0);
+
+    document.getElementById(`loc-${loc.id}-pp`).textContent=pp;
+    document.getElementById(`loc-${loc.id}-ep`).textContent=ep;
+
+    const ownerEl=document.getElementById(`loc-${loc.id}-owner`);
+    if(pp>ep){ ownerEl.textContent='ВЫ ЛИДИРУЕТЕ'; ownerEl.className='loc-owner-badge player'; }
+    else if(ep>pp){ ownerEl.textContent='ПРОТИВНИК'; ownerEl.className='loc-owner-badge enemy'; }
+    else { ownerEl.textContent='—'; ownerEl.className='loc-owner-badge tie'; }
+
+    // Player slot
+    const ps=document.getElementById(`loc-${loc.id}-player-slot`);
+    ps.innerHTML='';
+    loc.playerCards.forEach(c=>ps.appendChild(mkMiniCard(c,false)));
+
+    // Enemy slot
+    const es=document.getElementById(`loc-${loc.id}-enemy-slot`);
+    es.innerHTML='';
+    loc.enemyCards.forEach(c=>es.appendChild(mkMiniCard(c,true)));
+
+    // Targeting highlight
+    const locEl=document.getElementById(`loc-${loc.id}`);
+    if(state.selectedCard!==null && !state.animating){
+      locEl.classList.add('targeted');
+      locEl.onclick=()=>playCard(loc.id);
+    } else {
+      locEl.classList.remove('targeted');
+      locEl.onclick=null;
+    }
+  });
+}
+
+function mkMiniCard(card, isEnemy){
+  const el=document.createElement('div');
+  el.className='mini-card '+(isEnemy?'enemy-mini':'player-mini');
+  el.innerHTML=`
+    <div class="mini-art">${card.emoji}</div>
+    <div class="mini-power">⚔${card.power}</div>
+    <div class="mini-name">${card.name}</div>
+  `;
+  return el;
+}
+
+function renderUI(){
+  const hint=document.getElementById('action-hint');
+  const cancelBtn=document.getElementById('btn-cancel');
+  const endBtn=document.getElementById('btn-end-turn');
+
+  if(state.animating){
+    hint.textContent='Противник думает…';
+    endBtn.disabled=true;
+    cancelBtn.classList.add('hidden');
+    return;
+  }
+
+  endBtn.disabled=false;
+
+  if(state.selectedCard!==null){
+    const c=state.playerHand[state.selectedCard];
+    hint.textContent=`«${c.name}» — выберите локацию`;
+    cancelBtn.classList.remove('hidden');
+  } else {
+    hint.textContent='Выберите карту или завершите ход';
+    cancelBtn.classList.add('hidden');
+  }
+
+  // Score
+  const scores=calcScores();
+  document.getElementById('score-player').textContent=`Вы: ${scores.player}`;
+  document.getElementById('score-enemy').textContent=`ИИ: ${scores.enemy}`;
+}
+
+// ══════════════════════════════════════════
+// GAME LOGIC
+// ══════════════════════════════════════════
+function selectCard(idx){
+  if(state.animating) return;
+  const card=state.playerHand[idx];
+  if(card.played) return;
+  if(card.cost > state.energy){
+    log(`Нет энергии для «${card.name}» (нужно ${card.cost})`, 'bad');
+    return;
+  }
+  state.selectedCard = (state.selectedCard===idx) ? null : idx;
+  render();
+}
+
+function cancelSelection(){
+  state.selectedCard=null;
+  render();
+}
+
+function playCard(locId){
+  if(state.selectedCard===null || state.animating) return;
+  const card=state.playerHand[state.selectedCard];
+  if(card.cost > state.energy) return;
+
+  card.played=true;
+  state.energy -= card.cost;
+  state.locations[locId].playerCards.push(card);
+  state.selectedCard=null;
+  log(`Вы сыграли «${card.name}» (⚔${card.power}) в локацию ${locId+1}`, 'good');
+  render();
+}
+
+function endTurn(){
+  if(state.animating) return;
+  state.selectedCard=null;
+  state.animating=true;
+  render();
+  showBanner('ХОД ПРОТИВНИКА');
+  setTimeout(()=>{ enemyTurn(); }, 900);
+}
+
+function enemyTurn(){
+  // Simple AI: play affordable cards greedily
+  const available = state.enemyHand.filter(c=>!c.played && c.cost<=state.maxEnergy);
+  const toPlay = available.slice(0, Math.min(2, available.length));
+  let delay=0;
+  toPlay.forEach(card=>{
+    delay+=400;
+    setTimeout(()=>{
+      // pick weakest location for enemy
+      const locId = [0,1,2].reduce((best,l)=>{
+        const ep=state.locations[l].enemyCards.reduce((s,c)=>s+c.power,0);
+        const pp=state.locations[l].playerCards.reduce((s,c)=>s+c.power,0);
+        const bep=state.locations[best].enemyCards.reduce((s,c)=>s+c.power,0);
+        const bpp=state.locations[best].playerCards.reduce((s,c)=>s+c.power,0);
+        return (pp-ep) > (bpp-bep) ? l : best;
+      },0);
+      card.played=true;
+      state.locations[locId].enemyCards.push(card);
+      log(`Противник сыграл «${card.name}» (⚔${card.power})`, 'bad');
+      render();
+    }, delay);
+  });
+
+  setTimeout(()=>{
+    state.turn++;
+    state.maxEnergy = Math.min(state.turn, TOTAL_TURNS);
+    state.energy = state.maxEnergy;
+    state.animating=false;
+    hideBanner();
+
+    if(state.turn > state.maxTurns){
+      endGame();
+      return;
+    }
+    log(`— Ход ${state.turn} начался. Энергия: ${state.energy} —`,'event');
+    render();
+  }, delay+500);
+}
+
+function calcScores(){
+  let player=0, enemy=0;
+  state.locations.forEach(loc=>{
+    const pp=loc.playerCards.reduce((s,c)=>s+c.power,0);
+    const ep=loc.enemyCards.reduce((s,c)=>s+c.power,0);
+    if(pp>ep) player++;
+    else if(ep>pp) enemy++;
+  });
+  return {player, enemy};
+}
+
+function endGame(){
+  const {player,enemy}=calcScores();
+  const overlay=document.getElementById('overlay');
+  const title  =document.getElementById('overlay-title');
+  const sub    =document.getElementById('overlay-sub');
+  overlay.classList.remove('hidden');
+
+  if(player>=2){
+    title.textContent='ПОБЕДА'; title.className='overlay-title win';
+    sub.textContent=`Вы захватили ${player} из 3 локаций. Противник взял ${enemy}.`;
+  } else if(enemy>=2){
+    title.textContent='ПОРАЖЕНИЕ'; title.className='overlay-title lose';
+    sub.textContent=`Противник захватил ${enemy} из 3 локаций. Вы взяли ${player}.`;
+  } else {
+    title.textContent='НИЧЬЯ'; title.className='overlay-title draw';
+    sub.textContent='Каждый захватил по 1 локации. Победитель не определён.';
+  }
+}
+
+// ══════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════
+function showBanner(text){
+  const b=document.getElementById('phase-banner');
+  b.textContent=text; b.classList.add('show');
+}
+function hideBanner(){
+  document.getElementById('phase-banner').classList.remove('show');
+}
+
+const logEntries=[];
+function log(msg, type=''){
+  const area=document.getElementById('log-area');
+  const el=document.createElement('div');
+  el.className='log-entry'+(type?' '+type:'');
+  el.textContent=msg;
+  area.prepend(el);
+  setTimeout(()=>el.remove(), 6000);
+}
+function clearLog(){ document.getElementById('log-area').innerHTML=''; }
+
+// ══════════════════════════════════════════
+initGame();
+</script>
+</body>
+</html>
