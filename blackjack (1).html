@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>Блэкджек</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --gold: #c9a84c;
+    --gold2: #f0d080;
+    --red: #e63946;
+    --neon: #39ff85;
+    --card-w: clamp(58px, 11vw, 80px);
+    --card-h: clamp(84px, 16vw, 115px);
+    --card-font: clamp(.6rem, 2vw, .85rem);
+    --card-center: clamp(1.2rem, 4vw, 1.8rem);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; overscroll-behavior: none; }
+
+  body {
+    background: var(--bg);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, #0d2a1a 0%, #0a0a0f 70%),
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,.01) 2px, rgba(255,255,255,.01) 4px);
+    z-index: 0;
+  }
+
+  /* TABLE */
+  .table {
+    position: relative;
+    z-index: 1;
+    width: min(820px, 100vw);
+    height: 100dvh;
+    background: radial-gradient(ellipse 90% 85% at 50% 50%, #122b1a 0%, #0b1c11 60%, #070f0a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(10px, 3vh, 28px) clamp(12px, 4vw, 44px) clamp(12px, 3vh, 24px);
+    overflow: hidden;
+  }
+
+  @media (min-width: 600px) and (min-height: 680px) {
+    .table {
+      height: auto;
+      min-height: 570px;
+      border-radius: 50% / 30%;
+      box-shadow:
+        0 0 0 6px #1a3d22,
+        0 0 0 10px #0d2216,
+        0 0 60px rgba(57,255,133,.08),
+        0 30px 80px rgba(0,0,0,.8),
+        inset 0 0 80px rgba(0,0,0,.4);
+      padding: 36px 70px 44px;
+    }
+    .table::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 50% / 28%;
+      border: 1px solid rgba(201,168,76,.15);
+      pointer-events: none;
+    }
+  }
+
+  /* TITLE */
+  .title {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: clamp(.85rem, 3.5vw, 1.4rem);
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(201,168,76,.5);
+    opacity: .8;
+    flex-shrink: 0;
+  }
+
+  /* HAND AREA */
+  .hand-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(3px, 1.2vh, 8px);
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  .label {
+    font-size: clamp(.55rem, 2.2vw, .75rem);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(201,168,76,.5);
+  }
+
+  .score {
+    font-size: clamp(1.2rem, 4.5vw, 2rem);
+    font-weight: 600;
+    color: var(--gold2);
+    text-shadow: 0 0 15px rgba(240,208,128,.4);
+    min-width: 2ch;
+    text-align: center;
+    line-height: 1;
+  }
+  .score.bust      { color: var(--red);  text-shadow: 0 0 20px rgba(230,57,70,.6); }
+  .score.blackjack { color: var(--neon); text-shadow: 0 0 20px rgba(57,255,133,.6); }
+
+  /* CARDS ROW */
+  .cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(3px, 1.2vw, 8px);
+    justify-content: center;
+    min-height: calc(var(--card-h) + 4px);
+    align-items: center;
+    padding: 2px 4px;
+    width: 100%;
+  }
+
+  /* CARD */
+  .card {
+    width: var(--card-w);
+    height: var(--card-h);
+    border-radius: clamp(5px, 1.5vw, 8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(4px, 1.2vw, 7px);
+    position: relative;
+    cursor: default;
+    transition: transform .2s ease;
+    animation: dealCard .28s cubic-bezier(.22,.61,.36,1) both;
+    flex-shrink: 0;
+    touch-action: none;
+  }
+
+  @keyframes dealCard {
+    from { opacity: 0; transform: translateY(-28px) rotate(-6deg) scale(.85); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @media (hover: hover) { .card:hover { transform: translateY(-5px); } }
+
+  .card.face-up {
+    background: #fafaf5;
+    box-shadow: 0 4px 16px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.3);
+  }
+  .card.face-down {
+    background: repeating-linear-gradient(135deg, #1a3a6e 0, #1a3a6e 5px, #1e4280 5px, #1e4280 10px);
+    box-shadow: 0 4px 16px rgba(0,0,0,.6);
+  }
+  .card.face-down::after {
+    content: '♠';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--card-h) * .38);
+    opacity: .2;
+    color: #fff;
+  }
+
+  .card .corner       { font-size: var(--card-font); font-weight: 700; line-height: 1; color: #111; }
+  .card .corner.top   { align-self: flex-start; }
+  .card .corner.bot   { align-self: flex-end; transform: rotate(180deg); }
+  .card .center       { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: var(--card-center); color: #111; }
+  .card.red .corner, .card.red .center { color: var(--red); }
+
+  /* DIVIDER */
+  .divider {
+    width: 72%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,.22), transparent);
+    flex-shrink: 0;
+  }
+
+  /* MESSAGE */
+  .message {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(.95rem, 4vw, 1.5rem);
+    font-weight: 700;
+    text-align: center;
+    min-height: 1.6em;
+    transition: all .3s;
+    text-shadow: 0 0 30px currentColor;
+    flex-shrink: 0;
+    padding: 0 8px;
+  }
+  .message.win  { color: var(--neon); }
+  .message.lose { color: var(--red); }
+  .message.push { color: var(--gold); }
+  .message.info { color: rgba(201,168,76,.6); font-size: clamp(.65rem, 2.8vw, .95rem); font-family: 'Rajdhani'; letter-spacing: .12em; }
+
+  /* BET AREA */
+  .bet-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(6px, 1.8vh, 12px);
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  .stats { display: flex; gap: clamp(16px, 6vw, 40px); align-items: center; }
+  .stat-box { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .stat-val { font-size: clamp(.95rem, 3.8vw, 1.35rem); font-weight: 600; color: var(--gold2); }
+  .stat-val.bet { color: var(--neon); text-shadow: 0 0 10px rgba(57,255,133,.4); }
+
+  /* CHIPS */
+  .chips-row {
+    display: flex;
+    gap: clamp(5px, 1.8vw, 12px);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .chip {
+    width:  clamp(38px, 9.5vw, 54px);
+    height: clamp(38px, 9.5vw, 54px);
+    border-radius: 50%;
+    border: 3px dashed rgba(255,255,255,.38);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: clamp(.6rem, 2.3vw, .85rem);
+    cursor: pointer;
+    transition: transform .12s;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.7);
+    user-select: none;
+  }
+  .chip:active { transform: scale(.91); }
+  @media (hover: hover) { .chip:hover { transform: scale(1.13) translateY(-3px); } }
+
+  .chip[data-v="5"]   { background: radial-gradient(#e63946,#9b1c26); box-shadow: 0 3px 12px rgba(230,57,70,.5); }
+  .chip[data-v="10"]  { background: radial-gradient(#2196f3,#0d47a1); box-shadow: 0 3px 12px rgba(33,150,243,.5); }
+  .chip[data-v="25"]  { background: radial-gradient(#4caf50,#1b5e20); box-shadow: 0 3px 12px rgba(76,175,80,.5); }
+  .chip[data-v="50"]  { background: radial-gradient(#ff9800,#e65100); box-shadow: 0 3px 12px rgba(255,152,0,.5); }
+  .chip[data-v="100"] { background: radial-gradient(#9c27b0,#4a148c); box-shadow: 0 3px 12px rgba(156,39,176,.5); }
+
+  /* BUTTONS */
+  .btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(5px, 1.4vw, 9px);
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .btn {
+    padding: clamp(9px, 2.4vh, 13px) 4px;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(.72rem, 2.6vw, .98rem);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .1s, opacity .15s;
+    user-select: none;
+    touch-action: manipulation;
+    white-space: nowrap;
+  }
+  .btn:active  { transform: scale(.94); }
+  .btn:disabled { opacity: .28; cursor: not-allowed; transform: none; }
+  @media (hover: hover) { .btn:hover:not(:disabled) { transform: translateY(-2px); } }
+
+  .btn-deal   { background: linear-gradient(135deg, #c9a84c, #8b6914); color: #000; box-shadow: 0 3px 16px rgba(201,168,76,.35); }
+  .btn-hit    { background: linear-gradient(135deg, #39ff85, #00b050); color: #000; box-shadow: 0 3px 16px rgba(57,255,133,.35); }
+  .btn-stand  { background: linear-gradient(135deg, #e63946, #8b0000); color: #fff; box-shadow: 0 3px 16px rgba(230,57,70,.35); }
+  .btn-double { background: linear-gradient(135deg, #00e5ff, #0077aa); color: #000; box-shadow: 0 3px 16px rgba(0,229,255,.35); }
+  .btn-clear  {
+    background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.1);
+    grid-column: span 3;
+    padding: clamp(6px, 1.4vh, 9px);
+    font-size: clamp(.6rem, 2vw, .8rem);
+  }
+
+  /* Deal spans full grid when game not active */
+  .btn-deal.full { grid-column: span 3; }
+</style>
+</head>
+<body>
+<div class="table">
+  <div class="title">♠ Blackjack ♠</div>
+
+  <div class="hand-area">
+    <div class="label">Крупье</div>
+    <div class="score" id="dealer-score">–</div>
+    <div class="cards-row" id="dealer-cards"></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="message info" id="message">Сделайте ставку и нажмите «Раздать»</div>
+  <div class="divider"></div>
+
+  <div class="hand-area">
+    <div class="cards-row" id="player-cards"></div>
+    <div class="score" id="player-score">–</div>
+    <div class="label">Игрок</div>
+  </div>
+
+  <div class="bet-area">
+    <div class="stats">
+      <div class="stat-box">
+        <div class="label">Баланс</div>
+        <div class="stat-val" id="balance">1000</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">Ставка</div>
+        <div class="stat-val bet" id="current-bet">0</div>
+      </div>
+    </div>
+
+    <div class="chips-row" id="chips">
+      <div class="chip" data-v="5">5</div>
+      <div class="chip" data-v="10">10</div>
+      <div class="chip" data-v="25">25</div>
+      <div class="chip" data-v="50">50</div>
+      <div class="chip" data-v="100">100</div>
+    </div>
+
+    <div class="btns">
+      <button class="btn btn-deal full" id="btn-deal">Раздать</button>
+      <button class="btn btn-hit"    id="btn-hit"    disabled>Ещё</button>
+      <button class="btn btn-stand"  id="btn-stand"  disabled>Хватит</button>
+      <button class="btn btn-double" id="btn-double" disabled>×2</button>
+      <button class="btn btn-clear"  id="btn-clear">Сброс ставки</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RED   = new Set(['♥','♦']);
+
+let deck=[], playerHand=[], dealerHand=[], balance=1000, bet=0, gameActive=false;
+
+const $  = id => document.getElementById(id);
+const $pCards = $('player-cards'), $dCards = $('dealer-cards');
+const $pScore = $('player-score'), $dScore = $('dealer-score');
+const $bal = $('balance'), $betEl = $('current-bet'), $msg = $('message');
+const $deal=$('btn-deal'), $hit=$('btn-hit'), $stand=$('btn-stand'), $dbl=$('btn-double'), $clr=$('btn-clear');
+const $chipsEl = $('chips');
+
+function buildDeck() {
+  deck = [];
+  for (const s of SUITS) for (const r of RANKS) deck.push({s,r});
+  for (let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]];}
+}
+
+const cardValue = r => r==='A'?11:'JQK'.includes(r)?10:+r;
+
+function handTotal(h){let t=0,a=0;for(const{r}of h){t+=cardValue(r);if(r==='A')a++;}while(t>21&&a-->0)t-=10;return t;}
+
+function mkCard(card, hidden=false) {
+  const el = document.createElement('div');
+  el.className = 'card ' + (hidden ? 'face-down' : 'face-up' + (RED.has(card.s)?' red':''));
+  if (!hidden) {
+    const top=document.createElement('div'); top.className='corner top'; top.textContent=card.r+card.s;
+    const bot=document.createElement('div'); bot.className='corner bot'; bot.textContent=card.r+card.s;
+    const mid=document.createElement('div'); mid.className='center'; mid.textContent=card.s;
+    el.append(top,mid,bot);
+  }
+  return el;
+}
+
+function renderHands(dHidden=true) {
+  $pCards.innerHTML=''; $dCards.innerHTML='';
+  playerHand.forEach(c=>$pCards.appendChild(mkCard(c)));
+  dealerHand.forEach((c,i)=>$dCards.appendChild(mkCard(c,dHidden&&i===1)));
+
+  const pt=handTotal(playerHand);
+  $pScore.textContent=pt||'–';
+  $pScore.className='score'+(pt>21?' bust':pt===21?' blackjack':'');
+
+  if(dHidden){
+    const d=cardValue(dealerHand[0]?.r)||0;
+    $dScore.textContent=d||'–'; $dScore.className='score';
+  } else {
+    const dt=handTotal(dealerHand);
+    $dScore.textContent=dt||'–';
+    $dScore.className='score'+(dt>21?' bust':dt===21?' blackjack':'');
+  }
+}
+
+function setMsg(text,type='info'){$msg.textContent=text;$msg.className='message '+type;}
+
+function setBtns(playing) {
+  $deal.disabled=playing; $hit.disabled=!playing; $stand.disabled=!playing; $clr.disabled=playing;
+  $chipsEl.style.pointerEvents=playing?'none':'auto';
+  $chipsEl.style.opacity=playing?'.35':'1';
+  $deal.classList.toggle('full', !playing);
+}
+
+function updateBal(){$bal.textContent=balance;$betEl.textContent=bet;}
+
+function endGame(result) {
+  renderHands(false); gameActive=false; setBtns(false); $dbl.disabled=true;
+  if(result==='blackjack'){const w=Math.floor(bet*1.5);balance+=w;setMsg('🎉 Блэкджек! +'+w,'win');}
+  else if(result==='win'){balance+=bet;setMsg('✦ Победа! +'+bet,'win');}
+  else if(result==='lose'){balance-=bet;setMsg('✗ Поражение. −'+bet,'lose');}
+  else setMsg('⊙ Ничья','push');
+  bet=0; updateBal();
+  if(balance<=0) setTimeout(()=>{balance=1000;updateBal();setMsg('Баланс пополнен!','info');},1600);
+}
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function dealerPlay(){
+  await sleep(550); renderHands(false);
+  while(handTotal(dealerHand)<17){await sleep(640);dealerHand.push(deck.pop());renderHands(false);}
+  const dt=handTotal(dealerHand),pt=handTotal(playerHand);
+  if(dt>21)endGame('win');
+  else if(dt>pt)endGame('lose');
+  else if(pt>dt)endGame('win');
+  else endGame('push');
+}
+
+$deal.addEventListener('click',()=>{
+  if(bet===0){setMsg('Сначала сделайте ставку!','info');return;}
+  buildDeck();
+  playerHand=[deck.pop(),deck.pop()]; dealerHand=[deck.pop(),deck.pop()];
+  gameActive=true; setBtns(true); $dbl.disabled=balance<bet*2;
+  renderHands(true); setMsg('','info');
+  const pt=handTotal(playerHand),dt=handTotal(dealerHand);
+  if(pt===21&&dt===21){setTimeout(()=>endGame('push'),400);return;}
+  if(pt===21){setTimeout(()=>endGame('blackjack'),400);}
+});
+
+$hit.addEventListener('click',()=>{
+  playerHand.push(deck.pop()); $dbl.disabled=true; renderHands(true);
+  const pt=handTotal(playerHand);
+  if(pt>21)endGame('lose'); else if(pt===21)dealerPlay();
+});
+
+$stand.addEventListener('click',()=>{setBtns(false);dealerPlay();});
+
+$dbl.addEventListener('click',()=>{
+  bet*=2; updateBal(); playerHand.push(deck.pop()); renderHands(true);
+  const pt=handTotal(playerHand);
+  if(pt>21)endGame('lose'); else{setBtns(false);dealerPlay();}
+});
+
+$chipsEl.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    if(gameActive)return;
+    const v=+c.dataset.v;
+    if(bet+v>balance)return;
+    bet+=v; updateBal();
+  });
+});
+
+$clr.addEventListener('click',()=>{if(!gameActive){bet=0;updateBal();}});
+
+updateBal();
+</script>
+</body>
+</html>
