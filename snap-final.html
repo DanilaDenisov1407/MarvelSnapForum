@@ -390,7 +390,8 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
     <div class="code-display" id="code-display">
       <div class="cd-lbl">Код комнаты — отправьте другу</div>
       <div class="cd-code" id="cd-code">—</div>
-      <div class="cd-hint">Ожидание второго игрока…</div>
+      <button onclick="copyCode()" id="btn-copy-code" style="margin-top:6px;background:rgba(245,197,66,.15);border:1px solid rgba(245,197,66,.35);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;font-size:.8rem;padding:6px 16px;border-radius:5px;cursor:pointer;touch-action:manipulation;width:100%;">📋 Скопировать код</button>
+      <div class="cd-hint" id="cd-hint">Ожидание второго игрока…</div>
     </div>
     <div class="divrow">или войти по коду</div>
     <div class="field">
@@ -406,7 +407,10 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
 <div class="screen hidden" id="screen-waiting">
   <div class="wr-header">🎮 Комната</div>
   <div class="wr-box">
-    <div class="wr-code">Код: <span id="wr-code-val">—</span></div>
+    <div class="wr-code" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+      Код: <span id="wr-code-val" style="font-family:'Bebas Neue',sans-serif;letter-spacing:.15em;color:var(--gold);font-size:.9rem;">—</span>
+      <button onclick="copyCode()" style="background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);color:var(--gold);font-size:.65rem;padding:3px 8px;border-radius:4px;cursor:pointer;touch-action:manipulation;">📋</button>
+    </div>
     <div class="players-list">
       <div class="player-row" id="p1-row">
         <div class="player-dot"></div>
@@ -485,6 +489,12 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
   <div class="cards-scroll" id="e-hand"></div>
 </div>
 
+<!-- DECK ZONE: player's full 12-card deck visible -->
+<div class="hz" id="hz-deck" style="display:none;border-bottom:1px solid var(--border);">
+  <div class="hm"><span>🗂 КОЛОДА</span><span id="deck-cnt" style="color:var(--muted)">9 карт</span></div>
+  <div class="cards-scroll" id="p-deck" style="opacity:.75;"></div>
+</div>
+
 <div class="locs" id="locs" style="display:none">
   <div class="loc" data-i="0" id="loc-0">
     <div class="loc-hdr">
@@ -555,9 +565,17 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 let ALL_CARDS = [];       // from Google Sheets
 let SESSION_OVERRIDES = {}; // cost/power overrides set by host this session
 
-function artUrl(carddefid) {
-  if (!carddefid) return '';
-  return ART_BASE + carddefid.toLowerCase() + '.webp?v=845';
+function artUrl(carddefid, urlField) {
+  // Primary: build from carddefid (lowercase)
+  if (carddefid && carddefid.trim()) {
+    return ART_BASE + carddefid.trim().toLowerCase() + '.webp?v=845';
+  }
+  // Fallback: extract slug from url field like https://marvelsnapzone.com/cards/abomination/
+  if (urlField) {
+    const m = urlField.match(/\/cards\/([^\/]+)\/?$/);
+    if (m) return ART_BASE + m[1].toLowerCase() + '.webp?v=845';
+  }
+  return '';
 }
 
 function getCard(cid) {
@@ -622,12 +640,13 @@ function showScreen(id) {
   ['screen-lobby','screen-waiting','screen-editor'].forEach(s => {
     document.getElementById(s).classList.add('hidden');
   });
-  const gameEls = ['game-hdr','hz-enemy','locs','hz-player','btm'];
+  const gameEls = ['game-hdr','hz-enemy','hz-deck','locs','hz-player','btm'];
   gameEls.forEach(el => document.getElementById(el).style.display = 'none');
   if (id === 'game') {
     gameEls.forEach(el => document.getElementById(el).style.display = '');
     document.getElementById('game-hdr').style.display = 'flex';
     document.getElementById('hz-enemy').style.display = '';
+    document.getElementById('hz-deck').style.display = '';
     document.getElementById('hz-player').style.display = '';
     document.getElementById('btm').style.display = 'flex';
     document.getElementById('locs').style.display = 'flex';
@@ -659,12 +678,13 @@ async function createRoom() {
   const p1Deck = pool.slice(0,12).map(c=>String(c.cid));
   const p2Deck = pool.slice(12,24).map(c=>String(c.cid));
 
+  // deck = full 12 cards (ordered), hand = first 3 drawn at start
   const initState = {
     phase:'waiting',
     turn:1, maxTurns:6,
     overrides:{},
-    p1:{name:myName, deck:p1Deck, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
-    p2:{name:'', deck:p2Deck, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,3), deckIdx:3, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,3), deckIdx:3, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
     locs:[{id:0,p1c:[],p2c:[]},{id:1,p1c:[],p2c:[]},{id:2,p1c:[],p2c:[]}],
   };
 
@@ -771,7 +791,7 @@ function renderEditorTable() {
     const ov = editorDraft[c.cid]||{};
     const cost  = ov.cost  ?? c.cost;
     const power = ov.power ?? c.power;
-    const art   = artUrl(c.carddefid);
+    const art   = artUrl(c.carddefid, c.url);
     const abTag = abilTag(c.ability);
     return `<tr>
       <td class="td-art"><img class="card-thumb" src="${art}" alt="" onerror="this.style.opacity='.2'"></td>
@@ -795,6 +815,9 @@ async function startGame() {
 }
 
 // ═══════════════════ REALTIME + POLL ═══════════════════
+// Track last processed turn to avoid double-advancing
+let lastProcessedTurn = 0;
+
 function subscribeRoom() {
   subscription = sb.channel('room-'+roomId)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:`id=eq.${roomId}`},
@@ -803,29 +826,48 @@ function subscribeRoom() {
         if (st.overrides) SESSION_OVERRIDES = st.overrides;
         if (!gameEntered && st.phase === 'playing') {
           oppName = myRole==='p1' ? st.p2.name : st.p1.name;
-          stopPoll();
           enterGame(st);
           return;
         }
         if (!gameEntered && st.p2.name) applyWaitingRoom(st);
-        if (gameEntered) applyState(st);
-        // p1 advance turn
-        if (gameEntered && myRole==='p1' && st.p1.ready && st.p2.ready) advanceTurn(st);
+        if (gameEntered) {
+          applyState(st);
+          maybeAdvanceTurn(st);
+        }
       })
     .subscribe();
 
+  // Poll every 2s — handles both lobby→game AND turn advance fallback
   pollTimer = setInterval(async()=>{
-    if (gameEntered){stopPoll();return;}
     const {data}=await sb.from('game_rooms').select('state').eq('id',roomId).single();
     if (!data) return;
     const st = data.state;
     if (st.overrides) SESSION_OVERRIDES = st.overrides;
-    if (st.phase==='playing' && !gameEntered) { oppName=myRole==='p1'?st.p2.name:st.p1.name; stopPoll(); enterGame(st); return; }
-    if (st.p2.name && !gameEntered) applyWaitingRoom(st);
-  },2000);
+    if (!gameEntered && st.phase==='playing') {
+      oppName=myRole==='p1'?st.p2.name:st.p1.name;
+      enterGame(st);
+      return;
+    }
+    if (!gameEntered && st.p2.name) applyWaitingRoom(st);
+    if (gameEntered) {
+      applyState(st);
+      maybeAdvanceTurn(st);
+    }
+  },2500);
 }
 
 function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+
+// Only p1 (host) advances turn, but uses a turn-number lock to prevent double execution
+function maybeAdvanceTurn(st) {
+  if (myRole !== 'p1') return;
+  if (!st.p1.ready || !st.p2.ready) return;
+  if (st.phase !== 'playing') return;
+  // Lock: only advance if we haven't already processed this turn transition
+  if (st.turn <= lastProcessedTurn) return;
+  lastProcessedTurn = st.turn;
+  advanceTurn(st);
+}
 
 // ═══════════════════ ENTER GAME ═══════════════════
 function enterGame(st) {
@@ -882,10 +924,13 @@ async function playCard(cid, locIdx) {
   const st = JSON.parse(JSON.stringify(G));
   const me = st[myRole];
   const card = getCard(cid);
-  if (!card||me.played.includes(cid)||card.cost>me.energy) return;
+  const hand = me.hand || me.deck.slice(0,3);
+  if (!card||!hand.includes(cid)||me.played.includes(cid)||card.cost>me.energy) return;
 
   me.energy -= card.cost;
   me.played.push(cid);
+  // remove from hand
+  me.hand = hand.filter(c=>c!==cid);
   const myKey = myRole==='p1'?'p1c':'p2c';
   st.locs[locIdx][myKey].push({cid, mod:0, immune:false});
 
@@ -912,6 +957,12 @@ async function advanceTurn(st) {
     st[r].maxEnergy=Math.min(st.turn,st.maxTurns);
     st[r].energy=st[r].maxEnergy+(st[r].bonusEnergy||0);
     st[r].bonusEnergy=0;
+    // draw 1 card into hand from deck
+    const idx = st[r].deckIdx || 3;
+    if(idx < st[r].deck.length) {
+      st[r].hand = [...(st[r].hand||[]), st[r].deck[idx]];
+      st[r].deckIdx = idx + 1;
+    }
   });
   if(st.turn>st.maxTurns){st.phase='ended';}
   await pushState(st);
@@ -950,7 +1001,7 @@ function backToLobby() {
   document.getElementById('ovl').classList.add('off');
   if(subscription){sb.removeChannel(subscription);subscription=null;}
   stopPoll();
-  roomId=null;myRole=null;G={};gameEntered=false;SESSION_OVERRIDES={};
+  roomId=null;myRole=null;G={};gameEntered=false;SESSION_OVERRIDES={};lastProcessedTurn=0;
   document.getElementById('btn-create').disabled=false;
   document.getElementById('btn-join').disabled=false;
   document.getElementById('code-display').classList.remove('show');
@@ -970,9 +1021,46 @@ function renderHdr(me){
 
 function renderMyHand(me){
   const ph=document.getElementById('p-hand');ph.innerHTML='';
-  me.deck.forEach(cid=>{
+  const hand = me.hand || me.deck.slice(0,3);
+  hand.forEach(cid=>{
     const card=getCard(cid); if(!card) return;
     ph.appendChild(mkHandCard(card, me.played.includes(cid), card.cost>me.energy));
+  });
+  renderDeck(me);
+}
+
+function renderDeck(me){
+  const pd=document.getElementById('p-deck'); if(!pd) return;
+  pd.innerHTML='';
+  const deckIdx = me.deckIdx || 3;
+  const remaining = me.deck.slice(deckIdx);
+  document.getElementById('deck-cnt').textContent = remaining.length + ' карт';
+  remaining.forEach(cid=>{
+    const card=getCard(cid); if(!card) return;
+    // show as small face-up card (not draggable)
+    const el=document.createElement('div');
+    el.className='card';
+    el.style.cssText='cursor:default;touch-action:none;opacity:.7;flex-shrink:0;';
+    const art=artUrl(card.carddefid,card.url);
+    const tag=abilTag(card.ability);
+    const tagHTML=tag?`<div class="ab-tag ${tag}" style="font-size:.35rem;padding:1px 3px;">${tag==='onreveal'?'R':tag==='ongoing'?'O':'E'}</div>`:'';
+    el.innerHTML=`
+      <div class="card-art">
+        <img src="${art}" alt="${card.name}" loading="lazy"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="card-art-fallback" style="display:none">🃏</div>
+        ${tagHTML}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${card.name}</div>
+        <div class="card-row">
+          <div class="cst pw">⚔${card.power}</div>
+          <div class="cst en">⚡${card.cost}</div>
+        </div>
+      </div>`;
+    el.addEventListener('pointerenter',ev=>showTip(card,ev));
+    el.addEventListener('pointerleave',hideTip);
+    pd.appendChild(el);
   });
 }
 
@@ -988,7 +1076,7 @@ function mkHandCard(card, played, cantAfford){
   el.className='card'; el.dataset.cid=card.cid;
   if(played)el.classList.add('played');
   else if(cantAfford)el.classList.add('cant');
-  const art=artUrl(card.carddefid);
+  const art=artUrl(card.carddefid, card.url);
   const tag=abilTag(card.ability);
   const tagHTML=tag?`<div class="ab-tag ${tag}">${tag==='onreveal'?'Reveal':tag==='ongoing'?'On':'EoT'}</div>`:'';
   el.innerHTML=`
@@ -1033,7 +1121,7 @@ function mkMC(entry,loc,isMe){
   const el=document.createElement('div');
   el.className='mc '+(isMe?'pm':'em');
   const card=getCard(entry.cid);
-  const art=card?artUrl(card.carddefid):'';
+  const art=card?artUrl(card.carddefid,card.url):'';
   const ep=effPow(entry,loc,isMe);
   const base=card?(card.power+(entry.mod||0)):0;
   const pwCls=ep>base?'mc-pw buf':ep<base?'mc-pw ner':'mc-pw';
@@ -1074,6 +1162,9 @@ function onPD(ev){
   const g=document.getElementById('ghost');
   g.innerHTML=el.outerHTML;
   g.querySelector('.card')?.classList.remove('dragging');
+  // Match ghost size to actual card
+  g.style.width=el.offsetWidth+'px';
+  g.style.height=el.offsetHeight+'px';
   g.style.display='block';
   mvG(ev);
   setHint('Бросьте карту на локацию!');
@@ -1096,9 +1187,11 @@ function onPU(){
 }
 function mvG(ev){
   const g=document.getElementById('ghost');
-  const cw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw'));
-  const ch=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ch'));
-  g.style.left=(ev.clientX-cw*.5)+'px';g.style.top=(ev.clientY-ch*.72)+'px';
+  // Use actual rendered card size instead of CSS var string
+  const cw=D.el?D.el.offsetWidth:80;
+  const ch=D.el?D.el.offsetHeight:115;
+  g.style.left=(ev.clientX-cw*.5)+'px';
+  g.style.top=(ev.clientY-ch*.65)+'px';
 }
 
 // ═══════════════════ UI HELPERS ═══════════════════
@@ -1116,7 +1209,7 @@ function addLog(msg,type=''){const a=document.getElementById('log');const el=doc
 function clearLog(){document.getElementById('log').innerHTML='';}
 
 function showTip(card,ev){
-  const art=artUrl(card.carddefid);
+  const art=artUrl(card.carddefid,card.url);
   const tipArt=document.getElementById('tip-art');
   tipArt.src=art; tipArt.style.display='block';
   document.getElementById('tip-name').textContent=card.name;
@@ -1135,6 +1228,25 @@ function mvTip(ev){
 }
 document.addEventListener('pointermove',ev=>{if(document.getElementById('tip').classList.contains('on'))mvTip(ev);});
 document.getElementById('inp-code').addEventListener('input',function(){this.value=this.value.toUpperCase();});
+
+// ═══════════════════ COPY CODE ═══════════════════
+function copyCode() {
+  const code = roomId || document.getElementById('cd-code').textContent;
+  if (!code || code === '—') return;
+  navigator.clipboard.writeText(code).then(()=>{
+    const btn = document.getElementById('btn-copy-code');
+    const hint = document.getElementById('cd-hint');
+    if (btn) { const orig=btn.textContent; btn.textContent='✓ Скопировано!'; setTimeout(()=>btn.textContent=orig,2000); }
+    if (hint) { const orig=hint.textContent; hint.textContent='✓ Код скопирован!'; setTimeout(()=>hint.textContent=orig,2000); }
+  }).catch(()=>{
+    // Fallback for browsers without clipboard API
+    const ta=document.createElement('textarea');
+    ta.value=code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn=document.getElementById('btn-copy-code');
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Скопировано!';setTimeout(()=>btn.textContent=orig,2000);}
+  });
+}
 
 // ═══════════════════ BOOT ═══════════════════
 (async()=>{
