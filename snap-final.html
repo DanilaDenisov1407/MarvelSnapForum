@@ -565,15 +565,25 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 let ALL_CARDS = [];       // from Google Sheets
 let SESSION_OVERRIDES = {}; // cost/power overrides set by host this session
 
+function slugify(s) {
+  // Normalize any string into a clean lowercase slug: remove apostrophes, spaces, underscores, dashes
+  return (s||'').toLowerCase()
+    .replace(/'/g,'')    // M'Baku → mbaku
+    .replace(/[^a-z0-9]/g,''); // remove all non-alphanumeric
+}
+
 function artUrl(carddefid, urlField) {
-  // Primary: build from carddefid (lowercase)
+  // Primary: build from carddefid, aggressively normalized
   if (carddefid && carddefid.trim()) {
-    return ART_BASE + carddefid.trim().toLowerCase() + '.webp?v=845';
+    return ART_BASE + slugify(carddefid) + '.webp?v=845';
   }
-  // Fallback: extract slug from url field like https://marvelsnapzone.com/cards/abomination/
-  if (urlField) {
-    const m = urlField.match(/\/cards\/([^\/]+)\/?$/);
-    if (m) return ART_BASE + m[1].toLowerCase() + '.webp?v=845';
+  // Fallback: extract slug from url field e.g. https://marvelsnapzone.com/cards/moon-girl/
+  if (urlField && urlField.trim()) {
+    const m = urlField.match(/\/cards\/([^\/\?]+)/);
+    if (m) {
+      // url slug like "moon-girl" → "moon-girl" (keep dashes, site uses them)
+      return ART_BASE + m[1].toLowerCase().replace(/\/$/, '') + '.webp?v=845';
+    }
   }
   return '';
 }
@@ -683,8 +693,9 @@ async function createRoom() {
     phase:'waiting',
     turn:1, maxTurns:6,
     overrides:{},
-    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,3), deckIdx:3, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
-    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,3), deckIdx:3, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    // Start with 3 cards + draw 1 at beginning of turn 1 = 4 cards in hand
+    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
     locs:[{id:0,p1c:[],p2c:[]},{id:1,p1c:[],p2c:[]},{id:2,p1c:[],p2c:[]}],
   };
 
@@ -817,6 +828,17 @@ async function startGame() {
 // ═══════════════════ REALTIME + POLL ═══════════════════
 // Track last processed turn to avoid double-advancing
 let lastProcessedTurn = 0;
+let lastStateHash = '';
+
+function stateHash(st) {
+  // Quick hash: turn + readiness + card counts in locs + hand sizes
+  try {
+    const p1 = st.p1 || {};
+    const p2 = st.p2 || {};
+    const locs = (st.locs||[]).map(l=>(l.p1c||[]).length+','+(l.p2c||[]).length).join('|');
+    return `${st.turn}|${st.phase}|${p1.ready}|${p2.ready}|${(p1.played||[]).length}|${(p2.played||[]).length}|${locs}|${(p1.hand||[]).length}|${(p2.hand||[]).length}`;
+  } catch(e) { return Math.random()+''; }
+}
 
 function subscribeRoom() {
   subscription = sb.channel('room-'+roomId)
@@ -873,6 +895,7 @@ function maybeAdvanceTurn(st) {
 function enterGame(st) {
   if (gameEntered) return;
   gameEntered = true;
+  lastStateHash = ''; // force first render
   showScreen('game');
   document.getElementById('opp-lbl').textContent = '🎴 '+(oppName||'Противник');
   initDD();
@@ -881,7 +904,10 @@ function enterGame(st) {
 }
 
 // ═══════════════════ STATE APPLICATION ═══════════════════
-function applyState(st) {
+function applyState(st, force=false) {
+  const hash = stateHash(st);
+  if (!force && hash === lastStateHash) return; // nothing changed, skip re-render
+  lastStateHash = hash;
   G = st;
   if (st.phase==='ended'){setTimeout(()=>showEndGame(st),400);return;}
   const me  = st[myRole];
@@ -1001,7 +1027,7 @@ function backToLobby() {
   document.getElementById('ovl').classList.add('off');
   if(subscription){sb.removeChannel(subscription);subscription=null;}
   stopPoll();
-  roomId=null;myRole=null;G={};gameEntered=false;SESSION_OVERRIDES={};lastProcessedTurn=0;
+  roomId=null;myRole=null;G={};gameEntered=false;SESSION_OVERRIDES={};lastProcessedTurn=0;lastStateHash='';
   document.getElementById('btn-create').disabled=false;
   document.getElementById('btn-join').disabled=false;
   document.getElementById('code-display').classList.remove('show');
