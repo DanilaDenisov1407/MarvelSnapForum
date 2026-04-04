@@ -565,25 +565,28 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 let ALL_CARDS = [];       // from Google Sheets
 let SESSION_OVERRIDES = {}; // cost/power overrides set by host this session
 
-function slugify(s) {
-  // Normalize any string into a clean lowercase slug: remove apostrophes, spaces, underscores, dashes
-  return (s||'').toLowerCase()
-    .replace(/'/g,'')    // M'Baku → mbaku
-    .replace(/[^a-z0-9]/g,''); // remove all non-alphanumeric
-}
-
 function artUrl(carddefid, urlField) {
-  // Primary: build from carddefid, aggressively normalized
-  if (carddefid && carddefid.trim()) {
-    return ART_BASE + slugify(carddefid) + '.webp?v=845';
-  }
-  // Fallback: extract slug from url field e.g. https://marvelsnapzone.com/cards/moon-girl/
+  const VER = '?v=855'; // current asset version
+  // PRIMARY: extract slug from url field (most reliable — already correct format)
+  // url field examples: "https://marvelsnapzone.com/cards/agent-venom__"
+  //                     "https://marvelsnapzone.com/cards/mbaku__"
   if (urlField && urlField.trim()) {
-    const m = urlField.match(/\/cards\/([^\/\?]+)/);
-    if (m) {
-      // url slug like "moon-girl" → "moon-girl" (keep dashes, site uses them)
-      return ART_BASE + m[1].toLowerCase().replace(/\/$/, '') + '.webp?v=845';
-    }
+    // strip trailing underscores/slashes, extract last path segment
+    const cleaned = urlField.trim().replace(/[_\/\s]+$/, '');
+    const m = cleaned.match(/\/cards\/([^\/\?\_]+)/);
+    if (m && m[1]) return ART_BASE + m[1].toLowerCase() + '.webp' + VER;
+  }
+  // FALLBACK: build from carddefid with dash-preservation
+  // CardDefId examples: AbominationCharacter, AbsorbingManCharacter
+  // Strip trailing "Character"/"Action" etc, add dashes between camelCase words
+  if (carddefid && carddefid.trim()) {
+    let s = carddefid.trim()
+      .replace(/Character$|Action$|Token$/, '') // strip type suffix
+      .replace(/([a-z])([A-Z])/g, '$1-$2')      // camelCase → kebab-case
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '');              // remove non-slug chars
+    return ART_BASE + s + '.webp' + VER;
   }
   return '';
 }
@@ -921,6 +924,20 @@ function applyState(st, force=false) {
   setUi(myTurn);
 }
 
+function renderOppHand(opp){
+  const eh=document.getElementById('e-hand');
+  const allOppCards = opp.deck||[];
+  const oppHand = opp.hand || allOppCards.slice(0,4);
+  const played = opp.played||[];
+  const backCount = oppHand.filter(cid=>!played.includes(cid)).length;
+  document.getElementById('e-cnt').textContent=(allOppCards.length-played.length)+' карт';
+  // Only rebuild if count changed
+  const existing = eh.querySelectorAll('.card.back');
+  if(existing.length === backCount) return;
+  eh.innerHTML='';
+  for(let i=0;i<backCount;i++){const d=document.createElement('div');d.className='card back';eh.appendChild(d);}
+}
+
 // ═══════════════════ POWER ═══════════════════
 function effPow(entry, loc, isMe) {
   const myKey  = myRole==='p1'?'p1c':'p2c';
@@ -946,11 +963,52 @@ function locSum(loc, isMe) {
 }
 
 // ═══════════════════ PLAY CARD ═══════════════════
+// ── ABILITY DEFINITIONS ──
+// Map of ability keywords → handler function names
+// Ability text is matched case-insensitively
+const ABILITY_HANDLERS = {
+  // "On Reveal: Add a random card to your hand."
+  'add a random card to your hand': 'addRandomToHand',
+  // More can be added here
+};
+
+function getAbilityHandler(abilityText) {
+  if (!abilityText) return null;
+  const lower = abilityText.toLowerCase();
+  for (const [keyword, fn] of Object.entries(ABILITY_HANDLERS)) {
+    if (lower.includes(keyword)) return fn;
+  }
+  return null;
+}
+
+// Apply OnReveal effect to state, return modified state
+function applyOnReveal(st, cid, locIdx, isMe) {
+  const card = getCard(cid);
+  if (!card || !card.ability) return st;
+  const lower = card.ability.toLowerCase();
+  const role = isMe ? myRole : (myRole==='p1'?'p2':'p1');
+  const me = st[role];
+
+  // "Add a random card to your hand"
+  if (lower.includes('add a random card to your hand')) {
+    // Pick a random card NOT already in deck/hand/played
+    const inUse = new Set([...(me.deck||[]), ...(me.hand||[])]);
+    const pool = ALL_CARDS.filter(c=>!inUse.has(String(c.cid)));
+    if (pool.length > 0) {
+      const picked = pool[Math.floor(Math.random()*pool.length)];
+      me.hand = [...(me.hand||[]), String(picked.cid)];
+      if (isMe) addLog(`✨ «${card.name}»: +1 карта в руку (${picked.name})`,'pu');
+    }
+  }
+
+  return st;
+}
+
 async function playCard(cid, locIdx) {
   const st = JSON.parse(JSON.stringify(G));
   const me = st[myRole];
   const card = getCard(cid);
-  const hand = me.hand || me.deck.slice(0,3);
+  const hand = me.hand || me.deck.slice(0,4);
   if (!card||!hand.includes(cid)||me.played.includes(cid)||card.cost>me.energy) return;
 
   me.energy -= card.cost;
@@ -959,6 +1017,12 @@ async function playCard(cid, locIdx) {
   me.hand = hand.filter(c=>c!==cid);
   const myKey = myRole==='p1'?'p1c':'p2c';
   st.locs[locIdx][myKey].push({cid, mod:0, immune:false});
+
+  // Fire OnReveal if ability matches
+  const abilText = card.ability || '';
+  if (abilText.toLowerCase().startsWith('on reveal')) {
+    applyOnReveal(st, cid, locIdx, true);
+  }
 
   await pushState(st);
   addLog(`Вы: «${card.name}» (⚔${card.power}) → лок.${locIdx+1}`,'g');
@@ -1046,56 +1110,85 @@ function renderHdr(me){
 }
 
 function renderMyHand(me){
-  const ph=document.getElementById('p-hand');ph.innerHTML='';
+  const ph=document.getElementById('p-hand');
   const hand = me.hand || me.deck.slice(0,3);
+  const played = me.played || [];
+  
+  // Build desired state map
+  const desired = {}; // cid → {played, cantAfford}
   hand.forEach(cid=>{
     const card=getCard(cid); if(!card) return;
-    ph.appendChild(mkHandCard(card, me.played.includes(cid), card.cost>me.energy));
+    desired[cid] = {played:played.includes(cid), cantAfford:card.cost>me.energy};
   });
+  
+  // Remove cards no longer in hand
+  Array.from(ph.querySelectorAll('.card[data-cid]')).forEach(el=>{
+    if(!desired[el.dataset.cid]) el.remove();
+  });
+  
+  // Add or update cards
+  hand.forEach((cid, idx)=>{
+    const card=getCard(cid); if(!card) return;
+    const {played:p, cantAfford:c} = desired[cid];
+    let el = ph.querySelector(`.card[data-cid="${cid}"]`);
+    if(!el){
+      // New card — create and insert at correct position
+      el = mkHandCard(card, p, c);
+      const children = ph.querySelectorAll('.card[data-cid]');
+      if(children[idx]) ph.insertBefore(el, children[idx]);
+      else ph.appendChild(el);
+    } else {
+      // Existing card — just update classes (no DOM rebuild = no img flicker)
+      el.classList.toggle('played', p);
+      el.classList.toggle('cant', c && !p);
+    }
+  });
+  
   renderDeck(me);
 }
 
 function renderDeck(me){
   const pd=document.getElementById('p-deck'); if(!pd) return;
-  pd.innerHTML='';
-  const deckIdx = me.deckIdx || 3;
+  const deckIdx = me.deckIdx || 4;
   const remaining = me.deck.slice(deckIdx);
   document.getElementById('deck-cnt').textContent = remaining.length + ' карт';
+  // Diff: only rebuild if deck changed
+  const currentCids = Array.from(pd.querySelectorAll('.card[data-cid]')).map(e=>e.dataset.cid).join(',');
+  const newCids = remaining.join(',');
+  if(currentCids === newCids) return;
+  pd.innerHTML='';
   remaining.forEach(cid=>{
     const card=getCard(cid); if(!card) return;
-    // show as small face-up card (not draggable)
-    const el=document.createElement('div');
-    el.className='card';
-    el.style.cssText='cursor:default;touch-action:none;opacity:.7;flex-shrink:0;';
-    const art=artUrl(card.carddefid,card.url);
-    const tag=abilTag(card.ability);
-    const tagHTML=tag?`<div class="ab-tag ${tag}" style="font-size:.35rem;padding:1px 3px;">${tag==='onreveal'?'R':tag==='ongoing'?'O':'E'}</div>`:'';
-    el.innerHTML=`
-      <div class="card-art">
-        <img src="${art}" alt="${card.name}" loading="lazy"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="card-art-fallback" style="display:none">🃏</div>
-        ${tagHTML}
-      </div>
-      <div class="card-body">
-        <div class="card-name">${card.name}</div>
-        <div class="card-row">
-          <div class="cst pw">⚔${card.power}</div>
-          <div class="cst en">⚡${card.cost}</div>
-        </div>
-      </div>`;
-    el.addEventListener('pointerenter',ev=>showTip(card,ev));
-    el.addEventListener('pointerleave',hideTip);
-    pd.appendChild(el);
+    pd.appendChild(mkDeckCard(card));
   });
 }
 
-function renderOppHand(opp){
-  const eh=document.getElementById('e-hand');eh.innerHTML='';
-  const rem=(opp.deck||[]).filter(cid=>!(opp.played||[]).includes(cid));
-  document.getElementById('e-cnt').textContent=rem.length+' карт';
-  rem.slice(0,10).forEach(()=>{const d=document.createElement('div');d.className='card back';eh.appendChild(d);});
+function mkDeckCard(card){
+  const el=document.createElement('div');
+  el.className='card'; el.dataset.cid=card.cid;
+  el.style.cssText='cursor:default;touch-action:none;opacity:.72;flex-shrink:0;';
+  const art=artUrl(card.carddefid,card.url);
+  const tag=abilTag(card.ability);
+  const tagHTML=tag?`<div class="ab-tag ${tag}" style="font-size:.35rem;padding:1px 3px;">${tag==='onreveal'?'R':tag==='ongoing'?'O':'E'}</div>`:'';
+  el.innerHTML=`
+    <div class="card-art">
+      <img src="${art}" alt="${card.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="card-art-fallback" style="display:none">🃏</div>
+      ${tagHTML}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${card.name}</div>
+      <div class="card-row">
+        <div class="cst pw">⚔${card.power}</div>
+        <div class="cst en">⚡${card.cost}</div>
+      </div>
+    </div>`;
+  el.addEventListener('pointerenter',ev=>showTip(card,ev));
+  el.addEventListener('pointerleave',hideTip);
+  return el;
 }
+
 
 function mkHandCard(card, played, cantAfford){
   const el=document.createElement('div');
@@ -1125,6 +1218,8 @@ function mkHandCard(card, played, cantAfford){
 }
 
 function renderLocs(st){
+  const myKey=myRole==='p1'?'p1c':'p2c';
+  const opKey=myRole==='p1'?'p2c':'p1c';
   st.locs.forEach((loc,i)=>{
     const mp=locSum(loc,true),op=locSum(loc,false);
     const ppEl=document.getElementById(`l${i}-pp`),epEl=document.getElementById(`l${i}-ep`);
@@ -1134,18 +1229,25 @@ function renderLocs(st){
     if(mp>op){ow.textContent='ВЫ';ow.className='loc-own p';}
     else if(op>mp){ow.textContent='ОПП';ow.className='loc-own e';}
     else{ow.textContent='—';ow.className='loc-own t';}
-    const myKey=myRole==='p1'?'p1c':'p2c';
-    const opKey=myRole==='p1'?'p2c':'p1c';
-    const ps=document.getElementById(`l${i}-ps`);ps.innerHTML='';
-    (loc[myKey]||[]).forEach(e=>ps.appendChild(mkMC(e,loc,true)));
-    const es=document.getElementById(`l${i}-es`);es.innerHTML='';
-    (loc[opKey]||[]).forEach(e=>es.appendChild(mkMC(e,loc,false)));
+
+    // Diff player slot — only add new cards
+    const ps=document.getElementById(`l${i}-ps`);
+    const pCards=loc[myKey]||[];
+    const pExisting=new Set(Array.from(ps.querySelectorAll('.mc')).map(e=>e.dataset.cid));
+    pCards.forEach(e=>{ if(!pExisting.has(e.cid)) ps.appendChild(mkMC(e,loc,true)); });
+
+    // Diff enemy slot — only add new cards
+    const es=document.getElementById(`l${i}-es`);
+    const eCards=loc[opKey]||[];
+    const eExisting=new Set(Array.from(es.querySelectorAll('.mc')).map(e=>e.dataset.cid));
+    eCards.forEach(e=>{ if(!eExisting.has(e.cid)) es.appendChild(mkMC(e,loc,false)); });
   });
 }
 
 function mkMC(entry,loc,isMe){
   const el=document.createElement('div');
   el.className='mc '+(isMe?'pm':'em');
+  el.dataset.cid=entry.cid;
   const card=getCard(entry.cid);
   const art=card?artUrl(card.carddefid,card.url):'';
   const ep=effPow(entry,loc,isMe);
