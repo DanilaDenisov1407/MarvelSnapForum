@@ -1,6 +1,6 @@
 // ============================================================
-//  Marvel Snap Slot Machine — script.js v3
-//  Фикс: надёжная остановка барабанов, нет "Ошибка анимации"
+//  Marvel Snap Slot Machine — script.js v4
+//  Fixes: убран жёсткий checkImage, исправлена анимация
 // ============================================================
 
 const CARDS_API = 'https://script.google.com/macros/s/AKfycbx3jwUPotluP3qIHNvM6HiizPdLU-QJQdcTKMJiOXpaWnR606yj9gWe1fj32sEGrve78Q/exec';
@@ -11,15 +11,15 @@ let spinning     = false;
 let animationIds = [null, null, null];
 let positions    = [0, 0, 0];
 let isSpinning   = [false, false, false];
-let stoppedCount = 0;           // сколько барабанов финально остановились
+let stoppedCount = 0;
 let finalSymbols = [null, null, null];
-let stopIndices  = [0, 0, 0];   // индексы в slotSymbols (НЕ в пуле)
+let stopIndices  = [0, 0, 0];
 
 // ── Данные ───────────────────────────────────
 let characters   = [];
-let slotSymbols  = [];   // [{characterId, name, url, series, rarity}]
-let reelPool     = [];   // slotSymbols повторённые N раз
-let settings     = { jackpot_chance: 0.0001, win_chance: 0.05, slot_title: 'Слот-Машина у Баки' };
+let slotSymbols  = [];
+let reelPool     = [];
+let settings     = { jackpot_chance: 0.0001, win_chance: 0.05, slot_title: 'Слот-Машина у Баки 🦾' };
 let symbolHeight = 200;
 let reelHeight   = 0;
 
@@ -38,59 +38,51 @@ async function loadCards() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    if (data.settings) settings = { ...settings, ...data.settings };
+    if (data.settings) settings = Object.assign({}, settings, data.settings);
     if (settings.slot_title) document.querySelector('h1').textContent = settings.slot_title;
 
-    characters = (data.characters || []).filter(c => c.variants && c.variants.length > 0);
-    if (characters.length === 0) throw new Error('Нет персонажей');
+    characters = (data.characters || []).filter(function(c) {
+      return c.variants && c.variants.length > 0;
+    });
+    if (characters.length === 0) throw new Error('Нет персонажей в ответе API');
 
     buildSlotSymbols();
-    setStatus('Проверка картинок... ' + slotSymbols.length + ' шт.');
-    await filterBrokenImages();
-    if (slotSymbols.length === 0) throw new Error('Все картинки битые!');
 
+    // Только фильтруем явно пустые URL — не предзагружаем все картинки
+    // (предзагрузка через Image() падала из-за CORS на marvelsnapzone.com)
+    slotSymbols = slotSymbols.filter(function(s) {
+      return s.url && s.url.indexOf('http') === 0 && s.url.length > 15;
+    });
+
+    if (slotSymbols.length === 0) throw new Error('Нет валидных URL картинок');
+
+    console.log('Загружено символов:', slotSymbols.length);
     initReels();
     btn.disabled    = false;
     btn.textContent = 'Крутить!';
     setStatus('');
+
   } catch (err) {
-    console.error('Ошибка:', err);
-    setStatus('Резервный режим');
+    console.error('Ошибка загрузки:', err.message);
+    setStatus('Ошибка: ' + err.message);
     useFallback();
   }
 }
 
+// ─────────────────────────────────────────────
+//  ПОСТРОЕНИЕ СИМВОЛОВ
+// ─────────────────────────────────────────────
 function buildSlotSymbols() {
   slotSymbols = characters.map(function(char) {
     var url = char.variants[Math.floor(Math.random() * char.variants.length)];
-    return { characterId: char.id, name: char.name, series: char.series || '', rarity: char.rarity || '', cost: char.cost || 0, url: url };
+    return {
+      characterId: String(char.id),
+      name:        char.name  || 'Unknown',
+      rarity:      char.rarity || '',
+      status:      char.status || '',
+      url:         url || ''
+    };
   }).sort(function() { return Math.random() - 0.5; });
-}
-
-// ─────────────────────────────────────────────
-//  ФИЛЬТР БИТЫХ КАРТИНОК (батчами по 20)
-// ─────────────────────────────────────────────
-async function filterBrokenImages() {
-  var BATCH = 20, TIMEOUT = 5000;
-  var valid = [];
-  for (var i = 0; i < slotSymbols.length; i += BATCH) {
-    var batch   = slotSymbols.slice(i, i + BATCH);
-    var results = await Promise.all(batch.map(function(s) { return checkImage(s.url, TIMEOUT); }));
-    batch.forEach(function(s, j) { if (results[j]) valid.push(s); });
-    setStatus('Проверено ' + Math.min(i + BATCH, slotSymbols.length) + '/' + slotSymbols.length + ' ок: ' + valid.length);
-  }
-  slotSymbols = valid;
-}
-
-function checkImage(url, ms) {
-  return new Promise(function(resolve) {
-    if (!url || url.indexOf('http') !== 0) return resolve(false);
-    var img = new Image();
-    var t   = setTimeout(function() { img.src = ''; resolve(false); }, ms);
-    img.onload  = function() { clearTimeout(t); resolve(img.naturalWidth > 0); };
-    img.onerror = function() { clearTimeout(t); resolve(false); };
-    img.src = url;
-  });
 }
 
 // ─────────────────────────────────────────────
@@ -99,10 +91,8 @@ function checkImage(url, ms) {
 function initReels() {
   symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
 
-  // 6 повторений — достаточно места чтобы найти цель впереди текущей позиции
-  var repeatCount = 6;
   reelPool = [];
-  for (var r = 0; r < repeatCount; r++) {
+  for (var r = 0; r < 6; r++) {
     slotSymbols.forEach(function(s) { reelPool.push(s); });
   }
   reelHeight = reelPool.length * symbolHeight;
@@ -117,15 +107,17 @@ function initReels() {
       div.className = 'symbol';
       var img = document.createElement('img');
       img.src   = sym.url;
-      img.alt   = sym.name || '';
-      img.title = sym.name + ' | ' + sym.series + ' | ' + sym.rarity;
-      img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-      img.onerror = function() { div.style.opacity = '0'; };
+      img.alt   = sym.name;
+      img.title = sym.name + (sym.rarity ? ' · ' + sym.rarity : '');
+      img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+      // Если картинка битая — скрываем div чтобы не было пустого места
+      img.onerror = function() {
+        div.style.visibility = 'hidden';
+      };
       div.appendChild(img);
       reel.appendChild(div);
     });
 
-    // Стартуем из первого повторения
     var startIdx = Math.floor(Math.random() * slotSymbols.length);
     positions[index] = -(startIdx * symbolHeight);
     reel.style.transform = 'translateY(' + positions[index] + 'px)';
@@ -133,7 +125,7 @@ function initReels() {
 }
 
 // ─────────────────────────────────────────────
-//  АНИМАЦИЯ ОДНОГО БАРАБАНА
+//  АНИМАЦИЯ
 // ─────────────────────────────────────────────
 function startReelAnimation(index) {
   var reel     = document.getElementById(reelIds[index]);
@@ -149,14 +141,13 @@ function startReelAnimation(index) {
     var delta = now - lastTime;
     lastTime  = now;
 
-    // Сигнал остановки получен — ищем цель и плавно доезжаем
     if (!isSpinning[index] && !landing) {
       landing = true;
 
       var targetSym  = slotSymbols[stopIndices[index]];
       var currentRow = Math.round(-positions[index] / symbolHeight);
 
-      // Ищем ближайший targetSym в пуле ВПЕРЁД от текущей позиции (минимум +2 строки)
+      // Ищем ближайшее вхождение нужного символа впереди
       var targetRow = -1;
       for (var i = currentRow + 2; i < reelPool.length; i++) {
         if (reelPool[i] && reelPool[i].url === targetSym.url) {
@@ -164,7 +155,6 @@ function startReelAnimation(index) {
           break;
         }
       }
-      // Fallback — первое вхождение в пуле
       if (targetRow === -1) {
         for (var j = 0; j < reelPool.length; j++) {
           if (reelPool[j] && reelPool[j].url === targetSym.url) {
@@ -173,35 +163,33 @@ function startReelAnimation(index) {
           }
         }
       }
-      // Крайний fallback
       if (targetRow === -1) targetRow = stopIndices[index];
 
       var targetPos = -(targetRow * symbolHeight);
-
-      // Плавный доезд через CSS transition
       reel.style.transition = 'transform 0.45s cubic-bezier(0.33, 1, 0.68, 1)';
       reel.style.transform  = 'translateY(' + targetPos + 'px)';
       positions[index]      = targetPos;
       animationIds[index]   = null;
 
-      // После transition фиксируем результат
-      setTimeout(function() {
-        reel.style.transition = '';
-        finalSymbols[index]   = targetSym;
-        stoppedCount++;
-        if (stoppedCount === 3) finishSpin();
-      }, 460);
+      // Сохраняем index в замыкании
+      (function(idx, sym) {
+        setTimeout(function() {
+          reel.style.transition = '';
+          finalSymbols[idx]     = sym;
+          stoppedCount++;
+          if (stoppedCount === 3) finishSpin();
+        }, 460);
+      })(index, targetSym);
 
       return;
     }
 
     if (landing) return;
 
-    // Разгон и кручение
     speed = Math.min(maxSpeed, speed + accel * (delta / 16.67));
     positions[index] -= speed;
 
-    // Зацикливание — когда ушли в первые 60% пула, прыгаем назад на 30%
+    // Зацикливание
     if (-positions[index] > reelPool.length * 0.6 * symbolHeight) {
       positions[index] += Math.floor(reelPool.length * 0.3) * symbolHeight;
     }
@@ -228,34 +216,34 @@ function spin() {
   document.getElementById('result').className    = 'result';
 
   var roll    = Math.random();
-  var JACKPOT = settings.jackpot_chance || 0.0001;
-  var WIN     = settings.win_chance     || 0.05;
+  var JACKPOT = Number(settings.jackpot_chance) || 0.0001;
+  var WIN     = Number(settings.win_chance)     || 0.05;
 
   if (roll < JACKPOT) {
-    // Джекпот — три одинаковых
     var idx = Math.floor(Math.random() * slotSymbols.length);
     stopIndices = [idx, idx, idx];
 
   } else if (roll < JACKPOT + WIN) {
-    // Победа — три варианта одного персонажа
     var winners = characters.filter(function(c) { return c.variants.length >= 3; });
-    var pool    = winners.length > 0 ? winners : characters;
-    var winner  = pool[Math.floor(Math.random() * pool.length)];
+    var pool2   = winners.length > 0 ? winners : characters;
+    var winner  = pool2[Math.floor(Math.random() * pool2.length)];
     var picks   = winner.variants.slice().sort(function() { return Math.random() - 0.5; }).slice(0, 3);
 
     stopIndices = picks.map(function(url) {
-      var idx2 = slotSymbols.findIndex(function(s) { return s.url === url; });
-      if (idx2 === -1) {
-        var newSym = { characterId: winner.id, name: winner.name, url: url, series: winner.series || '', rarity: winner.rarity || '' };
-        slotSymbols.push(newSym);
-        reelPool.push(newSym); // добавляем в конец пула
-        idx2 = slotSymbols.length - 1;
+      var found = -1;
+      for (var k = 0; k < slotSymbols.length; k++) {
+        if (slotSymbols[k].url === url) { found = k; break; }
       }
-      return idx2;
+      if (found === -1) {
+        var ns = { characterId: String(winner.id), name: winner.name, url: url, rarity: winner.rarity || '', status: winner.status || '' };
+        slotSymbols.push(ns);
+        reelPool.push(ns);
+        found = slotSymbols.length - 1;
+      }
+      return found;
     });
 
   } else {
-    // Случайный результат
     stopIndices = [0, 1, 2].map(function() { return Math.floor(Math.random() * slotSymbols.length); });
   }
 
@@ -272,14 +260,14 @@ function spin() {
       setTimeout(function() { isSpinning[i] = false; }, delay);
     });
 
-    // Страховка 6с — заполняем finalSymbols и финишируем принудительно
+    // Страховка 7с
     setTimeout(function() {
       if (!spinning) return;
       finalSymbols = finalSymbols.map(function(s, i) {
         return s || slotSymbols[stopIndices[i]] || slotSymbols[0];
       });
       finishSpin();
-    }, 6000);
+    }, 7000);
 
   }, 150);
 }
@@ -301,7 +289,6 @@ function finishSpin() {
   btn.disabled    = false;
   btn.textContent = 'Крутить!';
 
-  // Страховка от null
   finalSymbols = finalSymbols.map(function(s, i) {
     return s || slotSymbols[stopIndices[i]] || slotSymbols[0];
   });
@@ -310,18 +297,18 @@ function finishSpin() {
   var ids = s.map(function(sym) { return sym ? sym.characterId : null; });
 
   if (s[0].url === s[1].url && s[1].url === s[2].url) {
-    result.innerHTML = '<b>ДЖЕКПОТ!</b> Три одинаковых! 🎉🎉🎉';
+    result.innerHTML = '🎰 <b>ДЖЕКПОТ!</b> Три одинаковых! 🎉🎉🎉';
     result.className = 'result win jackpot';
     launchConfetti(80);
 
   } else if (ids[0] && ids[0] === ids[1] && ids[1] === ids[2]) {
-    result.innerHTML = '<b>ПОБЕДА!</b> Три ' + s[0].name + '! Красавчик! 🎊';
+    result.innerHTML = '🏆 <b>ПОБЕДА!</b> Три ' + s[0].name + '! Красавчик! 🎊';
     result.className = 'result win';
     launchConfetti(50);
 
   } else if (ids[0] === ids[1] || ids[1] === ids[2] || ids[0] === ids[2]) {
     var pairName = (ids[0] === ids[1] || ids[0] === ids[2]) ? s[0].name : s[1].name;
-    result.textContent = 'Почти! Два ' + pairName + ' — ещё разок! 😬';
+    result.textContent = '😬 Почти! Два ' + pairName + ' — ещё разок!';
     result.className   = 'result near';
 
   } else {
@@ -345,12 +332,13 @@ function launchConfetti(count) {
   for (var i = 0; i < count; i++) {
     var el = document.createElement('div');
     el.style.cssText = 'position:fixed;top:-10px;pointer-events:none;z-index:9999;'
-      + 'left:' + (Math.random()*100) + 'vw;'
-      + 'width:' + (6+Math.random()*8) + 'px;height:' + (6+Math.random()*8) + 'px;'
-      + 'background:' + colors[Math.floor(Math.random()*colors.length)] + ';'
-      + 'border-radius:' + (Math.random()>.5?'50%':'2px') + ';'
-      + 'animation:confettiFall ' + (1.5+Math.random()*2) + 's ease-in forwards;'
-      + 'animation-delay:' + (Math.random()*0.6) + 's;';
+      + 'left:' + (Math.random() * 100) + 'vw;'
+      + 'width:' + (6 + Math.random() * 8) + 'px;'
+      + 'height:' + (6 + Math.random() * 8) + 'px;'
+      + 'background:' + colors[Math.floor(Math.random() * colors.length)] + ';'
+      + 'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';'
+      + 'animation:confettiFall ' + (1.5 + Math.random() * 2) + 's ease-in forwards;'
+      + 'animation-delay:' + (Math.random() * 0.6) + 's;';
     document.body.appendChild(el);
     el.addEventListener('animationend', function() { this.remove(); });
   }
@@ -366,8 +354,8 @@ function setStatus(msg) {
 
 function useFallback() {
   var emojis = ['🍋','🍒','🍊','🍇','🔔','⭐','💎','🃏','🎯','🏆'];
-  characters  = emojis.map(function(e, i) { return {id:String(i), name:e, variants:[e], series:'', rarity:''}; });
-  slotSymbols = characters.map(function(c) { return {characterId:c.id, name:c.name, url:c.variants[0], series:'', rarity:''}; });
+  characters  = emojis.map(function(e, i) { return { id: String(i), name: e, variants: [e], rarity: '', status: '' }; });
+  slotSymbols = characters.map(function(c) { return { characterId: c.id, name: c.name, url: c.variants[0], rarity: '', status: '' }; });
   symbolHeight = window.innerWidth < 480 ? 120 : (window.innerWidth < 768 ? 160 : 200);
   reelPool = [];
   for (var r = 0; r < 6; r++) slotSymbols.forEach(function(s) { reelPool.push(s); });
@@ -379,7 +367,7 @@ function useFallback() {
     reelPool.forEach(function(sym) {
       var div = document.createElement('div');
       div.className = 'symbol';
-      div.style.cssText = 'font-size:' + (symbolHeight*.55) + 'px;line-height:' + symbolHeight + 'px;text-align:center;';
+      div.style.cssText = 'font-size:' + Math.round(symbolHeight * 0.55) + 'px;line-height:' + symbolHeight + 'px;text-align:center;';
       div.textContent = sym.url;
       reel.appendChild(div);
     });
@@ -402,10 +390,14 @@ window.addEventListener('load', function() {
   var t;
   window.addEventListener('resize', function() {
     clearTimeout(t);
-    t = setTimeout(function() { if (!spinning && slotSymbols.length > 0) initReels(); }, 300);
+    t = setTimeout(function() {
+      if (!spinning && slotSymbols.length > 0) initReels();
+    }, 300);
   });
 });
 
 window.addEventListener('beforeunload', function() {
-  reelIds.forEach(function(_, i) { if (animationIds[i]) cancelAnimationFrame(animationIds[i]); });
+  reelIds.forEach(function(_, i) {
+    if (animationIds[i]) cancelAnimationFrame(animationIds[i]);
+  });
 });
