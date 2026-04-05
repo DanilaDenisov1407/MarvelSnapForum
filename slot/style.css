@@ -1,6 +1,8 @@
 /* ============================================================
-   Marvel Snap Slot Machine — style.css v4
+   Marvel Snap Slot Machine — style.css v5
    ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0; padding: 0;
@@ -16,6 +18,156 @@ body {
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
+.screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* ── АВТОРИЗАЦИЯ ──────────────────────────── */
+
+.auth-box {
+  background: rgba(0,0,0,0.9);
+  border: 3px solid gold;
+  border-radius: 20px;
+  padding: 30px 28px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255,215,0,0.4);
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-box h1 {
+  margin: 0 0 6px;
+  font-size: 1.4em;
+  color: gold;
+  text-shadow: 0 0 12px rgba(255,215,0,0.5);
+}
+
+.auth-sub {
+  margin: 0 0 20px;
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid rgba(255,215,0,0.3);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab.active, .tab:hover {
+  border-color: gold;
+  color: gold;
+  background: rgba(255,215,0,0.08);
+}
+
+.auth-input {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  color: white;
+  font-size: 1em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.auth-input:focus { border-color: gold; }
+.auth-input::placeholder { color: rgba(255,255,255,0.35); }
+
+.auth-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #111;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.auth-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FFA500, #FF6600);
+  transform: translateY(-1px);
+}
+.auth-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+.auth-error {
+  color: #ff6b6b;
+  font-size: 0.88em;
+  min-height: 1.4em;
+  margin-bottom: 6px;
+  text-shadow: none;
+}
+
+.auth-hint {
+  margin-top: 12px;
+  font-size: 0.82em;
+  opacity: 0.55;
+  text-shadow: none;
+}
+
+/* ── СЛОТ — ШАПКА ЮЗЕРА ──────────────────── */
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255,215,0,0.2);
+}
+
+.user-name {
+  flex: 1;
+  font-size: 0.9em;
+  color: rgba(255,255,255,0.8);
+  text-align: left;
+  text-shadow: none;
+}
+
+.user-balance {
+  font-weight: bold;
+  color: gold;
+  font-size: 0.95em;
+  text-shadow: 0 0 8px rgba(255,215,0,0.4);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 1em;
+  transition: all 0.2s;
+}
+.logout-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+/* ── СЛОТ-МАШИНА ──────────────────────────── */
+
 .slot-machine {
   background: rgba(0,0,0,0.87);
   border: 3px solid gold;
@@ -24,7 +176,7 @@ body {
   text-align: center;
   box-shadow: 0 0 40px rgba(255,215,0,0.4);
   max-width: 800px;
-  width: 90%;
+  width: 100%;
 }
 
 h1 {
@@ -36,15 +188,12 @@ h1 {
 
 p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
 
-/* ── БАРАБАНЫ ─────────────────────────────── */
-
 .slots-container {
   display: flex;
   justify-content: space-around;
   gap: 10px;
   margin: 18px 0;
   height: 200px;
-  /* НЕТ position:relative и НЕТ ::after — это вызывало жёлтую полосу */
 }
 
 .slot {
@@ -59,9 +208,7 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
   box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
 }
 
-/* Блики сверху/снизу — эффект глубины */
-.slot::before,
-.slot::after {
+.slot::before, .slot::after {
   content: '';
   position: absolute;
   left: 0; right: 0;
@@ -69,14 +216,8 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
   z-index: 2;
   pointer-events: none;
 }
-.slot::before {
-  top: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
-}
-.slot::after {
-  bottom: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-}
+.slot::before { top: 0;    background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent); }
+.slot::after  { bottom: 0; background: linear-gradient(to top,   rgba(0,0,0,0.75), transparent); }
 
 .reel {
   position: absolute;
@@ -94,7 +235,6 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
   justify-content: center;
   flex-shrink: 0;
   padding: 6px;
-  box-sizing: border-box;
 }
 
 .symbol img {
@@ -104,7 +244,7 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
   border-radius: 8px;
 }
 
-/* ── КНОПКА ───────────────────────────────── */
+/* ── КНОПКА КРУТИТЬ ───────────────────────── */
 
 .spin-btn {
   background: linear-gradient(135deg, #FFD700, #FFA500);
@@ -122,7 +262,6 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
 .spin-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #FFA500, #FF6600);
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(255,100,0,0.55);
 }
 .spin-btn:active:not(:disabled) { transform: translateY(0); }
 .spin-btn:disabled {
@@ -141,7 +280,7 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
   min-height: 2.2em;
   padding: 10px 16px;
   border-radius: 10px;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .result.win {
@@ -170,32 +309,29 @@ p { margin: 0 0 4px; opacity: 0.7; font-size: 0.9em; }
 .result.lose { color: #999; }
 
 @keyframes winPulse {
-  0%, 100% { transform: scale(1); }
+  0%,100% { transform: scale(1); }
   50% { transform: scale(1.04); box-shadow: 0 0 22px rgba(255,215,0,0.55); }
 }
 @keyframes jackpotPulse {
-  0%, 100% { transform: scale(1); }
+  0%,100% { transform: scale(1); }
   50% { transform: scale(1.07); box-shadow: 0 0 32px rgba(255,69,0,0.75); }
 }
 
-/* ── КОНФЕТТИ ─────────────────────────────── */
 @keyframes confettiFall {
   0%   { transform: translateY(0) rotate(0deg);       opacity: 1; }
   100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
 }
 
-/* ── МОБИЛЬНЫЕ (<480px) ───────────────────── */
+/* ── МОБИЛЬНЫЕ ────────────────────────────── */
 @media (max-width: 480px) {
-  .slot-machine { max-width: 400px; width: 96%; padding: 12px; }
+  .slot-machine { padding: 12px; }
   .slots-container { height: 120px; gap: 6px; margin: 12px 0; }
   .slot { height: 120px; max-width: none; }
   .symbol { height: 120px; padding: 4px; }
   h1 { font-size: 1.1em; }
   .spin-btn { padding: 11px 26px; font-size: 1em; }
-  .result { font-size: 0.92em; padding: 8px 10px; }
 }
 
-/* ── ПЛАНШЕТЫ (481–768px) ─────────────────── */
 @media (min-width: 481px) and (max-width: 768px) {
   .slots-container { height: 160px; }
   .slot { height: 160px; }
