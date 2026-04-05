@@ -1,51 +1,68 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Слот-Машина у Баки 🦾</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Слот-Машина у Баки 🦾</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="slot-machine">
-        <h1>Слот-Машина у Баки 🦾</h1>
-        <p>Удачи! 😄</p>
-       
-        <div class="slots-container">
-            <div class="slot" id="slot1">
-                <div class="reel" id="reel1">
-                    <!-- Символы добавит JS -->
-                </div>
-            </div>
-            <div class="slot" id="slot2">
-                <div class="reel" id="reel2">
-                    <!-- Символы добавит JS -->
-                </div>
-            </div>
-            <div class="slot" id="slot3">
-                <div class="reel" id="reel3">
-                    <!-- Символы добавит JS -->
-                </div>
-            </div>
-        </div>
-       
-        <button class="spin-btn" id="spinBtn" disabled>Загрузка...</button>
-        <div class="result" id="result"></div>
+
+  <!-- ── ЭКРАН АВТОРИЗАЦИИ ──────────────────── -->
+  <div class="screen" id="screen-auth">
+    <div class="auth-box">
+      <h1>Слот-Машина у Баки 🦾</h1>
+      <p class="auth-sub">Войди чтобы крутить!</p>
+
+      <div class="tabs">
+        <button class="tab active" id="tab-login">Войти</button>
+        <button class="tab" id="tab-reg">Регистрация</button>
+      </div>
+
+      <!-- Форма входа -->
+      <div id="form-login">
+        <input class="auth-input" id="login-username" type="text"     placeholder="@логин" autocomplete="username">
+        <input class="auth-input" id="login-password" type="password" placeholder="Пароль" autocomplete="current-password">
+        <div class="auth-error" id="login-error"></div>
+        <button class="auth-btn" id="login-btn">Войти</button>
+      </div>
+
+      <!-- Форма регистрации -->
+      <div id="form-reg" style="display:none">
+        <input class="auth-input" id="reg-username" type="text"     placeholder="@логин (начни с @)" autocomplete="username">
+        <input class="auth-input" id="reg-password" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="new-password">
+        <div class="auth-error" id="reg-error"></div>
+        <button class="auth-btn" id="reg-btn">Зарегистрироваться</button>
+        <p class="auth-hint">При регистрации ты получишь 3000 🎲 кубов</p>
+      </div>
     </div>
-    <script src="script.js"></script>
+  </div>
+
+  <!-- ── ЭКРАН СЛОТА ────────────────────────── -->
+  <div class="screen" id="screen-slot" style="display:none">
+    <div class="slot-machine">
+
+      <!-- Шапка с юзером -->
+      <div class="user-bar">
+        <span class="user-name" id="user-name">@username</span>
+        <span class="user-balance" id="user-balance">3000 🎲</span>
+        <button class="logout-btn" id="logout-btn" title="Выйти">↩</button>
+      </div>
+
+      <h1 id="slot-title">Слот-Машина у Баки 🦾</h1>
+      <p>Удачи! 😄</p>
+
+      <div class="slots-container">
+        <div class="slot" id="slot1"><div class="reel" id="reel1"></div></div>
+        <div class="slot" id="slot2"><div class="reel" id="reel2"></div></div>
+        <div class="slot" id="slot3"><div class="reel" id="reel3"></div></div>
+      </div>
+
+      <button class="spin-btn" id="spinBtn" disabled>Загрузка...</button>
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=105434537', 'ym');
-
-    ym(105434537, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/105434537" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
