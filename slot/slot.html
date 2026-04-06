@@ -2,24 +2,23 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Слот-Машина у Баки 🦾</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- ── ЭКРАН АВТОРИЗАЦИИ ──────────────────── -->
-  <div class="screen" id="screen-auth">
+  <!-- ══ ЭКРАН АВТОРИЗАЦИИ ══════════════════════ -->
+  <div id="screen-auth" class="screen">
     <div class="auth-box">
       <h1>Слот-Машина у Баки 🦾</h1>
       <p class="auth-sub">Войди чтобы крутить!</p>
 
       <div class="tabs">
         <button class="tab active" id="tab-login">Войти</button>
-        <button class="tab" id="tab-reg">Регистрация</button>
+        <button class="tab"        id="tab-reg">Регистрация</button>
       </div>
 
-      <!-- Форма входа -->
       <div id="form-login">
         <input class="auth-input" id="login-username" type="text"     placeholder="@логин" autocomplete="username">
         <input class="auth-input" id="login-password" type="password" placeholder="Пароль" autocomplete="current-password">
@@ -27,39 +26,39 @@
         <button class="auth-btn" id="login-btn">Войти</button>
       </div>
 
-      <!-- Форма регистрации -->
       <div id="form-reg" style="display:none">
         <input class="auth-input" id="reg-username" type="text"     placeholder="@логин (начни с @)" autocomplete="username">
         <input class="auth-input" id="reg-password" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="new-password">
         <div class="auth-error" id="reg-error"></div>
         <button class="auth-btn" id="reg-btn">Зарегистрироваться</button>
-        <p class="auth-hint">При регистрации ты получишь 3000 🎲 кубов</p>
+        <p class="auth-hint">При регистрации получишь 3000 🎲 кубов</p>
       </div>
     </div>
   </div>
 
-  <!-- ── ЭКРАН СЛОТА ────────────────────────── -->
-  <div class="screen" id="screen-slot" style="display:none">
+  <!-- ══ ЭКРАН СЛОТА ════════════════════════════ -->
+  <div id="screen-slot" class="screen" style="display:none">
     <div class="slot-machine">
 
-      <!-- Шапка с юзером -->
       <div class="user-bar">
-        <span class="user-name" id="user-name">@username</span>
-        <span class="user-balance" id="user-balance">3000 🎲</span>
-        <button class="logout-btn" id="logout-btn" title="Выйти">↩</button>
+        <span class="user-name"    id="user-name">@username</span>
+        <span class="user-balance" id="user-balance">— 🎲</span>
+        <button class="logout-btn" id="logout-btn">↩ Выйти</button>
       </div>
 
       <h1 id="slot-title">Слот-Машина у Баки 🦾</h1>
       <p>Удачи! 😄</p>
 
       <div class="slots-container">
-        <div class="slot" id="slot1"><div class="reel" id="reel1"></div></div>
-        <div class="slot" id="slot2"><div class="reel" id="reel2"></div></div>
-        <div class="slot" id="slot3"><div class="reel" id="reel3"></div></div>
+        <div class="slot"><div class="reel" id="reel1"></div></div>
+        <div class="slot"><div class="reel" id="reel2"></div></div>
+        <div class="slot"><div class="reel" id="reel3"></div></div>
       </div>
 
       <button class="spin-btn" id="spinBtn" disabled>Загрузка...</button>
       <div class="result" id="result"></div>
+
+      <div class="stats-bar" id="stats-bar"></div>
     </div>
   </div>
 
