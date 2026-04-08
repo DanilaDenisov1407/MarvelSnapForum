@@ -5,27 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Слот-Машина у Баки 🦾</title>
 <style>
-/* ============================================================
-   RESET & BASE
-   ============================================================ */
+/* ── RESET ──────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: Arial, sans-serif;
-  background: url('slotback.png') center center / cover fixed;
+  background: url('slotback.png') center/cover fixed;
   min-height: 100vh;
   color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* ============================================================
-   SCREENS
-   ============================================================ */
+/* ── SCREENS ────────────────────────────── */
 .screen {
   display: none;
-  width: 100%;
   min-height: 100vh;
   align-items: center;
   justify-content: center;
@@ -33,93 +25,88 @@ body {
 }
 .screen.active { display: flex; }
 
-/* ============================================================
-   AUTH BOX
-   ============================================================ */
+/* ── AUTH ───────────────────────────────── */
 .auth-box {
   background: rgba(0,0,0,0.93);
   border: 3px solid gold;
   border-radius: 20px;
   padding: 32px 28px;
-  width: 100%;
-  max-width: 400px;
+  width: 100%; max-width: 400px;
   text-align: center;
   box-shadow: 0 0 40px rgba(255,215,0,0.35);
 }
-.auth-box h1 { color: gold; font-size: 1.4em; margin-bottom: 6px; text-shadow: 0 0 10px rgba(255,215,0,.5); }
-.auth-sub    { font-size: .9em; opacity: .6; margin-bottom: 22px; }
-
-.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-.tab  {
-  flex: 1; padding: 10px;
-  border: 2px solid rgba(255,215,0,.3); border-radius: 10px;
-  background: transparent; color: rgba(255,255,255,.6);
-  font-size: .95em; cursor: pointer; transition: all .2s;
+.auth-box h1 {
+  color: gold; font-size: 1.4em; margin-bottom: 6px;
+  text-shadow: 0 0 10px rgba(255,215,0,.5);
 }
-.tab.active, .tab:hover { border-color: gold; color: gold; background: rgba(255,215,0,.08); }
+.auth-sub { font-size:.9em; opacity:.6; margin-bottom:22px; }
+
+.tabs { display:flex; gap:8px; margin-bottom:20px; }
+.tab {
+  flex:1; padding:10px;
+  border:2px solid rgba(255,215,0,.3); border-radius:10px;
+  background:transparent; color:rgba(255,255,255,.6);
+  font-size:.95em; cursor:pointer; transition:all .2s;
+}
+.tab.active,.tab:hover { border-color:gold; color:gold; background:rgba(255,215,0,.08); }
 
 .auth-input {
-  display: block; width: 100%;
-  padding: 12px 14px; margin-bottom: 12px;
-  border: 2px solid rgba(255,255,255,.15); border-radius: 10px;
-  background: rgba(255,255,255,.07); color: #fff; font-size: 1em; outline: none;
-  transition: border-color .2s;
+  display:block; width:100%;
+  padding:12px 14px; margin-bottom:12px;
+  border:2px solid rgba(255,255,255,.15); border-radius:10px;
+  background:rgba(255,255,255,.07); color:#fff; font-size:1em; outline:none;
+  transition:border-color .2s;
 }
-.auth-input:focus { border-color: gold; }
-.auth-input::placeholder { color: rgba(255,255,255,.35); }
+.auth-input:focus { border-color:gold; }
+.auth-input::placeholder { color:rgba(255,255,255,.35); }
 
 .auth-btn {
-  width: 100%; padding: 13px; margin-top: 4px;
-  background: linear-gradient(135deg,#FFD700,#FFA500);
-  color: #111; border: none; border-radius: 12px;
-  font-size: 1.05em; font-weight: bold; cursor: pointer; transition: all .2s;
+  width:100%; padding:13px; margin-top:4px;
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  color:#111; border:none; border-radius:12px;
+  font-size:1.05em; font-weight:bold; cursor:pointer; transition:all .2s;
 }
-.auth-btn:hover:not(:disabled) { background: linear-gradient(135deg,#FFA500,#FF6600); transform: translateY(-1px); }
-.auth-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+.auth-btn:hover:not(:disabled) { background:linear-gradient(135deg,#FFA500,#FF6600); transform:translateY(-1px); }
+.auth-btn:disabled { background:#444; color:#888; cursor:not-allowed; }
 
-.auth-error { color: #ff6b6b; font-size: .88em; min-height: 1.4em; margin-bottom: 8px; }
-.auth-hint  { margin-top: 12px; font-size: .82em; opacity: .55; }
+.auth-error { color:#ff6b6b; font-size:.88em; min-height:1.4em; margin-bottom:8px; }
+.auth-hint  { margin-top:12px; font-size:.82em; opacity:.55; }
 
-/* ============================================================
-   SLOT MACHINE
-   ============================================================ */
+/* ── SLOT MACHINE ───────────────────────── */
 .slot-machine {
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.90);
   border: 3px solid gold;
   border-radius: 20px;
   padding: 18px 20px 22px;
-  width: 100%;
-  max-width: 680px;
+  width: 100%; max-width: 660px;
   text-align: center;
   box-shadow: 0 0 40px rgba(255,215,0,.4);
 }
 
-/* User bar */
 .user-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; margin-bottom: 14px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,215,0,.2); border-radius: 10px;
+  display:flex; align-items:center; gap:10px;
+  padding:8px 12px; margin-bottom:14px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,215,0,.2); border-radius:10px;
 }
-.user-name    { flex: 1; font-size: .88em; color: rgba(255,255,255,.75); text-align: left; }
-.user-balance { font-weight: bold; color: gold; white-space: nowrap; font-size: .95em; }
-.logout-btn   {
-  background: transparent; border: 1px solid rgba(255,255,255,.2);
-  border-radius: 8px; color: rgba(255,255,255,.5);
-  padding: 5px 10px; font-size: .85em; cursor: pointer; white-space: nowrap; transition: all .2s;
+.user-name    { flex:1; font-size:.88em; color:rgba(255,255,255,.75); text-align:left; }
+.user-balance { font-weight:bold; color:gold; white-space:nowrap; font-size:.95em; }
+.logout-btn {
+  background:transparent; border:1px solid rgba(255,255,255,.2);
+  border-radius:8px; color:rgba(255,255,255,.5);
+  padding:5px 10px; font-size:.85em; cursor:pointer; transition:all .2s;
 }
-.logout-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
+.logout-btn:hover { border-color:#ff6b6b; color:#ff6b6b; }
 
-.slot-machine h1 { color: gold; font-size: 1.4em; margin-bottom: 4px; text-shadow: 0 0 12px rgba(255,215,0,.5); }
-.slot-machine p  { font-size: .9em; opacity: .7; }
+.slot-machine h1 { color:gold; font-size:1.4em; margin-bottom:4px; text-shadow:0 0 12px rgba(255,215,0,.5); }
+.slot-machine p  { font-size:.9em; opacity:.7; }
 
-/* ── БАРАБАНЫ ───────────────────────────────────── */
+/* ── БАРАБАНЫ ───────────────────────────── */
 .slots-container {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin: 16px auto;
-  /* js управляет height */
 }
 
 .slot {
@@ -130,197 +117,202 @@ body {
   position: relative;
   background: #050505;
   box-shadow: inset 0 0 20px rgba(0,0,0,.9);
-  /* js управляет width и height */
 }
-/* блики */
-.slot::before, .slot::after {
-  content: ''; position: absolute; left: 0; right: 0; height: 40px; z-index: 2; pointer-events: none;
+.slot::before,.slot::after {
+  content:''; position:absolute; left:0; right:0; height:40px; z-index:2; pointer-events:none;
 }
-.slot::before { top: 0;    background: linear-gradient(to bottom, rgba(0,0,0,.85), transparent); }
-.slot::after  { bottom: 0; background: linear-gradient(to top,   rgba(0,0,0,.85), transparent); }
+.slot::before { top:0;    background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent); }
+.slot::after  { bottom:0; background:linear-gradient(to top,  rgba(0,0,0,.85),transparent); }
 
 .reel {
-  position: absolute; top: 0; left: 0; width: 100%;
-  display: flex; flex-direction: column;
-  will-change: transform;
+  position:absolute; top:0; left:0; width:100%;
+  display:flex; flex-direction:column;
+  will-change:transform;
 }
 
-/* Каждый .symbol получает height через JS-атрибут style,
-   чтобы гарантированно совпадать с SYM_H */
-.symbol {
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  padding: 6px;
-  /* height задаётся через JS */
+.sym {
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  padding:6px; overflow:hidden;
 }
-.symbol img {
-  width: 100%; height: 100%;
-  object-fit: contain; border-radius: 8px; display: block;
-}
-.symbol.emoji {
-  font-size: 3em; line-height: 1;
+.sym img {
+  width:100%; height:100%;
+  object-fit:contain; border-radius:8px; display:block;
 }
 
-/* ── КНОПКА ─────────────────────────────────────── */
+/* ── КНОПКА ────────────────────────────── */
 .spin-btn {
-  background: linear-gradient(135deg,#FFD700,#FFA500);
-  color: #111; border: none;
-  padding: 14px 50px; font-size: 1.2em; font-weight: bold;
-  border-radius: 12px; cursor: pointer; margin: 12px 0 4px;
-  transition: all .2s; box-shadow: 0 4px 18px rgba(255,165,0,.45);
-  display: inline-block;
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  color:#111; border:none;
+  padding:14px 50px; font-size:1.2em; font-weight:bold;
+  border-radius:12px; cursor:pointer; margin:12px 0 4px;
+  transition:all .2s; box-shadow:0 4px 18px rgba(255,165,0,.45);
+  display:inline-block;
 }
-.spin-btn:hover:not(:disabled) { background: linear-gradient(135deg,#FFA500,#FF6600); transform: translateY(-2px); }
-.spin-btn:active:not(:disabled) { transform: translateY(0); }
-.spin-btn:disabled { background: linear-gradient(135deg,#444,#2a2a2a); color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
+.spin-btn:hover:not(:disabled) { background:linear-gradient(135deg,#FFA500,#FF6600); transform:translateY(-2px); }
+.spin-btn:active:not(:disabled){ transform:translateY(0); }
+.spin-btn:disabled { background:linear-gradient(135deg,#444,#2a2a2a); color:#777; cursor:not-allowed; box-shadow:none; transform:none; }
 
-/* ── РЕЗУЛЬТАТ ──────────────────────────────────── */
+/* ── РЕЗУЛЬТАТ ──────────────────────────── */
 .result {
-  min-height: 2.4em; padding: 10px 14px;
-  border-radius: 10px; font-size: 1.05em; margin-top: 8px; transition: all .3s;
+  min-height:2.4em; padding:10px 14px;
+  border-radius:10px; font-size:1.05em; margin-top:8px; transition:all .3s;
 }
-.result.win     { background: rgba(255,215,0,.12); border: 2px solid gold; color: gold; font-size: 1.2em; font-weight: bold; animation: winPulse .5s ease-in-out 3; }
-.result.jackpot { background: rgba(255,50,0,.18);  border: 2px solid #FF4500; color: #FFD700; font-size: 1.4em; animation: jackpotPulse .35s ease-in-out 5; }
-.result.near    { background: rgba(255,165,0,.08); border: 1px solid rgba(255,165,0,.3); color: #FFA500; }
-.result.lose    { color: #999; }
+.result.win     { background:rgba(255,215,0,.12); border:2px solid gold; color:gold; font-size:1.2em; font-weight:bold; animation:pulse .5s ease-in-out 3; }
+.result.jackpot { background:rgba(255,50,0,.18);  border:2px solid #FF4500; color:#FFD700; font-size:1.4em; animation:pulse2 .35s ease-in-out 5; }
+.result.near    { background:rgba(255,165,0,.08); border:1px solid rgba(255,165,0,.3); color:#FFA500; }
+.result.lose    { color:#999; }
 
-.stats-bar { margin-top: 8px; font-size: .8em; color: rgba(255,255,255,.4); }
+.stats-bar { margin-top:8px; font-size:.8em; color:rgba(255,255,255,.4); }
 
-/* ── АНИМАЦИИ ───────────────────────────────────── */
-@keyframes winPulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04); box-shadow:0 0 22px rgba(255,215,0,.55)} }
-@keyframes jackpotPulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.07); box-shadow:0 0 32px rgba(255,69,0,.75)} }
-@keyframes confettiFall{ 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(105vh) rotate(720deg);opacity:0} }
+/* ── АНИМАЦИИ ───────────────────────────── */
+@keyframes pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04);box-shadow:0 0 22px rgba(255,215,0,.55)} }
+@keyframes pulse2 { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07);box-shadow:0 0 32px rgba(255,69,0,.75)} }
+@keyframes fall   { 0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(105vh) rotate(720deg);opacity:0} }
 
-/* ============================================================
-   MOBILE
-   ============================================================ */
-@media (max-width: 560px) {
-  .slot-machine { padding: 10px 8px 14px; border-radius: 14px; }
-  .slot-machine h1 { font-size: 1.05em; }
-  .spin-btn { padding: 11px 28px; font-size: 1em; }
-  .result   { font-size: .9em; }
-  .user-bar { padding: 6px 8px; }
-  .user-name { font-size: .78em; }
-  .logout-btn{ font-size: .75em; padding: 4px 6px; }
-  .slots-container { gap: 6px; }
+/* ── MOBILE ─────────────────────────────── */
+@media (max-width:560px) {
+  .slot-machine { padding:10px 8px 14px; }
+  .slot-machine h1 { font-size:1.05em; }
+  .spin-btn { padding:11px 28px; font-size:1em; }
+  .result { font-size:.9em; }
+  .user-name { font-size:.78em; }
+  .logout-btn { font-size:.75em; padding:4px 6px; }
+  .slots-container { gap:6px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══ AUTH ══════════════════════════════════════ -->
+<!-- AUTH -->
 <div id="screen-auth" class="screen">
   <div class="auth-box">
     <h1>Слот-Машина у Баки 🦾</h1>
     <p class="auth-sub">Войди чтобы крутить!</p>
-
     <div class="tabs">
       <button class="tab active" id="tab-login">Войти</button>
       <button class="tab"        id="tab-reg">Регистрация</button>
     </div>
-
     <div id="form-login">
-      <input class="auth-input" id="login-username" type="text"     placeholder="@логин"   autocomplete="username">
-      <input class="auth-input" id="login-password" type="password" placeholder="Пароль"   autocomplete="current-password">
-      <div class="auth-error" id="login-error"></div>
+      <input class="auth-input" id="login-u" type="text"     placeholder="@логин"             autocomplete="username">
+      <input class="auth-input" id="login-p" type="password" placeholder="Пароль"             autocomplete="current-password">
+      <div class="auth-error" id="login-err"></div>
       <button class="auth-btn" id="login-btn">Войти</button>
     </div>
-
     <div id="form-reg" style="display:none">
-      <input class="auth-input" id="reg-username" type="text"     placeholder="@логин (с @)"       autocomplete="username">
-      <input class="auth-input" id="reg-password" type="password" placeholder="Пароль ≥ 6 символов" autocomplete="new-password">
-      <div class="auth-error" id="reg-error"></div>
+      <input class="auth-input" id="reg-u" type="text"     placeholder="@логин (начни с @)"   autocomplete="username">
+      <input class="auth-input" id="reg-p" type="password" placeholder="Пароль ≥ 6 символов"  autocomplete="new-password">
+      <div class="auth-error" id="reg-err"></div>
       <button class="auth-btn" id="reg-btn">Зарегистрироваться</button>
       <p class="auth-hint">При регистрации получишь 3000 🎲 кубов</p>
     </div>
   </div>
 </div>
 
-<!-- ══ SLOT ══════════════════════════════════════ -->
+<!-- SLOT -->
 <div id="screen-slot" class="screen">
   <div class="slot-machine">
-
     <div class="user-bar">
-      <span class="user-name"    id="user-name">@username</span>
-      <span class="user-balance" id="user-balance">— 🎲</span>
-      <button class="logout-btn" id="logout-btn">↩ Выйти</button>
+      <span class="user-name"    id="u-name">@user</span>
+      <span class="user-balance" id="u-bal">— 🎲</span>
+      <button class="logout-btn" id="btn-logout">↩ Выйти</button>
     </div>
-
     <h1 id="slot-title">Слот-Машина у Баки 🦾</h1>
     <p>Удачи! 😄</p>
-
-    <div class="slots-container" id="slots-container">
-      <div class="slot" id="slot0"><div class="reel" id="reel0"></div></div>
-      <div class="slot" id="slot1"><div class="reel" id="reel1"></div></div>
-      <div class="slot" id="slot2"><div class="reel" id="reel2"></div></div>
-    </div>
-
-    <button class="spin-btn" id="spinBtn" disabled>Загрузка...</button>
+    <div class="slots-container" id="slots-wrap"></div>
+    <button class="spin-btn" id="btn-spin" disabled>Загрузка...</button>
     <div class="result" id="result"></div>
-    <div class="stats-bar" id="stats-bar"></div>
+    <div class="stats-bar" id="stats"></div>
   </div>
 </div>
 
 <script>
-// ============================================================
+'use strict';
+// ================================================================
 //  КОНФИГ
-// ============================================================
-const API = 'https://script.google.com/macros/s/AKfycbx3jwUPotluP3qIHNvM6HiizPdLU-QJQdcTKMJiOXpaWnR606yj9gWe1fj32sEGrve78Q/exec';
-const N_REELS = 3;
+// ================================================================
+const API_URL  = 'https://script.google.com/macros/s/AKfycbx3jwUPotluP3qIHNvM6HiizPdLU-QJQdcTKMJiOXpaWnR606yj9gWe1fj32sEGrve78Q/exec';
+const N        = 3;   // кол-во барабанов
+const REPEATS  = 10;  // кол-во повторений символов в каждом барабане
+const SESSION_KEY = 'snap_v2';
 
-// ============================================================
+// ================================================================
 //  УТИЛИТЫ
-// ============================================================
-const $ = id => document.getElementById(id);
+// ================================================================
+const el = id => document.getElementById(id);
 
-async function api(params) {
-  const r = await fetch(API + '?' + new URLSearchParams(params));
+async function callApi(params) {
+  const r = await fetch(API_URL + '?' + new URLSearchParams(params));
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+  const d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d;
 }
 
-function showScreen(name) {
+function show(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  $(name).classList.add('active');
+  el(screenId).classList.add('active');
 }
 
 function setResult(text, cls) {
-  const el = $('result');
-  el.textContent = text;
-  el.className = 'result' + (cls ? ' ' + cls : '');
+  const d = el('result');
+  d.textContent = text;
+  d.className = 'result' + (cls ? ' ' + cls : '');
 }
 
-// ============================================================
-//  СЕССИЯ
-// ============================================================
-let user = null;
+// ================================================================
+//  СЕССИЯ (хранит только username, balance, spins, wins — числа)
+// ================================================================
+let session = null;
 
-function saveSession() { try { localStorage.setItem('mss', JSON.stringify(user)); } catch(e){} }
-function loadSession() { try { return JSON.parse(localStorage.getItem('mss')); } catch(e){ return null; } }
-function clearSession(){ try { localStorage.removeItem('mss'); } catch(e){} }
-
-function updateUserBar() {
-  if (!user) return;
-  $('user-name').textContent    = user.username;
-  $('user-balance').textContent = (user.balance ?? 0) + ' 🎲';
-  $('stats-bar').textContent    = 'Всего спинов: ' + (user.spins ?? 0) + ' · Побед: ' + (user.wins ?? 0);
+function saveSession() {
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(_){}
+}
+function loadStoredSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    // Санитизируем числа — защита от мусора в localStorage
+    return {
+      username: String(s.username || ''),
+      balance:  Math.max(0, parseInt(s.balance)  || 0),
+      spins:    Math.max(0, parseInt(s.spins)     || 0),
+      wins:     Math.max(0, parseInt(s.wins)      || 0),
+    };
+  } catch(_){ return null; }
+}
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch(_){}
 }
 
-// ============================================================
-//  АВТОРИЗАЦИЯ
-// ============================================================
+function renderUserBar() {
+  if (!session) return;
+  el('u-name').textContent = session.username;
+  el('u-bal').textContent  = session.balance + ' 🎲';
+  el('stats').textContent  =
+    'Всего спинов: ' + session.spins + ' · Побед: ' + session.wins;
+}
+
+// ================================================================
+//  AUTH
+// ================================================================
 async function doLogin() {
-  const username = $('login-username').value.trim().toLowerCase();
-  const password = $('login-password').value.trim();
-  const err      = $('login-error');
-  const btn      = $('login-btn');
+  const u   = el('login-u').value.trim().toLowerCase();
+  const p   = el('login-p').value.trim();
+  const err = el('login-err');
+  const btn = el('login-btn');
   err.textContent = '';
-  if (!username || !password) { err.textContent = 'Заполни все поля'; return; }
+  if (!u || !p) { err.textContent = 'Заполни все поля'; return; }
   btn.disabled = true; btn.textContent = 'Входим...';
   try {
-    const d = await api({ action:'login', username, password });
-    if (!d.ok) throw new Error(d.error);
-    user = { username: d.username, balance: d.balance, spins: d.spins, wins: d.wins ?? 0 };
+    const d = await callApi({ action:'login', username:u, password:p });
+    session = {
+      username: String(d.username),
+      balance:  Math.max(0, parseInt(d.balance) || 0),
+      spins:    Math.max(0, parseInt(d.spins)   || 0),
+      wins:     Math.max(0, parseInt(d.wins)    || 0),
+    };
     saveSession();
     await enterSlot();
   } catch(e) { err.textContent = '❌ ' + e.message; }
@@ -328,17 +320,16 @@ async function doLogin() {
 }
 
 async function doRegister() {
-  const username = $('reg-username').value.trim().toLowerCase();
-  const password = $('reg-password').value.trim();
-  const err      = $('reg-error');
-  const btn      = $('reg-btn');
+  const u   = el('reg-u').value.trim().toLowerCase();
+  const p   = el('reg-p').value.trim();
+  const err = el('reg-err');
+  const btn = el('reg-btn');
   err.textContent = '';
-  if (!username || !password) { err.textContent = 'Заполни все поля'; return; }
+  if (!u || !p) { err.textContent = 'Заполни все поля'; return; }
   btn.disabled = true; btn.textContent = 'Создаём...';
   try {
-    const d = await api({ action:'register', username, password });
-    if (!d.ok) throw new Error(d.error);
-    user = { username: d.username, balance: d.balance, spins: 0, wins: 0 };
+    const d = await callApi({ action:'register', username:u, password:p });
+    session = { username: String(d.username), balance: 3000, spins: 0, wins: 0 };
     saveSession();
     await enterSlot();
   } catch(e) { err.textContent = '❌ ' + e.message; }
@@ -346,431 +337,470 @@ async function doRegister() {
 }
 
 function doLogout() {
-  user = null; clearSession();
-  ['login-username','login-password','reg-username','reg-password'].forEach(id => $(id).value = '');
-  ['login-error','reg-error'].forEach(id => $(id).textContent = '');
-  // Сбрасываем барабаны чтобы при следующем входе не было старых данных
-  symbols = []; pool = [];
-  showScreen('screen-auth');
+  session = null;
+  clearSession();
+  // Сброс полей
+  ['login-u','login-p','reg-u','reg-p'].forEach(id => el(id).value = '');
+  ['login-err','reg-err'].forEach(id => el(id).textContent = '');
+  // Чистим барабаны
+  el('slots-wrap').innerHTML = '';
+  chars = []; deck = [];
+  show('screen-auth');
 }
 
-// ============================================================
-//  РАЗМЕРЫ БАРАБАНОВ
-// ============================================================
-let SYM_H = 200, SYM_W = 170;
-
-function calcSizes() {
-  const vw = window.innerWidth;
-  if      (vw <= 400) { SYM_H = 90;  SYM_W = 88;  }
-  else if (vw <= 560) { SYM_H = 110; SYM_W = 100; }
-  else if (vw <= 768) { SYM_H = 150; SYM_W = 136; }
-  else                { SYM_H = 200; SYM_W = 170; }
-}
-
-// ============================================================
-//  ДАННЫЕ
-// ============================================================
-let characters = [];
-let symbols    = []; // [{characterId, name, rarity, url}]
-let pool       = []; // symbols × 8 — общий пул для всех барабанов
-let settings   = { jackpot_chance: 0.0001, win_chance: 0.05, slot_title: 'Слот-Машина у Баки 🦾' };
+// ================================================================
+//  ДАННЫЕ КАРТ
+// ================================================================
+let chars    = [];   // [{id, name, rarity, variants:[url,...]}]
+let deck     = [];   // отфильтрованные символы для барабана: [{charId,name,url}]
+let cfg      = { jackpot_chance:0.0001, win_chance:0.05 };
 
 async function enterSlot() {
-  showScreen('screen-slot');
-  updateUserBar();
-  calcSizes();
+  show('screen-slot');
+  renderUserBar();
   await loadCards();
 }
 
 async function loadCards() {
-  const btn = $('spinBtn');
+  const btn = el('btn-spin');
   btn.disabled = true; btn.textContent = 'Загрузка...';
   setResult('Загружаем карты...');
 
   try {
-    const d = await api({ action: 'cards' });
-    if (d.error) throw new Error(d.error);
+    const d = await callApi({ action:'cards' });
+    if (d.settings) Object.assign(cfg, d.settings);
+    if (cfg.slot_title) el('slot-title').textContent = cfg.slot_title;
 
-    Object.assign(settings, d.settings || {});
-    if (settings.slot_title) $('slot-title').textContent = settings.slot_title;
+    chars = (d.characters || []).filter(c => c.variants?.length > 0);
+    if (!chars.length) throw new Error('Нет карт в таблице');
 
-    characters = (d.characters || []).filter(c => c.variants?.length > 0);
-    if (!characters.length) throw new Error('Таблица Cards пустая или нет URL');
+    // Собираем колоду — по одному рандомному варианту на персонажа
+    deck = chars.map(c => ({
+      charId: String(c.id),
+      name:   c.name || '?',
+      url:    c.variants[Math.floor(Math.random() * c.variants.length)]
+    })).filter(s => s.url.startsWith('http'));
 
-    buildSymbols();
-    // Предзагружаем картинки прежде чем строить барабаны
-    await preloadSymbols();
+    if (!deck.length) throw new Error('Нет валидных URL');
+
+    // Предзагрузка — убираем битые картинки ДО построения барабанов
+    setResult('Проверяем картинки...');
+    deck = await filterBroken(deck);
+    if (!deck.length) throw new Error('Все картинки недоступны');
+
+    deck = deck.sort(() => Math.random() - 0.5);
+
     buildReels();
-
     btn.disabled = false; btn.textContent = 'Крутить!';
     setResult('');
   } catch(e) {
-    console.error('loadCards:', e.message);
+    console.error(e);
     setResult('⚠️ ' + e.message);
     useFallback();
   }
 }
 
-function buildSymbols() {
-  symbols = characters.map(c => {
-    const url = c.variants[Math.floor(Math.random() * c.variants.length)];
-    return { characterId: String(c.id), name: c.name || '?', rarity: c.rarity || '', url: url || '' };
-  }).filter(s => s.url && s.url.startsWith('http'))
-    .sort(() => Math.random() - 0.5);
-
-  // Пул = 8 повторений (гарантирует что найдём цель при любой скорости прокрутки)
-  pool = [];
-  for (let r = 0; r < 8; r++) symbols.forEach(s => pool.push(s));
+// Проверяем картинки батчами по 30, таймаут 5с
+async function filterBroken(list) {
+  const TIMEOUT = 5000, BATCH = 30;
+  const good = [];
+  for (let i = 0; i < list.length; i += BATCH) {
+    const batch = list.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(sym => checkImg(sym.url, TIMEOUT)));
+    batch.forEach((sym, j) => { if (results[j]) good.push(sym); });
+  }
+  return good;
 }
 
-// Предзагрузка с таймаутом — убираем битые URL из symbols ДО построения барабанов
-function preloadSymbols() {
-  const TIMEOUT = 4000;
-  return Promise.all(
-    symbols.map(sym => new Promise(resolve => {
-      const img = new Image();
-      const t   = setTimeout(() => { sym._broken = true; resolve(); }, TIMEOUT);
-      img.onload  = () => { clearTimeout(t); resolve(); };
-      img.onerror = () => { clearTimeout(t); sym._broken = true; resolve(); };
-      img.src = sym.url;
-    }))
-  ).then(() => {
-    const before = symbols.length;
-    symbols = symbols.filter(s => !s._broken);
-    console.log(`Предзагрузка: ${before} → ${symbols.length} валидных`);
-    if (!symbols.length) throw new Error('Все картинки недоступны');
-    // Перестраиваем пул из валидных символов
-    pool = [];
-    for (let r = 0; r < 8; r++) symbols.forEach(s => pool.push(s));
+function checkImg(url, ms) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const t   = setTimeout(() => { img.onload = img.onerror = null; resolve(false); }, ms);
+    img.onload  = () => { clearTimeout(t); resolve(true); };
+    img.onerror = () => { clearTimeout(t); resolve(false); };
+    img.src = url;
   });
 }
 
-// ============================================================
-//  БАРАБАНЫ
-// ============================================================
+// ================================================================
+//  ПОСТРОЕНИЕ БАРАБАНОВ
+//  Каждый барабан — независимый DOM с pool = deck × REPEATS
+//  Все символы одинаковые → landReel всегда найдёт цель
+// ================================================================
+let symH = 200, symW = 170;
+
+function calcDims() {
+  const vw = window.innerWidth;
+  if      (vw <= 380) { symH=90;  symW=84; }
+  else if (vw <= 560) { symH=110; symW=100; }
+  else if (vw <= 768) { symH=150; symW=136; }
+  else                { symH=200; symW=170; }
+}
+
+// Для каждого барабана храним его pool отдельно
+const reelData = [null, null, null]; // [{pool:[...], el:reelEl}]
+
 function buildReels() {
-  calcSizes();
+  calcDims();
+  const wrap = el('slots-wrap');
+  wrap.innerHTML = '';
+  wrap.style.height = symH + 'px';
 
-  // Контейнер
-  const container = $('slots-container');
-  container.style.height = SYM_H + 'px';
+  for (let i = 0; i < N; i++) {
+    // Строим pool для этого барабана: deck × REPEATS (перемешиваем каждый раз)
+    const shuffled = [...deck].sort(() => Math.random() - 0.5);
+    const pool = [];
+    for (let r = 0; r < REPEATS; r++) shuffled.forEach(s => pool.push(s));
 
-  for (let i = 0; i < N_REELS; i++) {
-    const slot = $('slot' + i);
-    const reel = $('reel' + i);
+    // DOM
+    const slotDiv = document.createElement('div');
+    slotDiv.className = 'slot';
+    slotDiv.style.cssText = `width:${symW}px;height:${symH}px;`;
 
-    slot.style.width  = SYM_W + 'px';
-    slot.style.height = SYM_H + 'px';
-
-    reel.innerHTML = '';
-    reel.style.transition = '';
+    const reelDiv = document.createElement('div');
+    reelDiv.className = 'reel';
+    reelDiv.id = 'reel' + i;
 
     pool.forEach(sym => {
       const div = document.createElement('div');
-      div.className  = 'symbol';
-      div.style.height = SYM_H + 'px'; // ← ключевое: высота задана явно
+      div.className = 'sym';
+      div.style.cssText = `width:${symW}px;height:${symH}px;`;
 
       const img = document.createElement('img');
-      img.src = sym.url;
-      img.alt = sym.name;
-      img.title = sym.name + (sym.rarity ? ' · ' + sym.rarity : '');
-      // onerror скрываем div, но символ уже прошёл предзагрузку — это крайний случай
-      img.onerror = () => { div.style.visibility = 'hidden'; };
+      img.src   = sym.url;
+      img.alt   = sym.name;
+      img.title = sym.name;
       div.appendChild(img);
-      reel.appendChild(div);
+      reelDiv.appendChild(div);
     });
 
-    // Стартовая позиция — середина пула, немного рандома
-    const startRow = Math.floor(pool.length * 0.4) + Math.floor(Math.random() * symbols.length);
-    positions[i] = -(startRow * SYM_H);
-    reel.style.transform = `translateY(${positions[i]}px)`;
+    slotDiv.appendChild(reelDiv);
+    wrap.appendChild(slotDiv);
+
+    // Стартовая позиция — начало второй трети пула
+    const startRow = Math.floor(pool.length / 3) + Math.floor(Math.random() * deck.length);
+    reelPos[i] = -(startRow * symH);
+    reelDiv.style.transform = `translateY(${reelPos[i]}px)`;
+
+    reelData[i] = { pool, elReel: reelDiv };
   }
 }
 
-// ============================================================
-//  АНИМАЦИЯ
-// ============================================================
-let spinning     = false;
-let stoppedCount = 0;
-let animationIds = [null, null, null];
-let positions    = [0, 0, 0];
-let isSpinning   = [false, false, false];
-let finalSymbols = [null, null, null];
-let stopTargets  = [0, 0, 0]; // индексы в symbols[]
+// ================================================================
+//  СПИН — логика
+// ================================================================
+let spinning    = false;
+let reelPos     = [0,0,0];
+let rafIds      = [null,null,null];
+let reelDone    = [false,false,false];
+let reelStop    = [false,false,false]; // сигнал остановки
+// Для каждого барабана — индекс ВНУТРИ deck[], куда нужно встать
+let targets     = [0,0,0];
 
-function spinReel(idx) {
-  const reel = $('reel' + idx);
-  const isMob = window.innerWidth <= 560;
-  const maxSpd = isMob ? 12 : 18;
-  const accel  = isMob ? 3  : 4;
-
-  let speed = 0, last = performance.now(), braking = false;
-  const totalH = pool.length * SYM_H;
-
-  function frame(now) {
-    const dt = Math.min(now - last, 48); last = now;
-
-    if (!isSpinning[idx] && !braking) {
-      braking = true;
-      landReel(idx, reel);
-      return;
-    }
-    if (braking) return;
-
-    speed = Math.min(maxSpd, speed + accel * dt / 16);
-    positions[idx] -= speed;
-
-    // Зацикливание: прыгаем назад на 40% когда прошли 65%
-    if (-positions[idx] > totalH * 0.65) {
-      positions[idx] += totalH * 0.4;
-    }
-
-    reel.style.transform = `translateY(${Math.round(positions[idx])}px)`;
-    animationIds[idx] = requestAnimationFrame(frame);
-  }
-  animationIds[idx] = requestAnimationFrame(frame);
-}
-
-function landReel(idx, reel) {
-  const target = symbols[stopTargets[idx]];
-  const curRow  = Math.round(-positions[idx] / SYM_H);
-
-  // Ищем ближайшее вхождение target.url вперёд от curRow (мин +2)
-  let tRow = -1;
-  for (let i = curRow + 2; i < pool.length; i++) {
-    if (pool[i]?.url === target.url) { tRow = i; break; }
-  }
-  if (tRow === -1) {
-    for (let i = 0; i < pool.length; i++) {
-      if (pool[i]?.url === target.url) { tRow = i; break; }
-    }
-  }
-  if (tRow === -1) tRow = Math.floor(pool.length * 0.4) + stopTargets[idx];
-
-  const tPos = -(tRow * SYM_H);
-  reel.style.transition = `transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)`;
-  reel.style.transform  = `translateY(${tPos}px)`;
-  positions[idx]        = tPos;
-
-  ;(function(i, sym) {
-    setTimeout(() => {
-      $('reel' + i).style.transition = '';
-      finalSymbols[i] = sym;
-      stoppedCount++;
-      if (stoppedCount === N_REELS) finishSpin();
-    }, 400);
-  })(idx, target);
-}
-
-// ============================================================
-//  СПИН
-// ============================================================
 function spin() {
-  if (spinning || !symbols.length) return;
-  spinning     = true;
-  stoppedCount = 0;
-  finalSymbols = [null, null, null];
+  if (spinning || !deck.length) return;
+  spinning = true;
+  reelDone = [false,false,false];
+  reelStop = [false,false,false];
 
-  $('spinBtn').disabled    = true;
-  $('spinBtn').textContent = 'Крутит...';
+  el('btn-spin').disabled    = true;
+  el('btn-spin').textContent = 'Крутит...';
   setResult('');
 
+  // ── Определяем результат ──────────────────
   const roll = Math.random();
-  const J = Number(settings.jackpot_chance) || 0.0001;
-  const W = Number(settings.win_chance)     || 0.05;
+  const J = Number(cfg.jackpot_chance) || 0.0001;
+  const W = Number(cfg.win_chance)     || 0.05;
 
   if (roll < J) {
-    // Джекпот
-    const i = Math.floor(Math.random() * symbols.length);
-    stopTargets = [i, i, i];
+    // Джекпот: все три — один и тот же символ из deck
+    const t = Math.floor(Math.random() * deck.length);
+    targets = [t, t, t];
 
   } else if (roll < J + W) {
-    // Победа: 3 варианта одного персонажа
-    const winners = characters.filter(c => c.variants.length >= 3);
-    const src     = winners.length ? winners : characters;
-    const winner  = src[Math.floor(Math.random() * src.length)];
-    const picks   = [...winner.variants].sort(() => Math.random() - 0.5).slice(0, 3);
-
-    stopTargets = picks.map(url => {
-      const k = symbols.findIndex(s => s.url === url);
-      if (k !== -1) return k;
-      const ns = { characterId: String(winner.id), name: winner.name, url, rarity: winner.rarity || '' };
-      symbols.push(ns); pool.push(ns);
-      return symbols.length - 1;
-    });
+    // Победа: три РАЗНЫХ варианта одного персонажа
+    // Ищем персонажа у которого >=3 вариантов И все три есть в deck
+    const winner = pickWinner();
+    if (winner) {
+      // winner.slots = три индекса в deck[]
+      targets = winner.slots;
+    } else {
+      // fallback — случайный
+      targets = randomTargets();
+    }
 
   } else {
-    stopTargets = [0,1,2].map(() => Math.floor(Math.random() * symbols.length));
+    targets = randomTargets();
   }
 
-  // Запуск
-  for (let i = 0; i < N_REELS; i++) {
-    isSpinning[i] = true;
-    if (animationIds[i]) cancelAnimationFrame(animationIds[i]);
-    spinReel(i);
-  }
+  // ── Запуск анимаций ──────────────────────
+  for (let i = 0; i < N; i++) startReel(i);
 
-  const isMob  = window.innerWidth <= 560;
-  const delays = isMob ? [900,1400,1900] : [1100,1700,2300];
-  delays.forEach((d, i) => setTimeout(() => { isSpinning[i] = false; }, d));
+  // ── Сигналы остановки ────────────────────
+  const mob    = window.innerWidth <= 560;
+  const delays = mob ? [900,1400,1900] : [1100,1700,2300];
+  delays.forEach((d,i) => setTimeout(() => { reelStop[i] = true; }, d));
 
   // Страховка
-  setTimeout(() => {
-    if (!spinning) return;
-    finalSymbols = finalSymbols.map((s, i) => s || symbols[stopTargets[i]] || symbols[0]);
-    finishSpin();
-  }, isMob ? 3500 : 4500);
+  setTimeout(() => { if (spinning) forceFinish(); }, mob ? 4000 : 5500);
 }
 
-// ============================================================
+function randomTargets() {
+  // три разных случайных индекса
+  const idxs = [];
+  while (idxs.length < 3) {
+    const r = Math.floor(Math.random() * deck.length);
+    if (!idxs.includes(r)) idxs.push(r);
+  }
+  return idxs;
+}
+
+function pickWinner() {
+  // Для каждого персонажа проверяем сколько его вариантов есть в deck
+  for (const c of chars.sort(() => Math.random() - 0.5)) {
+    const inDeck = [];
+    c.variants.forEach(url => {
+      const idx = deck.findIndex(s => s.url === url);
+      if (idx !== -1) inDeck.push(idx);
+    });
+    if (inDeck.length >= 3) {
+      // Берём первые 3 рандомных
+      const shuffled = inDeck.sort(() => Math.random() - 0.5);
+      return { charId: c.id, slots: [shuffled[0], shuffled[1], shuffled[2]] };
+    }
+  }
+  return null;
+}
+
+// ================================================================
+//  АНИМАЦИЯ БАРАБАНА
+// ================================================================
+function startReel(idx) {
+  const data   = reelData[idx];
+  const reel   = data.elReel;
+  const pool   = data.pool;
+  const totalH = pool.length * symH;
+  const mob    = window.innerWidth <= 560;
+  const maxSpd = mob ? 12 : 18;
+  const accel  = mob ? 2.5 : 3.5;
+
+  let speed = 0;
+  let last  = performance.now();
+
+  function frame(now) {
+    const dt = Math.min(now - last, 48);
+    last = now;
+
+    if (reelStop[idx]) {
+      // Плавная посадка на нужный символ
+      land(idx, reel, pool, totalH);
+      return;
+    }
+
+    speed = Math.min(maxSpd, speed + accel * dt / 16);
+    reelPos[idx] -= speed;
+
+    // Зацикливание: когда прошли 65% — прыгаем на начало второй трети
+    if (-reelPos[idx] > totalH * 0.65) {
+      reelPos[idx] += Math.floor(pool.length * 0.35) * symH;
+    }
+
+    reel.style.transform = `translateY(${Math.round(reelPos[idx])}px)`;
+    rafIds[idx] = requestAnimationFrame(frame);
+  }
+
+  rafIds[idx] = requestAnimationFrame(frame);
+}
+
+function land(idx, reel, pool, totalH) {
+  if (rafIds[idx]) { cancelAnimationFrame(rafIds[idx]); rafIds[idx] = null; }
+
+  const targetSym = deck[targets[idx]];
+  const curRow    = Math.round(-reelPos[idx] / symH);
+
+  // Ищем БЛИЖАЙШЕЕ вхождение targetSym.url в pool ВПЕРЁД от текущей строки
+  let tRow = -1;
+  for (let i = curRow + 1; i < pool.length; i++) {
+    if (pool[i].url === targetSym.url) { tRow = i; break; }
+  }
+  // Если не нашли — ищем с начала
+  if (tRow === -1) {
+    for (let i = 0; i < pool.length; i++) {
+      if (pool[i].url === targetSym.url) { tRow = i; break; }
+    }
+  }
+  // Крайний fallback
+  if (tRow === -1) tRow = Math.floor(pool.length / 3) + targets[idx];
+
+  const tPos = -(tRow * symH);
+  reel.style.transition = `transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)`;
+  reel.style.transform  = `translateY(${tPos}px)`;
+  reelPos[idx] = tPos;
+
+  // После анимации фиксируем результат
+  setTimeout(() => {
+    reel.style.transition = '';
+    reelDone[idx] = true;
+    if (reelDone.every(Boolean)) finishSpin();
+  }, 420);
+}
+
+function forceFinish() {
+  for (let i = 0; i < N; i++) {
+    reelStop[i] = true;
+    if (!reelDone[i]) {
+      // Мгновенно ставим на нужную позицию
+      const reel = reelData[i].elReel;
+      const pool = reelData[i].pool;
+      if (rafIds[i]) { cancelAnimationFrame(rafIds[i]); rafIds[i] = null; }
+      const tRow = Math.floor(pool.length / 3) + targets[i];
+      reelPos[i] = -(tRow * symH);
+      reel.style.transition = '';
+      reel.style.transform  = `translateY(${reelPos[i]}px)`;
+      reelDone[i] = true;
+    }
+  }
+  finishSpin();
+}
+
+// ================================================================
 //  ФИНИШ
-// ============================================================
+// ================================================================
 function finishSpin() {
   if (!spinning) return;
   spinning = false;
 
-  for (let i = 0; i < N_REELS; i++) {
-    isSpinning[i] = false;
-    if (animationIds[i]) { cancelAnimationFrame(animationIds[i]); animationIds[i] = null; }
-  }
+  el('btn-spin').disabled    = false;
+  el('btn-spin').textContent = 'Крутить!';
 
-  $('spinBtn').disabled    = false;
-  $('spinBtn').textContent = 'Крутить!';
+  // Итоговые символы
+  const s0 = deck[targets[0]];
+  const s1 = deck[targets[1]];
+  const s2 = deck[targets[2]];
 
-  finalSymbols = finalSymbols.map((s, i) => s || symbols[stopTargets[i]] || symbols[0]);
+  let won = false, cls = 'lose', text = '';
 
-  const s   = finalSymbols;
-  const ids = s.map(x => x?.characterId);
-  let won   = false;
-  let cls   = 'lose';
+  if (s0.url === s1.url && s1.url === s2.url) {
+    // Джекпот
+    text = '🎰 ДЖЕКПОТ! Три одинаковых! 🎉🎉🎉';
+    cls = 'win jackpot'; won = true; confetti(80);
 
-  if (s[0].url === s[1].url && s[1].url === s[2].url) {
-    setResult('🎰 ДЖЕКПОТ! Три одинаковых! 🎉🎉🎉', 'win jackpot');
-    launchConfetti(80); won = true; cls = 'jackpot';
+  } else if (s0.charId === s1.charId && s1.charId === s2.charId) {
+    // Три варианта одного персонажа
+    text = '🏆 ПОБЕДА! Три ' + s0.name + '! Красавчик! 🎊';
+    cls = 'win'; won = true; confetti(50);
 
-  } else if (ids[0] && ids[0] === ids[1] && ids[1] === ids[2]) {
-    setResult('🏆 ПОБЕДА! Три ' + s[0].name + '! Красавчик! 🎊', 'win');
-    launchConfetti(50); won = true; cls = 'win';
-
-  } else if (ids[0] === ids[1] || ids[1] === ids[2] || ids[0] === ids[2]) {
-    const pair = (ids[0]===ids[1]||ids[0]===ids[2]) ? s[0].name : s[1].name;
-    setResult('😬 Почти! Два ' + pair + ' — ещё разок!', 'near'); cls = 'near';
+  } else if (s0.charId === s1.charId || s1.charId === s2.charId || s0.charId === s2.charId) {
+    // Два совпали
+    let pair = s0.name;
+    if (s1.charId === s2.charId) pair = s1.name;
+    text = '😬 Почти! Два ' + pair + ' — ещё разок!';
+    cls = 'near';
 
   } else {
-    const phrases = ['Мимо! 😅 Бака-машина не жалеет','Не повезло! 💸 Попробуй ещё','Слот смеётся над тобой 😈','Облом! Карты не в твою пользу 🃏'];
-    setResult(phrases[Math.floor(Math.random() * phrases.length)], 'lose');
+    const phrases = [
+      'Мимо! 😅 Бака-машина не жалеет',
+      'Не повезло! 💸 Попробуй ещё',
+      'Слот смеётся над тобой 😈',
+      'Облом! Карты не в твою пользу 🃏'
+    ];
+    text = phrases[Math.floor(Math.random() * phrases.length)];
   }
 
-  // Локальное обновление
-  if (user) {
-    user.spins = (user.spins || 0) + 1;
-    if (won) user.wins = (user.wins || 0) + 1;
+  setResult(text, cls);
+
+  // Обновляем сессию
+  if (session) {
+    session.spins += 1;
+    if (won) session.wins += 1;
     saveSession();
-    updateUserBar();
+    renderUserBar();
   }
 
-  // Запись в таблицу (fire-and-forget)
-  if (user) {
-    api({ action: 'spin_result', username: user.username, won: won ? 1 : 0 })
-      .catch(e => console.warn('spin_result:', e.message));
+  // Пишем в таблицу (fire-and-forget)
+  if (session) {
+    callApi({ action:'spin_result', username: session.username, won: won ? 1 : 0 })
+      .catch(e => console.warn('spin_result error:', e.message));
   }
 }
 
-// ============================================================
+// ================================================================
 //  КОНФЕТТИ
-// ============================================================
-function launchConfetti(n) {
+// ================================================================
+function confetti(n) {
   const colors = ['#FFD700','#FF4500','#00BFFF','#FF69B4','#7FFF00'];
   for (let i = 0; i < n; i++) {
-    const el = document.createElement('div');
-    el.style.cssText =
+    const d = document.createElement('div');
+    d.style.cssText =
       'position:fixed;top:-10px;pointer-events:none;z-index:9999;' +
       `left:${Math.random()*100}vw;` +
       `width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;` +
       `background:${colors[Math.floor(Math.random()*colors.length)]};` +
       `border-radius:${Math.random()>.5?'50%':'2px'};` +
-      `animation:confettiFall ${1.5+Math.random()*2}s ease-in forwards;` +
+      `animation:fall ${1.5+Math.random()*2}s ease-in forwards;` +
       `animation-delay:${Math.random()*0.5}s;`;
-    document.body.appendChild(el);
-    el.addEventListener('animationend', function(){ this.remove(); });
+    document.body.appendChild(d);
+    d.addEventListener('animationend', () => d.remove());
   }
 }
 
-// ============================================================
-//  ФОЛЛБЭК (если API недоступен)
-// ============================================================
+// ================================================================
+//  ФОЛЛБЭК (emoji если API недоступен)
+// ================================================================
 function useFallback() {
   const emojis = ['🍋','🍒','🍊','🍇','🔔','⭐','💎','🃏','🎯','🏆'];
-  characters = emojis.map((e,i) => ({ id:String(i), name:e, variants:[e], rarity:'' }));
-  symbols    = emojis.map((e,i) => ({ characterId:String(i), name:e, url:e, rarity:'' }));
-  pool = [];
-  for (let r = 0; r < 8; r++) symbols.forEach(s => pool.push(s));
-
-  calcSizes();
-  const container = $('slots-container');
-  container.style.height = SYM_H + 'px';
-
-  for (let i = 0; i < N_REELS; i++) {
-    const slot = $('slot'+i), reel = $('reel'+i);
-    slot.style.width = SYM_W+'px'; slot.style.height = SYM_H+'px';
-    reel.innerHTML = '';
-    pool.forEach(sym => {
-      const div = document.createElement('div');
-      div.className = 'symbol emoji';
-      div.style.height = SYM_H + 'px';
-      div.textContent = sym.url;
-      reel.appendChild(div);
-    });
-    const startRow = Math.floor(pool.length * 0.4);
-    positions[i] = -(startRow * SYM_H);
-    reel.style.transform = `translateY(${positions[i]}px)`;
-  }
-
-  $('spinBtn').disabled = false;
-  $('spinBtn').textContent = 'Крутить!';
+  deck = emojis.map((e,i) => ({ charId:String(i), name:e, url:e }));
+  chars = emojis.map((e,i) => ({ id:String(i), name:e, variants:[e] }));
+  buildReels();
+  el('btn-spin').disabled    = false;
+  el('btn-spin').textContent = 'Крутить!';
   setResult('');
 }
 
-// ============================================================
-//  INIT — все события вешаем сразу через DOMContentLoaded
-// ============================================================
+// ================================================================
+//  СОБЫТИЯ — вешаем сразу через DOMContentLoaded
+// ================================================================
 document.addEventListener('DOMContentLoaded', () => {
 
   // Вкладки
-  $('tab-login').addEventListener('click', () => {
-    $('tab-login').classList.add('active'); $('tab-reg').classList.remove('active');
-    $('form-login').style.display = 'block'; $('form-reg').style.display = 'none';
+  el('tab-login').addEventListener('click', () => {
+    el('tab-login').classList.add('active'); el('tab-reg').classList.remove('active');
+    el('form-login').style.display = 'block'; el('form-reg').style.display = 'none';
   });
-  $('tab-reg').addEventListener('click', () => {
-    $('tab-reg').classList.add('active'); $('tab-login').classList.remove('active');
-    $('form-reg').style.display = 'block'; $('form-login').style.display = 'none';
+  el('tab-reg').addEventListener('click', () => {
+    el('tab-reg').classList.add('active'); el('tab-login').classList.remove('active');
+    el('form-reg').style.display = 'block'; el('form-login').style.display = 'none';
   });
 
   // Auth
-  $('login-btn').addEventListener('click', doLogin);
-  $('reg-btn').addEventListener('click', doRegister);
-  ['login-username','login-password'].forEach(id => $(id).addEventListener('keydown', e => e.key==='Enter' && doLogin()));
-  ['reg-username','reg-password'].forEach(id => $(id).addEventListener('keydown', e => e.key==='Enter' && doRegister()));
+  el('login-btn').addEventListener('click', doLogin);
+  el('reg-btn').addEventListener('click',   doRegister);
+  ['login-u','login-p'].forEach(id => el(id).addEventListener('keydown', e => e.key==='Enter' && doLogin()));
+  ['reg-u','reg-p'].forEach(id =>     el(id).addEventListener('keydown', e => e.key==='Enter' && doRegister()));
 
-  // Logout + Spin
-  $('logout-btn').addEventListener('click', doLogout);
-  $('spinBtn').addEventListener('click', spin);
+  // Слот
+  el('btn-logout').addEventListener('click', doLogout);
+  el('btn-spin').addEventListener('click',   spin);
 
   // Resize
   let rt;
   window.addEventListener('resize', () => {
     clearTimeout(rt);
-    rt = setTimeout(() => { if (!spinning && symbols.length) buildReels(); }, 250);
+    rt = setTimeout(() => { if (!spinning && deck.length) buildReels(); }, 300);
   });
 
   // Восстановление сессии
-  const saved = loadSession();
-  if (saved) { user = saved; enterSlot(); return; }
-  showScreen('screen-auth');
+  const saved = loadStoredSession();
+  if (saved?.username) {
+    session = saved;
+    enterSlot();
+    return;
+  }
+  show('screen-auth');
 });
 
 window.addEventListener('beforeunload', () => {
-  for (let i = 0; i < N_REELS; i++) if (animationIds[i]) cancelAnimationFrame(animationIds[i]);
+  rafIds.forEach(id => id && cancelAnimationFrame(id));
 });
 </script>
 </body>
