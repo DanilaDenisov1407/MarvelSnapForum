@@ -1,67 +1,1560 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Слот-Машина у Баки 🦾</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#08090f">
+<title>SNAP — Card Battle</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════ VARS */
+:root {
+  --bg:#08090f; --surf:#10121e; --surf2:#181a28;
+  --border:#1e2140; --border2:#2a2d50;
+  --gold:#f5c542; --gold2:#fde68a;
+  --blue:#4a9eff; --red:#ff4a6a;
+  --green:#3effa0; --purple:#c084fc; --orange:#fb923c;
+  --energy:#facc15; --muted:#3a3f65; --text:#c0c4e0;
+  --cw:clamp(62px,13vw,86px); --ch:clamp(95px,20vw,128px);
+  --card-radius:10px;
+}
+*,::before,::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overscroll-behavior:none;}
+body{background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);
+  min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;user-select:none;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 120% 60% at 50% -10%,#1c1870 0%,transparent 55%),
+    radial-gradient(ellipse 60% 40% at 5% 110%,#22063a 0%,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 95% 110%,#060e3a 0%,transparent 50%);
+  pointer-events:none;z-index:0;}
+
+/* ═══════════════════════════════════════════ SCREENS */
+.screen{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+  background:var(--bg);overflow-y:auto;}
+.screen.hidden{display:none;}
+.screen::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 120% 60% at 50% -10%,#1c1870 0%,transparent 55%);
+  pointer-events:none;z-index:-1;}
+
+/* ═══════════════════════════════════════════ LOBBY */
+.logo-big{font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,12vw,5rem);letter-spacing:.25em;
+  color:var(--gold);text-shadow:0 0 50px rgba(245,197,66,.5);
+  line-height:1;margin-bottom:4px;}
+.logo-sub{font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:28px;}
+.lobby-box{background:var(--surf);border:1px solid var(--border);
+  border-radius:14px;padding:24px;width:min(400px,94vw);
+  display:flex;flex-direction:column;gap:14px;}
+.lb-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;
+  letter-spacing:.15em;color:var(--gold);text-align:center;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.inp{background:rgba(255,255,255,.06);border:1px solid var(--border2);
+  border-radius:7px;padding:10px 14px;color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;
+  transition:border-color .2s;width:100%;}
+.inp:focus{border-color:var(--gold);}
+.inp::placeholder{color:var(--muted);}
+.inp.code-inp{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;
+  letter-spacing:.3em;text-align:center;text-transform:uppercase;}
+.divrow{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.65rem;}
+.divrow::before,.divrow::after{content:'';flex:1;height:1px;background:var(--border);}
+.btn-l{font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;font-size:1rem;
+  padding:13px;border:none;border-radius:7px;cursor:pointer;
+  transition:transform .1s,opacity .15s,box-shadow .15s;touch-action:manipulation;width:100%;}
+.btn-l:active{transform:scale(.96);}
+.btn-l:disabled{opacity:.28;cursor:not-allowed;transform:none;}
+.btn-create{background:linear-gradient(135deg,#f5c542,#a07010);color:#000;
+  box-shadow:0 4px 20px rgba(245,197,66,.3);}
+.btn-join{background:linear-gradient(135deg,#4a9eff,#1a5fa0);color:#fff;
+  box-shadow:0 4px 20px rgba(74,158,255,.25);}
+.st{text-align:center;font-size:.78rem;min-height:18px;transition:color .2s;}
+.st.ok{color:var(--green);}
+.st.err{color:var(--red);}
+.st.wait{color:var(--gold);}
+/* code display */
+.code-display{display:none;background:rgba(245,197,66,.07);
+  border:1px solid rgba(245,197,66,.25);border-radius:10px;padding:14px;text-align:center;}
+.code-display.show{display:block;}
+.cd-lbl{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.cd-code{font-family:'Bebas Neue',sans-serif;font-size:3rem;
+  letter-spacing:.35em;color:var(--gold);text-shadow:0 0 24px rgba(245,197,66,.4);}
+.cd-hint{font-size:.62rem;color:var(--muted);margin-top:5px;}
+
+/* ═══════════════════════════════════════════ WAITING ROOM */
+.wr-header{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;
+  letter-spacing:.15em;color:var(--gold);margin-bottom:6px;}
+.wr-box{background:var(--surf);border:1px solid var(--border);
+  border-radius:14px;padding:22px;width:min(480px,96vw);
+  display:flex;flex-direction:column;gap:16px;}
+.players-list{display:flex;flex-direction:column;gap:8px;}
+.player-row{display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:8px;background:var(--surf2);border:1px solid var(--border);}
+.player-row.connected{border-color:var(--green);}
+.player-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.player-row.connected .player-dot{background:var(--green);box-shadow:0 0 8px var(--green);}
+.player-name{font-weight:700;flex:1;}
+.player-badge{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 8px;border-radius:10px;background:rgba(245,197,66,.15);color:var(--gold);}
+.wr-actions{display:flex;flex-direction:column;gap:10px;}
+.btn-edit{background:var(--surf2);color:var(--text);border:1px solid var(--border2);
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;font-size:.9rem;
+  padding:11px;border-radius:7px;cursor:pointer;touch-action:manipulation;
+  transition:border-color .15s;}
+.btn-edit:hover{border-color:var(--purple);}
+.btn-start{background:linear-gradient(135deg,#3effa0,#00b060);color:#000;
+  box-shadow:0 4px 18px rgba(62,255,160,.3);}
+.wr-code{text-align:center;font-size:.7rem;color:var(--muted);}
+.wr-code span{color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:.15em;font-size:.85rem;}
+
+/* ═══════════════════════════════════════════ CARD EDITOR */
+.editor-wrap{width:min(780px,98vw);display:flex;flex-direction:column;gap:14px;max-height:96dvh;}
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+.editor-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.12em;color:var(--gold);}
+.editor-actions{display:flex;gap:8px;}
+.btn-sm{font-family:'Bebas Neue',sans-serif;letter-spacing:.08em;font-size:.8rem;
+  padding:8px 16px;border:none;border-radius:6px;cursor:pointer;touch-action:manipulation;
+  transition:transform .1s;}
+.btn-sm:active{transform:scale(.95);}
+.btn-save{background:linear-gradient(135deg,#f5c542,#a07010);color:#000;}
+.btn-cancel-sm{background:var(--surf2);color:var(--muted);border:1px solid var(--border2);}
+.editor-filter{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+.filter-inp{background:var(--surf2);border:1px solid var(--border2);border-radius:6px;
+  padding:7px 12px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.82rem;
+  outline:none;flex:1;min-width:120px;}
+.filter-inp:focus{border-color:var(--gold);}
+.editor-table-wrap{flex:1;overflow-y:auto;border-radius:8px;border:1px solid var(--border);min-height:0;}
+.editor-table-wrap::-webkit-scrollbar{width:4px;}
+.editor-table-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+table{width:100%;border-collapse:collapse;}
+thead th{position:sticky;top:0;background:var(--surf);padding:8px 10px;
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  text-align:left;border-bottom:1px solid var(--border2);z-index:2;}
+tbody tr{border-bottom:1px solid rgba(30,33,64,.6);transition:background .12s;}
+tbody tr:hover{background:rgba(255,255,255,.03);}
+tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
+.td-art{width:44px;}
+.card-thumb{width:38px;height:52px;border-radius:5px;object-fit:cover;
+  background:var(--surf2);border:1px solid var(--border2);display:block;}
+.td-name{max-width:150px;font-weight:700;font-size:.78rem;}
+.td-ab{max-width:220px;font-size:.7rem;color:var(--purple);line-height:1.3;}
+.num-inp{background:var(--surf2);border:1px solid var(--border2);border-radius:5px;
+  padding:4px 6px;color:var(--text);font-family:'Nunito',sans-serif;font-weight:900;
+  font-size:.85rem;width:44px;text-align:center;outline:none;}
+.num-inp:focus{border-color:var(--gold);}
+.editor-loading{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;}
+
+/* ═══════════════════════════════════════════ GAME HEADER */
+.hdr{position:relative;z-index:20;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 12px;background:rgba(8,9,15,.97);
+  border-bottom:1px solid var(--border);gap:8px;}
+.logo-sm{font-family:'Bebas Neue',sans-serif;font-size:clamp(.85rem,2.5vw,1.15rem);
+  letter-spacing:.18em;color:var(--gold);text-shadow:0 0 15px rgba(245,197,66,.4);flex-shrink:0;}
+.hdr-c{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;}
+.turn-l{font-size:.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+.pips{display:flex;gap:3px;}
+.pip{width:clamp(11px,2.2vw,15px);height:clamp(11px,2.2vw,15px);border-radius:50%;
+  border:2px solid var(--energy);transition:background .25s,box-shadow .25s;}
+.pip.on{background:var(--energy);box-shadow:0 0 7px var(--energy);}
+.scores{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.sc{font-family:'Bebas Neue',sans-serif;font-size:clamp(.68rem,2vw,.9rem);
+  padding:2px 7px;border-radius:5px;border:1.5px solid;min-width:42px;text-align:center;}
+.sc.p{border-color:var(--blue);color:var(--blue);}
+.sc.e{border-color:var(--red);color:var(--red);}
+
+/* ═══════════════════════════════════════════ HAND ZONES */
+/* Enemy hand — compact strip at top */
+.hz{position:relative;z-index:10;flex-shrink:0;
+  padding:4px 8px 5px;background:rgba(8,9,15,.98);}
+.hz.enemy{border-bottom:1px solid var(--border);}
+.hm{display:flex;justify-content:space-between;align-items:center;
+  font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.hm .enrg{color:var(--energy);}
+.hm .deck-lbl{color:var(--muted);font-size:.55rem;}
+
+/* Bottom zone: hand + deck side by side */
+.hz-bottom{
+  position:relative;z-index:10;flex-shrink:0;
+  display:flex;gap:0;
+  background:rgba(8,9,15,.98);
+  border-top:1px solid var(--border);
+  max-height:clamp(130px,26vw,170px);
+  overflow:hidden;
+}
+.hz-hand{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+  padding:4px 8px 5px;
+  border-right:1px solid var(--border);
+  overflow:hidden;
+}
+.hz-deck-side{
+  flex-shrink:0;
+  width:clamp(80px,18vw,130px);
+  display:flex;flex-direction:column;
+  padding:4px 6px 5px;
+  overflow:hidden;
+}
+.cards-scroll{
+  display:flex;gap:clamp(3px,1vw,6px);
+  overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;align-items:flex-end;flex:1;
+}
+.cards-scroll::-webkit-scrollbar{display:none;}
+
+/* ═══════════════════════════════════════════ CARD */
+.card{flex-shrink:0;width:var(--cw);height:var(--ch);border-radius:var(--card-radius);
+  border:1.5px solid var(--border);display:flex;flex-direction:column;
+  cursor:grab;touch-action:none;overflow:hidden;position:relative;
+  transition:transform .14s,border-color .14s,box-shadow .14s;
+  animation:cardUp .26s cubic-bezier(.22,.61,.36,1) both;}
+@keyframes cardUp{from{opacity:0;transform:translateY(26px) scale(.88)}to{opacity:1;transform:none}}
+.card:active{cursor:grabbing;}
+.card.cant{opacity:.4;cursor:not-allowed;}
+.card.cant::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:none;}
+.card.played{opacity:.16;cursor:default;filter:grayscale(1);pointer-events:none;}
+.card.dragging{opacity:.25;transform:scale(.86)!important;}
+.card.back{cursor:default;touch-action:none;
+  background:repeating-linear-gradient(135deg,#14082e 0,#14082e 5px,#1c0e3c 5px,#1c0e3c 10px);
+  border-color:#2a1548;}
+/* Deck cards — slightly smaller */
+.card.deck-card{
+  --cw:clamp(52px,10vw,68px);
+  --ch:clamp(76px,14vw,98px);
+  width:var(--cw);height:var(--ch);
+  opacity:.75;cursor:default;touch-action:none;
+}
+.card[data-f="fire"] .ca{background:linear-gradient(160deg,#3d0f08,#1a0504);}
+.card[data-f="water"] .ca{background:linear-gradient(160deg,#081c3d,#040b1c);}
+.card[data-f="earth"] .ca{background:linear-gradient(160deg,#0c2408,#051305);}
+.card[data-f="shadow"] .ca{background:linear-gradient(160deg,#1c0830,#0a0416);}
+.card[data-f="light"] .ca{background:linear-gradient(160deg,#2a2008,#141005);}
+.ca{flex:1;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1.2rem,3.2vw,1.9rem);border-bottom:1px solid var(--border);position:relative;}
+.ab-tag{position:absolute;bottom:2px;right:3px;
+  font-size:.4rem;font-weight:900;letter-spacing:.05em;padding:1px 4px;border-radius:3px;text-transform:uppercase;}
+.ab-tag.onreveal{background:#d97706;color:#000;}
+.ab-tag.ongoing{background:#7c3aed;color:#fff;}
+.ab-tag.eot{background:#0e7490;color:#fff;}
+.card-body{padding:2px 4px 4px;display:flex;flex-direction:column;gap:1px;
+  background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.35) 100%);}
+.card-name{font-size:clamp(.36rem,.95vw,.54rem);font-weight:900;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;}
+.card-row{display:flex;justify-content:space-between;align-items:center;}
+.cst{display:flex;align-items:center;gap:1px;font-size:clamp(.58rem,1.4vw,.74rem);font-weight:900;}
+.cst.pw{color:#ff6b6b;}
+.cst.en{color:var(--energy);}
+
+/* ═══════════════════════════════════════════ LOCATIONS */
+.locs{
+  position:relative;z-index:1;
+  display:flex;flex:1;min-height:0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.loc{
+  flex:1;display:flex;flex-direction:column;
+  border-right:1px solid var(--border);
+  overflow:hidden;
+  transition:box-shadow .18s;
+  position:relative;
+}
+.loc:last-child{border-right:none;}
+.loc.over{box-shadow:inset 0 0 0 2.5px var(--gold),inset 0 0 28px rgba(245,197,66,.18);}
+.loc.full-p .slot.ps{opacity:.5;}
+
+/* Enemy slot — top 35% of loc */
+.slot.es{
+  flex:0 0 35%;
+  display:flex;flex-wrap:wrap;
+  gap:2px;align-content:flex-start;
+  padding:3px;overflow:hidden;
+  border-bottom:none;
+}
+/* Location header — center strip */
+.loc-hdr{
+  flex-shrink:0;
+  padding:3px 4px 2px;
+  background:rgba(0,0,0,.55);
+  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:1px;
+  position:relative;overflow:hidden;
+}
+/* Location art as background of header */
+.loc-hdr::before{
+  content:'';position:absolute;inset:0;
+  background-size:cover;background-position:center;
+  opacity:.35;z-index:0;
+}
+.loc-hdr > *{position:relative;z-index:1;}
+.loc-art-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;
+  opacity:.4;z-index:0;display:none;
+}
+.loc-art-img.loaded{display:block;}
+.loc-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(.5rem,1.6vw,.7rem);
+  letter-spacing:.07em;text-align:center;
+  color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);
+}
+.loc-bar{display:flex;align-items:center;justify-content:center;gap:3px;}
+.lp{font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(.8rem,2.4vw,1.05rem);min-width:2ch;text-align:center;transition:color .2s;}
+.lp.p{color:var(--blue);}
+.lp.e{color:var(--red);}
+.lp.winning{color:var(--green)!important;text-shadow:0 0 8px var(--green);}
+.lsep{font-size:.55rem;color:rgba(255,255,255,.4);}
+.loc-own{font-size:.48rem;text-align:center;height:10px;letter-spacing:.07em;font-weight:700;}
+.loc-own.p{color:var(--blue);}
+.loc-own.e{color:var(--red);}
+.loc-own.t{color:var(--muted);}
+.loc-desc{
+  font-size:clamp(.35rem,.85vw,.5rem);
+  color:rgba(255,255,255,.5);
+  text-align:center;line-height:1.25;
+  padding:1px 3px;
+  display:none;
+}
+.loc:hover .loc-desc{display:block;}
+/* Player slot — bottom 35% of loc */
+.slot.ps{
+  flex:0 0 35%;
+  display:flex;flex-wrap:wrap;
+  gap:2px;align-content:flex-start;
+  padding:3px;overflow:hidden;
+  border-top:none;
+}
+
+/* ═══════════════════════════════════════════ MINI CARD */
+.mc{width:clamp(28px,5.5vw,40px);height:clamp(40px,8vw,56px);
+  border-radius:5px;flex-shrink:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;padding:1px;
+  animation:mcPop .2s cubic-bezier(.34,1.56,.64,1) both;
+  overflow:hidden;position:relative;}
+@keyframes mcPop{from{opacity:0;transform:scale(.3) rotate(-12deg)}to{opacity:1;transform:none}}
+.mc.pm{border:1px solid rgba(74,158,255,.5);background:linear-gradient(160deg,#102030,#080e18);}
+.mc.em{border:1px solid rgba(255,74,106,.4);background:linear-gradient(160deg,#200808,#100404);}
+.mc img{width:100%;height:68%;object-fit:cover;object-position:top;display:block;}
+.mc-fb{width:100%;height:68%;display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;background:rgba(255,255,255,.05);}
+.mc-pw{font-weight:900;font-size:clamp(.5rem,1vw,.65rem);color:#ff6b6b;line-height:1;padding-bottom:1px;}
+.mc-pw.buf{color:var(--green);text-shadow:0 0 5px var(--green);}
+.mc-pw.ner{color:#fca5a5;}
+.mc-nm{font-size:clamp(.28rem,.62vw,.42rem);color:var(--muted);
+  text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;}
+
+/* ═══════════════════════════════════════════ BOTTOM BAR */
+.btm{position:relative;z-index:20;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;gap:6px;background:rgba(8,9,15,.99);
+  border-top:1px solid var(--border);}
+.hint{flex:1;text-align:center;font-size:clamp(.52rem,1.5vw,.7rem);color:var(--muted);font-style:italic;}
+.btn-g{font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;
+  font-size:clamp(.68rem,1.9vw,.92rem);
+  padding:clamp(7px,1.5vh,10px) clamp(11px,2.8vw,20px);
+  border:none;border-radius:5px;cursor:pointer;
+  transition:transform .1s,opacity .15s;touch-action:manipulation;flex-shrink:0;}
+.btn-g:active{transform:scale(.93);}
+.btn-g:disabled{opacity:.22;cursor:not-allowed;transform:none;}
+.btn-end{background:linear-gradient(135deg,#f5c542,#8b6914);color:#000;
+  box-shadow:0 3px 14px rgba(245,197,66,.28);}
+.btn-pass{background:rgba(255,255,255,.07);color:var(--muted);border:1px solid var(--border2);}
+.wait-badge{background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.25);
+  border-radius:5px;padding:5px 10px;font-size:.68rem;color:var(--gold);
+  letter-spacing:.08em;display:none;}
+.wait-badge.show{display:block;}
+
+/* ═══════════════════════════════════════════ DRAG GHOST */
+#ghost{position:fixed;z-index:999;pointer-events:none;
+  width:var(--cw);height:var(--ch);
+  opacity:.82;transform:rotate(5deg) scale(1.08);display:none;}
+
+/* ═══════════════════════════════════════════ LOG */
+.logw{position:fixed;bottom:60px;right:7px;
+  width:clamp(130px,28vw,195px);
+  display:flex;flex-direction:column-reverse;gap:2px;
+  z-index:30;pointer-events:none;max-height:85px;overflow:hidden;}
+.le{font-size:clamp(.46rem,1.2vw,.6rem);background:rgba(8,9,15,.93);
+  padding:2px 6px;border-radius:3px;border-left:2px solid var(--border);
+  animation:leIn .16s ease both;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.le.g{border-color:var(--green);color:var(--green);}
+.le.b{border-color:var(--red);color:var(--red);}
+.le.ev{border-color:var(--gold);color:var(--gold);}
+.le.pu{border-color:var(--purple);color:var(--purple);}
+@keyframes leIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+
+/* ═══════════════════════════════════════════ BANNER */
+.banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;pointer-events:none;font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(.95rem,4vw,1.7rem);letter-spacing:.22em;color:var(--gold);
+  text-shadow:0 0 24px var(--gold);background:rgba(0,0,0,.86);
+  padding:10px 28px;border-radius:6px;border:1px solid rgba(245,197,66,.4);
+  opacity:0;transition:opacity .22s;white-space:nowrap;}
+.banner.on{opacity:1;}
+
+/* ═══════════════════════════════════════════ TOOLTIP */
+#tip{position:fixed;z-index:500;background:rgba(12,14,28,.98);
+  border:1px solid var(--border2);border-radius:9px;padding:10px 13px;max-width:200px;
+  font-size:.72rem;line-height:1.55;pointer-events:none;
+  box-shadow:0 6px 28px rgba(0,0,0,.7);display:none;}
+#tip.on{display:block;}
+#tip-art{width:100%;height:80px;object-fit:cover;object-position:top;
+  border-radius:5px;margin-bottom:7px;display:block;}
+#tip-name{font-weight:900;color:#fff;font-size:.82rem;margin-bottom:2px;}
+#tip-stats{color:var(--gold);font-size:.66rem;margin-bottom:4px;}
+#tip-ab{color:var(--purple);font-style:italic;font-size:.66rem;line-height:1.45;}
+
+/* ═══════════════════════════════════════════ END OVERLAY */
+.ovl{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.92);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;backdrop-filter:blur(10px);}
+.ovl.off{display:none;}
+.ovl-t{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,9vw,4rem);
+  letter-spacing:.2em;text-align:center;text-shadow:0 0 45px currentColor;}
+.ovl-t.win{color:var(--gold);}
+.ovl-t.lose{color:var(--red);}
+.ovl-t.draw{color:var(--muted);}
+.ovl-ls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.ovl-l{background:var(--surf);border:1px solid var(--border);
+  border-radius:9px;padding:9px 14px;text-align:center;min-width:95px;}
+.ovl-ln{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:.08em;margin-bottom:3px;}
+.ovl-sc{font-size:.74rem;}
+.ovl-sc .p{color:var(--blue);font-weight:700;}
+.ovl-sc .e{color:var(--red);font-weight:700;}
+.ovl-s{font-size:clamp(.75rem,2.2vw,.95rem);color:var(--text);opacity:.65;
+  text-align:center;padding:0 20px;}
+.btn-back{font-family:'Bebas Neue',sans-serif;letter-spacing:.12em;font-size:1.05rem;
+  background:linear-gradient(135deg,#f5c542,#8b6914);color:#000;
+  border:none;padding:11px 34px;border-radius:6px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(245,197,66,.4);touch-action:manipulation;}
+
+/* ═══════════════════════════════════════════ LOADING */
+.loading-screen{position:fixed;inset:0;z-index:300;
+  background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;}
+.loading-screen.off{display:none;}
+.loading-logo{font-family:'Bebas Neue',sans-serif;font-size:3rem;
+  letter-spacing:.25em;color:var(--gold);text-shadow:0 0 40px rgba(245,197,66,.4);}
+.loading-bar-wrap{width:220px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.loading-bar{height:100%;background:var(--gold);border-radius:2px;
+  animation:loadBar 1.5s ease-in-out infinite;}
+@keyframes loadBar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+.loading-txt{font-size:.72rem;color:var(--muted);letter-spacing:.1em;}
+</style>
 </head>
 <body>
 
-  <!-- ══ ЭКРАН АВТОРИЗАЦИИ ══════════════════════ -->
-  <div id="screen-auth" class="screen">
-    <div class="auth-box">
-      <h1>Слот-Машина у Баки 🦾</h1>
-      <p class="auth-sub">Войди чтобы крутить!</p>
+<!-- Loading -->
+<div class="loading-screen" id="screen-loading">
+  <div class="loading-logo">⚡SNAP</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-txt" id="loading-txt">Загрузка карт…</div>
+</div>
 
-      <div class="tabs">
-        <button class="tab active" id="tab-login">Войти</button>
-        <button class="tab"        id="tab-reg">Регистрация</button>
+<!-- LOBBY -->
+<div class="screen hidden" id="screen-lobby">
+  <div class="logo-big">⚡SNAP</div>
+  <div class="logo-sub">Card Battle · Multiplayer</div>
+  <div class="lobby-box">
+    <div class="lb-title">Введите имя</div>
+    <div class="field">
+      <label>Ваше имя</label>
+      <input class="inp" id="inp-name" placeholder="Игрок" maxlength="16" autocomplete="off">
+    </div>
+    <button class="btn-l btn-create" id="btn-create" onclick="createRoom()">Создать комнату</button>
+    <div class="code-display" id="code-display">
+      <div class="cd-lbl">Код комнаты — отправьте другу</div>
+      <div class="cd-code" id="cd-code">—</div>
+      <button onclick="copyCode()" id="btn-copy-code" style="margin-top:6px;background:rgba(245,197,66,.15);border:1px solid rgba(245,197,66,.35);color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;font-size:.8rem;padding:6px 16px;border-radius:5px;cursor:pointer;touch-action:manipulation;width:100%;">📋 Скопировать код</button>
+      <div class="cd-hint" id="cd-hint">Ожидание второго игрока…</div>
+    </div>
+    <div class="divrow">или войти по коду</div>
+    <div class="field">
+      <label>Код комнаты</label>
+      <input class="inp code-inp" id="inp-code" placeholder="XKQR2" maxlength="6" autocomplete="off">
+    </div>
+    <button class="btn-l btn-join" id="btn-join" onclick="joinRoom()">Войти в комнату</button>
+    <div class="st" id="lobby-st"></div>
+  </div>
+</div>
+
+<!-- WAITING ROOM -->
+<div class="screen hidden" id="screen-waiting">
+  <div class="wr-header">🎮 Комната</div>
+  <div class="wr-box">
+    <div class="wr-code" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+      Код: <span id="wr-code-val" style="font-family:'Bebas Neue',sans-serif;letter-spacing:.15em;color:var(--gold);font-size:.9rem;">—</span>
+      <button onclick="copyCode()" style="background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);color:var(--gold);font-size:.65rem;padding:3px 8px;border-radius:4px;cursor:pointer;touch-action:manipulation;">📋</button>
+    </div>
+    <div class="players-list">
+      <div class="player-row" id="p1-row">
+        <div class="player-dot"></div>
+        <div class="player-name" id="p1-name-wr">—</div>
+        <div class="player-badge">Хост</div>
       </div>
-
-      <div id="form-login">
-        <input class="auth-input" id="login-username" type="text"     placeholder="@логин" autocomplete="username">
-        <input class="auth-input" id="login-password" type="password" placeholder="Пароль" autocomplete="current-password">
-        <div class="auth-error" id="login-error"></div>
-        <button class="auth-btn" id="login-btn">Войти</button>
-      </div>
-
-      <div id="form-reg" style="display:none">
-        <input class="auth-input" id="reg-username" type="text"     placeholder="@логин (начни с @)" autocomplete="username">
-        <input class="auth-input" id="reg-password" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="new-password">
-        <div class="auth-error" id="reg-error"></div>
-        <button class="auth-btn" id="reg-btn">Зарегистрироваться</button>
-        <p class="auth-hint">При регистрации получишь 3000 🎲 кубов</p>
+      <div class="player-row" id="p2-row">
+        <div class="player-dot"></div>
+        <div class="player-name" id="p2-name-wr">Ожидаем игрока…</div>
       </div>
     </div>
+    <div class="wr-actions" id="host-actions" style="display:none">
+      <button class="btn-l btn-edit" onclick="openEditor()">📋 Настроить карты (необязательно)</button>
+      <button class="btn-l btn-start btn-l" id="btn-start" onclick="startGame()" disabled>▶ Начать игру</button>
+    </div>
+    <div class="st wait" id="wr-st">Ожидаем второго игрока…</div>
   </div>
+</div>
 
-  <!-- ══ ЭКРАН СЛОТА ════════════════════════════ -->
-  <div id="screen-slot" class="screen" style="display:none">
-    <div class="slot-machine">
-
-      <div class="user-bar">
-        <span class="user-name"    id="user-name">@username</span>
-        <span class="user-balance" id="user-balance">— 🎲</span>
-        <button class="logout-btn" id="logout-btn">↩ Выйти</button>
+<!-- CARD EDITOR -->
+<div class="screen hidden" id="screen-editor">
+  <div class="editor-wrap">
+    <div class="editor-head">
+      <div class="editor-title">📋 Настройка карт</div>
+      <div class="editor-actions">
+        <button class="btn-sm btn-cancel-sm" onclick="closeEditor()">Отмена</button>
+        <button class="btn-sm btn-save" onclick="saveEditorChanges()">Сохранить</button>
       </div>
-
-      <h1 id="slot-title">Слот-Машина у Баки 🦾</h1>
-      <p>Удачи! 😄</p>
-
-      <div class="slots-container">
-        <div class="slot"><div class="reel" id="reel1"></div></div>
-        <div class="slot"><div class="reel" id="reel2"></div></div>
-        <div class="slot"><div class="reel" id="reel3"></div></div>
-      </div>
-
-      <button class="spin-btn" id="spinBtn" disabled>Загрузка...</button>
-      <div class="result" id="result"></div>
-
-      <div class="stats-bar" id="stats-bar"></div>
+    </div>
+    <div class="editor-filter">
+      <input class="filter-inp" id="editor-search" placeholder="🔍 Поиск по названию…" oninput="renderEditorTable()">
+      <select class="filter-inp" id="editor-cost-filter" onchange="renderEditorTable()" style="max-width:120px;">
+        <option value="">Любой cost</option>
+        <option value="1">⚡1</option>
+        <option value="2">⚡2</option>
+        <option value="3">⚡3</option>
+        <option value="4">⚡4</option>
+        <option value="5">⚡5</option>
+        <option value="6">⚡6</option>
+      </select>
+    </div>
+    <div class="editor-table-wrap">
+      <table id="editor-table">
+        <thead>
+          <tr>
+            <th class="td-art"></th>
+            <th>Название</th>
+            <th>⚡ Cost</th>
+            <th>⚔ Power</th>
+            <th>Способность</th>
+          </tr>
+        </thead>
+        <tbody id="editor-tbody">
+          <tr><td colspan="5" class="editor-loading">Загрузка…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
+</div>
 
-  <script src="script.js"></script>
+<!-- GAME LAYOUT -->
+<header class="hdr" id="game-hdr" style="display:none">
+  <div class="logo-sm">⚡SNAP</div>
+  <div class="hdr-c">
+    <div class="turn-l" id="turn-l">ХОД 1 / 6</div>
+    <div class="pips" id="pips"></div>
+  </div>
+  <div class="scores">
+    <div class="sc p" id="sc-p">ВЫ·0</div>
+    <div class="sc e" id="sc-e">ОПП·0</div>
+  </div>
+</header>
+
+<!-- Enemy hand strip -->
+<div class="hz enemy" id="hz-enemy" style="display:none">
+  <div class="hm"><span id="opp-lbl">🎴 Противник</span><span id="e-cnt">12 карт</span></div>
+  <div class="cards-scroll" id="e-hand"></div>
+</div>
+
+<div class="locs" id="locs" style="display:none">
+  <div class="loc" data-i="0" id="loc-0">
+    <div class="slot es" id="l0-es"></div>
+    <div class="loc-hdr">
+      <div class="loc-art-wrap"><img class="loc-art-img" id="l0-art" src="" alt="" style="display:none" onerror="this.style.display='none'"></div>
+      <div class="loc-name" id="l0-name">🌿 ЛЕСНАЯ КРЕПОСТЬ</div>
+      <div class="loc-bar"><div class="lp e" id="l0-ep">0</div><div class="lsep">⚔</div><div class="lp p" id="l0-pp">0</div></div>
+      <div class="loc-own t" id="l0-ow">—</div>
+      <div class="loc-desc" id="l0-desc"></div>
+    </div>
+    <div class="slot ps" id="l0-ps"></div>
+  </div>
+  <div class="loc" data-i="1" id="loc-1">
+    <div class="slot es" id="l1-es"></div>
+    <div class="loc-hdr">
+      <div class="loc-art-wrap"><img class="loc-art-img" id="l1-art" src="" alt="" style="display:none" onerror="this.style.display='none'"></div>
+      <div class="loc-name" id="l1-name">🌊 МОРСКОЙ ПОРТ</div>
+      <div class="loc-bar"><div class="lp e" id="l1-ep">0</div><div class="lsep">⚔</div><div class="lp p" id="l1-pp">0</div></div>
+      <div class="loc-own t" id="l1-ow">—</div>
+      <div class="loc-desc" id="l1-desc"></div>
+    </div>
+    <div class="slot ps" id="l1-ps"></div>
+  </div>
+  <div class="loc" data-i="2" id="loc-2">
+    <div class="slot es" id="l2-es"></div>
+    <div class="loc-hdr">
+      <div class="loc-art-wrap"><img class="loc-art-img" id="l2-art" src="" alt="" style="display:none" onerror="this.style.display='none'"></div>
+      <div class="loc-name" id="l2-name">🔥 ВУЛКАННАЯ ЦИТАДЕЛЬ</div>
+      <div class="loc-bar"><div class="lp e" id="l2-ep">0</div><div class="lsep">⚔</div><div class="lp p" id="l2-pp">0</div></div>
+      <div class="loc-own t" id="l2-ow">—</div>
+      <div class="loc-desc" id="l2-desc"></div>
+    </div>
+    <div class="slot ps" id="l2-ps"></div>
+  </div>
+</div>
+
+<!-- Player hand + deck side by side -->
+<div class="hz-bottom" id="hz-player" style="display:none">
+  <div class="hz-hand">
+    <div class="hm"><span>⚔ РУКА</span><span class="enrg" id="p-enrg">⚡ 1/1</span></div>
+    <div class="cards-scroll" id="p-hand"></div>
+  </div>
+  <div class="hz-deck-side" id="hz-deck">
+    <div class="hm"><span>🗂 КОЛОДА</span><span class="deck-lbl" id="deck-cnt">8</span></div>
+    <div class="cards-scroll" id="p-deck"></div>
+  </div>
+</div>
+
+<div class="btm" id="btm" style="display:none">
+  <button class="btn-g btn-pass" id="btn-pass" onclick="endTurn()">Пропустить</button>
+  <div class="hint" id="hint">Перетащите карту на локацию</div>
+  <div class="wait-badge" id="wait-badge">⏳ Ожидаем…</div>
+  <button class="btn-g btn-end" id="btn-end" onclick="endTurn()">Завершить ход ›</button>
+</div>
+
+<div class="banner" id="banner">ХОД ПРОТИВНИКА</div>
+<div id="ghost"></div>
+<div id="tip">
+  <img id="tip-art" src="" alt="" onerror="this.style.display='none'">
+  <div id="tip-name"></div>
+  <div id="tip-stats"></div>
+  <div id="tip-ab"></div>
+</div>
+<div class="logw" id="log"></div>
+<button id="post-game-btn" onclick="backToLobby()">← В ЛОББИ</button>
+
+<div class="ovl off" id="ovl">
+  <div class="ovl-t" id="ovl-t">ПОБЕДА</div>
+  <div class="ovl-ls" id="ovl-ls"></div>
+  <div class="ovl-s" id="ovl-s"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn-back" style="background:rgba(255,255,255,.1);color:var(--text);border:1px solid var(--border2);" onclick="closeOverlayViewField()">👁 Посмотреть поле</button>
+    <button class="btn-back" onclick="backToLobby()">← В ЛОББИ</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════ CONFIG ═══════════════════
+const SB_URL = 'https://zzeigpzrakowapidaixo.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6ZWlncHpyYWtvd2FwaWRhaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDQyMjYsImV4cCI6MjA5MDM4MDIyNn0.CgoKtxwxTJKebewrEBfoRUh4q_F28By8HJUsYdYOdKc';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8oh1xCutds1aXA3wQ3Hyim4fvvhvHKBaXTP5PU4_bTKBNYyrfWQym_YZMUQliCBQqYhILC82gxgk4/pub?gid=2114523481&single=true&output=csv';
+const ART_BASE = 'https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/';
+
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ═══════════════════ CARD DB ═══════════════════
+let ALL_CARDS = [];       // from Google Sheets
+let SESSION_OVERRIDES = {}; // cost/power overrides set by host this session
+
+function artUrl(carddefid, urlField) {
+  const VER = '?v=855'; // current asset version
+  // PRIMARY: extract slug from url field (most reliable — already correct format)
+  // url field examples: "https://marvelsnapzone.com/cards/agent-venom__"
+  //                     "https://marvelsnapzone.com/cards/mbaku__"
+  if (urlField && urlField.trim()) {
+    // strip trailing underscores/slashes, extract last path segment
+    const cleaned = urlField.trim().replace(/[_\/\s]+$/, '');
+    const m = cleaned.match(/\/cards\/([^\/\?\_]+)/);
+    if (m && m[1]) return ART_BASE + m[1].toLowerCase() + '.webp' + VER;
+  }
+  // FALLBACK: build from carddefid with dash-preservation
+  // CardDefId examples: AbominationCharacter, AbsorbingManCharacter
+  // Strip trailing "Character"/"Action" etc, add dashes between camelCase words
+  if (carddefid && carddefid.trim()) {
+    let s = carddefid.trim()
+      .replace(/Character$|Action$|Token$/, '') // strip type suffix
+      .replace(/([a-z])([A-Z])/g, '$1-$2')      // camelCase → kebab-case
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '');              // remove non-slug chars
+    return ART_BASE + s + '.webp' + VER;
+  }
+  return '';
+}
+
+function getCard(cid) {
+  const base = ALL_CARDS.find(c => String(c.cid) === String(cid));
+  if (!base) return null;
+  const ov = SESSION_OVERRIDES[cid] || {};
+  return { ...base, cost: ov.cost ?? base.cost, power: ov.power ?? base.power };
+}
+
+function abilTag(ability) {
+  if (!ability) return '';
+  const a = ability.toLowerCase();
+  if (a.startsWith('on reveal')) return 'onreveal';
+  if (a.startsWith('ongoing')) return 'ongoing';
+  if (a.startsWith('end of turn')) return 'eot';
+  return '';
+}
+
+// Parse CSV
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  return lines.slice(1).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => {
+    if (!r.name) return false;
+    if (!r.source || r.source.trim() === '' || r.source.trim().toLowerCase() === 'none') return false;
+    // Keep released; unreleased only available via card abilities, not in pool
+    return true; // keep both released & unreleased in ALL_CARDS
+  });
+}
+
+async function loadCards() {
+  document.getElementById('loading-txt').textContent = 'Загрузка карт из базы…';
+  try {
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+    ALL_CARDS = parseCSV(text);
+    document.getElementById('loading-txt').textContent = `Загружено ${ALL_CARDS.length} карт ✓`;
+    await new Promise(r => setTimeout(r, 600));
+  } catch(e) {
+    document.getElementById('loading-txt').textContent = 'Ошибка загрузки карт. Проверьте соединение.';
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}
+
+// ═══════════════════ GLOBALS ═══════════════════
+let roomId = null, myRole = null, myName = '', oppName = '';
+let subscription = null, pollTimer = null, gameEntered = false;
+let G = {};
+let editorDraft = {}; // {cid: {cost, power}}
+
+const sh = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[b[i],b[j]]=[b[j],b[i]];} return b; };
+
+// ══════════ LOCATIONS DATABASE ══════════
+const LOCATIONS_DB = [
+  {id:'altar-of-death',     name:'Altar of Death',       emoji:'⚰️',  color:'#7c1c1c', desc:'After you play a card here, destroy it to get +2 Energy next turn.', effect:'destroyForEnergy'},
+  {id:'asgard',             name:'Asgard',                emoji:'⚡',  color:'#1c3a7c', desc:'At the end of Turn 4, whoever is winning here draws 2 cards.', effect:'drawOnWin'},
+  {id:'avengers-compound',  name:'Avengers Compound',     emoji:'🛡️',  color:'#1c2a4a', desc:'After you play a card here, give it +2 Power.', effect:'buffOnPlay'},
+  {id:'bar-with-no-name',   name:'Bar With No Name',      emoji:'🍺',  color:'#2a1c0a', desc:'Only the lowest-Power cards can play here.', effect:'lowestOnly'},
+  {id:'death-domain',       name:'Deaths Domain',         emoji:'💀',  color:'#2a0a2a', desc:'When a card is destroyed, add it here with +2 Power.', effect:'destroyRevive'},
+  {id:'deep-space',         name:'Deep Space',            emoji:'🌌',  color:'#0a0a2a', desc:'Cards played here have their Power doubled.', effect:'doublePower'},
+  {id:'dojo',               name:'Dojo',                  emoji:'🥋',  color:'#2a1a0a', desc:'At the end of each turn, +1 Power to the winning side here.', effect:'winnerBuff'},
+  {id:'ego',                name:'Ego',                   emoji:'🧠',  color:'#0a2a1c', desc:'Ego plays cards from your hand for you each turn.', effect:'autoPlay'},
+  {id:'flooded-vault',      name:'Flooded Vault',         emoji:'🌊',  color:'#0a1c2a', desc:'On Turn 6, move all cards here to other locations.', effect:'floodMove'},
+  {id:'lush-forest',        name:'Lush Forest',           emoji:'🌿',  color:'#0a2a0a', desc:'No special effect.', effect:'none'},
+  {id:'kyln',               name:'The Kyln',              emoji:'⛓️',  color:'#1c1c1c', desc:'Turn 3: Cards can no longer be added here.', effect:'lockTurn3'},
+  {id:'limbo',              name:'Limbo',                 emoji:'🌀',  color:'#1a0a2a', desc:'There is always a Turn 7.', effect:'turn7'},
+  {id:'monster-island',     name:'Monster Island',        emoji:'🦎',  color:'#0a2a0a', desc:'A 15-Power monster is guarding this location.', effect:'monster'},
+  {id:'muir-island',        name:'Muir Island',           emoji:'🏝️',  color:'#0a1a2a', desc:'After each turn, give all cards here +1 Power.', effect:'passiveBuff'},
+  {id:'museum-of-history',  name:'Museum of History',     emoji:'🏛️',  color:'#2a2a1a', desc:'1-Cost cards played here have their Power tripled.', effect:'tripleCost1'},
+  {id:'nexus',              name:'The Nexus',             emoji:'⚡',  color:'#2a1a0a', desc:'No special effect.', effect:'none'},
+  {id:'savage-land',        name:'Savage Land',           emoji:'🦕',  color:'#1a2a0a', desc:'No cards with abilities can be played here.', effect:'noAbilities'},
+  {id:'sokovia',            name:'Sokovia',               emoji:'💥',  color:'#2a1a1a', desc:'No special effect.', effect:'none'},
+  {id:'triskelion',         name:'Triskelion',            emoji:'🔱',  color:'#1a1a2a', desc:'No special effect.', effect:'none'},
+  {id:'wakanda',            name:'Wakanda',               emoji:'🌺',  color:'#0a1a0a', desc:'Cards here cannot be moved or destroyed.', effect:'immune'},
+];
+
+function pickLocations(seed) {
+  // Pick 3 random locations per game, seeded by room id for consistency
+  const picked = sh([...LOCATIONS_DB]).slice(0,3);
+  return picked;
+}
+
+function getLocArt(locId) {
+  return `https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/${locId}.webp?v=856`;
+}
+
+// ═══════════════════ SCREENS ═══════════════════
+function showScreen(id) {
+  ['screen-lobby','screen-waiting','screen-editor'].forEach(s => {
+    document.getElementById(s).classList.add('hidden');
+  });
+  const gameEls = ['game-hdr','hz-enemy','locs','hz-player','btm'];
+  gameEls.forEach(el => document.getElementById(el).style.display = 'none');
+  if (id === 'game') {
+    gameEls.forEach(el => document.getElementById(el).style.display = '');
+    document.getElementById('game-hdr').style.display = 'flex';
+    document.getElementById('hz-enemy').style.display = '';
+    document.getElementById('hz-player').style.display = 'flex';
+    document.getElementById('btm').style.display = 'flex';
+    document.getElementById('locs').style.display = 'flex';
+  } else if (id) {
+    document.getElementById(id).classList.remove('hidden');
+  }
+}
+
+// ═══════════════════ LOBBY ═══════════════════
+function lobbyStatus(msg, type='') {
+  const el = document.getElementById('lobby-st');
+  el.textContent = msg; el.className = 'st' + (type?' '+type:'');
+}
+
+function genCode() {
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:5},()=>c[Math.random()*c.length|0]).join('');
+}
+
+async function createRoom() {
+  myName = document.getElementById('inp-name').value.trim() || 'Игрок 1';
+  document.getElementById('btn-create').disabled = true;
+  document.getElementById('btn-join').disabled = true;
+  lobbyStatus('Создаём комнату…','wait');
+
+  roomId = genCode();
+  // pick 12 random cards for each player
+
+  // Only released cards with valid source go into starting decks
+  const releasedPool = sh(ALL_CARDS.filter(c => c.status === 'released'));
+  const p1Deck = releasedPool.slice(0,12).map(c=>String(c.cid));
+  const p2Deck = releasedPool.slice(12,24).map(c=>String(c.cid));
+  // deck = full 12 cards (ordered), hand = first 3 drawn at start
+  const initState = {
+    phase:'waiting',
+    turn:1, maxTurns:6,
+    overrides:{},
+    // Start with 3 cards + draw 1 at beginning of turn 1 = 4 cards in hand
+    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    locs: (() => {
+      const picked = pickLocations(roomId);
+      return picked.map((loc,i)=>({id:i, locKey:loc.id, locName:loc.name, locEmoji:loc.emoji, locColor:loc.color, locDesc:loc.desc, locEffect:loc.effect, p1c:[], p2c:[]}));
+    })(),
+  };
+
+  const {error} = await sb.from('game_rooms').insert({id:roomId, state:initState});
+  if (error) { lobbyStatus('Ошибка: '+error.message,'err'); document.getElementById('btn-create').disabled=false; document.getElementById('btn-join').disabled=false; return; }
+
+  myRole = 'p1';
+  document.getElementById('cd-code').textContent = roomId;
+  document.getElementById('code-display').classList.add('show');
+  lobbyStatus('','');
+  subscribeRoom();
+  showWaitingRoom(initState);
+}
+
+async function joinRoom() {
+  myName = document.getElementById('inp-name').value.trim() || 'Игрок 2';
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  if (!code) { lobbyStatus('Введите код комнаты','err'); return; }
+  document.getElementById('btn-create').disabled = true;
+  document.getElementById('btn-join').disabled = true;
+  lobbyStatus('Подключаемся…','wait');
+
+  const {data,error} = await sb.from('game_rooms').select('state').eq('id',code).single();
+  if (error||!data) { lobbyStatus('Комната не найдена','err'); document.getElementById('btn-create').disabled=false; document.getElementById('btn-join').disabled=false; return; }
+  const st = data.state;
+  if (st.phase !== 'waiting') { lobbyStatus('Игра уже идёт','err'); document.getElementById('btn-create').disabled=false; document.getElementById('btn-join').disabled=false; return; }
+
+  roomId = code; myRole = 'p2'; oppName = st.p1.name;
+  st.p2.name = myName;
+  await sb.from('game_rooms').update({state:st,updated_at:new Date().toISOString()}).eq('id',roomId);
+
+  lobbyStatus('','');
+  subscribeRoom();
+  applyWaitingRoom(st);
+  showScreen('screen-waiting');
+}
+
+// ═══════════════════ WAITING ROOM ═══════════════════
+function showWaitingRoom(st) {
+  showScreen('screen-waiting');
+  document.getElementById('wr-code-val').textContent = roomId;
+  applyWaitingRoom(st);
+  if (myRole === 'p1') {
+    document.getElementById('host-actions').style.display = 'flex';
+    document.getElementById('host-actions').style.flexDirection = 'column';
+    document.getElementById('host-actions').style.gap = '10px';
+  }
+}
+
+function applyWaitingRoom(st) {
+  document.getElementById('wr-code-val').textContent = roomId||'';
+  document.getElementById('p1-name-wr').textContent = st.p1.name || '—';
+  document.getElementById('p2-name-wr').textContent = st.p2.name || 'Ожидаем игрока…';
+  const p2Connected = !!st.p2.name;
+  document.getElementById('p2-row').classList.toggle('connected', p2Connected);
+  document.getElementById('p1-row').classList.add('connected');
+  if (myRole === 'p1') {
+    document.getElementById('btn-start').disabled = !p2Connected;
+    document.getElementById('wr-st').textContent = p2Connected ? `${st.p2.name} подключился ✓` : 'Ожидаем второго игрока…';
+    document.getElementById('wr-st').className = 'st' + (p2Connected?' ok':' wait');
+  } else {
+    document.getElementById('wr-st').textContent = 'Ожидаем хоста…';
+    document.getElementById('wr-st').className = 'st wait';
+  }
+  // apply overrides from state
+  if (st.overrides) SESSION_OVERRIDES = st.overrides;
+}
+
+// ═══════════════════ CARD EDITOR ═══════════════════
+let editorPrevScreen = 'screen-waiting';
+
+function openEditor() {
+  editorDraft = JSON.parse(JSON.stringify(SESSION_OVERRIDES));
+  showScreen('screen-editor');
+  renderEditorTable();
+}
+
+function closeEditor() { showScreen('screen-waiting'); }
+
+async function saveEditorChanges() {
+  SESSION_OVERRIDES = JSON.parse(JSON.stringify(editorDraft));
+  // push overrides to room state
+  const {data} = await sb.from('game_rooms').select('state').eq('id',roomId).single();
+  if (data) {
+    const st = data.state;
+    st.overrides = SESSION_OVERRIDES;
+    await sb.from('game_rooms').update({state:st,updated_at:new Date().toISOString()}).eq('id',roomId);
+  }
+  showScreen('screen-waiting');
+  addLog('Карты обновлены!','ev');
+}
+
+function renderEditorTable() {
+  const search = (document.getElementById('editor-search').value||'').toLowerCase();
+  const costF  = document.getElementById('editor-cost-filter').value;
+  const filtered = ALL_CARDS.filter(c => {
+    if (search && !c.name.toLowerCase().includes(search)) return false;
+    if (costF && String(c.cost) !== costF) return false;
+    return true;
+  });
+  const tbody = document.getElementById('editor-tbody');
+  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="5" class="editor-loading">Нет карт</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(c => {
+    const ov = editorDraft[c.cid]||{};
+    const cost  = ov.cost  ?? c.cost;
+    const power = ov.power ?? c.power;
+    const art   = artUrl(c.carddefid, c.url);
+    const abTag = abilTag(c.ability);
+    return `<tr>
+      <td class="td-art"><img class="card-thumb" src="${art}" alt="" onerror="this.style.opacity='.2'"></td>
+      <td class="td-name">${c.name}</td>
+      <td><input class="num-inp" type="number" min="1" max="6" value="${cost}"
+          onchange="editorDraft['${c.cid}']={...(editorDraft['${c.cid}']||{}),cost:+this.value}"></td>
+      <td><input class="num-inp" type="number" min="-10" max="30" value="${power}"
+          onchange="editorDraft['${c.cid}']={...(editorDraft['${c.cid}']||{}),power:+this.value}"></td>
+      <td class="td-ab">${abTag?`<span style="font-size:.58rem;font-weight:700;color:${abTag==='onreveal'?'#d97706':abTag==='ongoing'?'#a855f7':'#0e7490'}">[${abTag.toUpperCase()}]</span> `:''}${c.ability||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════ START GAME (host only) ═══════════════════
+async function startGame() {
+  const {data} = await sb.from('game_rooms').select('state').eq('id',roomId).single();
+  if (!data) return;
+  const st = data.state;
+  st.phase = 'playing';
+  await sb.from('game_rooms').update({state:st,updated_at:new Date().toISOString()}).eq('id',roomId);
+}
+
+// ═══════════════════ REALTIME + POLL ═══════════════════
+// Track last processed turn to avoid double-advancing
+let lastProcessedTurn = 0;
+let lastStateHash = '';
+
+function stateHash(st) {
+  // Quick hash: turn + readiness + card counts in locs + hand sizes
+  try {
+    const p1 = st.p1 || {};
+    const p2 = st.p2 || {};
+    const locs = (st.locs||[]).map(l=>(l.p1c||[]).length+','+(l.p2c||[]).length).join('|');
+    return `${st.turn}|${st.phase}|${p1.ready}|${p2.ready}|${(p1.played||[]).length}|${(p2.played||[]).length}|${locs}|${(p1.hand||[]).length}|${(p2.hand||[]).length}`;
+  } catch(e) { return Math.random()+''; }
+}
+
+function subscribeRoom() {
+  subscription = sb.channel('room-'+roomId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:`id=eq.${roomId}`},
+      payload => {
+        const st = payload.new.state;
+        if (st.overrides) SESSION_OVERRIDES = st.overrides;
+        if (!gameEntered && st.phase === 'playing') {
+          oppName = myRole==='p1' ? st.p2.name : st.p1.name;
+          enterGame(st);
+          return;
+        }
+        if (!gameEntered && st.p2.name) applyWaitingRoom(st);
+        if (gameEntered) {
+          applyState(st);
+          maybeAdvanceTurn(st);
+        }
+      })
+    .subscribe();
+
+  // Poll every 2s — handles both lobby→game AND turn advance fallback
+  pollTimer = setInterval(async()=>{
+    const {data}=await sb.from('game_rooms').select('state').eq('id',roomId).single();
+    if (!data) return;
+    const st = data.state;
+    if (st.overrides) SESSION_OVERRIDES = st.overrides;
+    if (!gameEntered && st.phase==='playing') {
+      oppName=myRole==='p1'?st.p2.name:st.p1.name;
+      enterGame(st);
+      return;
+    }
+    if (!gameEntered && st.p2.name) applyWaitingRoom(st);
+    if (gameEntered) {
+      applyState(st);
+      maybeAdvanceTurn(st);
+    }
+  },2500);
+}
+
+function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+
+// Only p1 (host) advances turn, but uses a turn-number lock to prevent double execution
+function maybeAdvanceTurn(st) {
+  if (myRole !== 'p1') return;
+  if (!st.p1.ready || !st.p2.ready) return;
+  if (st.phase !== 'playing') return;
+  // Lock: only advance if we haven't already processed this turn transition
+  if (st.turn <= lastProcessedTurn) return;
+  lastProcessedTurn = st.turn;
+  advanceTurn(st);
+}
+
+// ═══════════════════ ENTER GAME ═══════════════════
+function enterGame(st) {
+  if (gameEntered) return;
+  gameEntered = true;
+  lastStateHash = ''; // force first render
+  showScreen('game');
+  document.getElementById('opp-lbl').textContent = '🎴 '+(oppName||'Противник');
+  initDD();
+  applyState(st);
+  addLog(`Игра началась! Вы — ${myRole==='p1'?'Синие 🔵':'Красные 🔴'}`,'ev');
+}
+
+// ═══════════════════ STATE APPLICATION ═══════════════════
+function applyState(st, force=false) {
+  const hash = stateHash(st);
+  if (!force && hash === lastStateHash) return; // nothing changed, skip re-render
+  lastStateHash = hash;
+  G = st;
+  if (st.phase==='ended'){setTimeout(()=>showEndGame(st),400);return;}
+  const me  = st[myRole];
+  const opp = myRole==='p1'?st.p2:st.p1;
+  renderHdr(me);
+  renderMyHand(me);
+  renderOppHand(opp);
+  renderLocs(st);
+  renderScores(st);
+  const myTurn = !me.ready && st.phase==='playing';
+  setUi(myTurn);
+}
+
+function renderOppHand(opp){
+  const eh=document.getElementById('e-hand');
+  const allOppCards = opp.deck||[];
+  const oppHand = opp.hand || allOppCards.slice(0,4);
+  const played = opp.played||[];
+  const backCount = oppHand.filter(cid=>!played.includes(cid)).length;
+  document.getElementById('e-cnt').textContent=(allOppCards.length-played.length)+' карт';
+  // Only rebuild if count changed
+  const existing = eh.querySelectorAll('.card.back');
+  if(existing.length === backCount) return;
+  eh.innerHTML='';
+  for(let i=0;i<backCount;i++){const d=document.createElement('div');d.className='card back';eh.appendChild(d);}
+}
+
+// ═══════════════════ POWER ═══════════════════
+function effPow(entry, loc, isMe) {
+  const myKey  = myRole==='p1'?'p1c':'p2c';
+  const oppKey = myRole==='p1'?'p2c':'p1c';
+  const mine   = isMe ? loc[myKey] : loc[oppKey];
+  const opp    = isMe ? loc[oppKey]: loc[myKey];
+  const card   = getCard(entry.cid);
+  if (!card) return 0;
+  let p = card.power + (entry.mod||0);
+  if (entry.immune && p < card.power) p = card.power;
+  // simple ongoing auras (Ghost, aura +1)
+  mine.forEach(e=>{
+    if(e.cid===entry.cid) return;
+    const c=getCard(e.cid); if(!c) return;
+    // holyAura, waterAura placeholder
+  });
+  return Math.max(0,p);
+}
+
+function locSum(loc, isMe) {
+  const k = isMe?(myRole==='p1'?'p1c':'p2c'):(myRole==='p1'?'p2c':'p1c');
+  return (loc[k]||[]).reduce((s,e)=>s+effPow(e,loc,isMe),0);
+}
+
+// ═══════════════════ PLAY CARD ═══════════════════
+// ── ABILITY DEFINITIONS ──
+// Map of ability keywords → handler function names
+// Ability text is matched case-insensitively
+const ABILITY_HANDLERS = {
+  // "On Reveal: Add a random card to your hand."
+  'add a random card to your hand': 'addRandomToHand',
+  // More can be added here
+};
+
+function getAbilityHandler(abilityText) {
+  if (!abilityText) return null;
+  const lower = abilityText.toLowerCase();
+  for (const [keyword, fn] of Object.entries(ABILITY_HANDLERS)) {
+    if (lower.includes(keyword)) return fn;
+  }
+  return null;
+}
+
+// Apply OnReveal effect to state, return modified state
+function applyOnReveal(st, cid, locIdx, isMe) {
+  const card = getCard(cid);
+  if (!card || !card.ability) return st;
+  const lower = card.ability.toLowerCase();
+  const role = isMe ? myRole : (myRole==='p1'?'p2':'p1');
+  const me = st[role];
+
+  // "Add a random card to your hand"
+  if (lower.includes('add a random card to your hand')) {
+    // Pick a random card NOT already in deck/hand/played
+    const inUse = new Set([...(me.deck||[]), ...(me.hand||[])]);
+    const pool = ALL_CARDS.filter(c=>!inUse.has(String(c.cid)));
+    if (pool.length > 0) {
+      const picked = pool[Math.floor(Math.random()*pool.length)];
+      me.hand = [...(me.hand||[]), String(picked.cid)];
+      if (isMe) addLog(`✨ «${card.name}»: +1 карта в руку (${picked.name})`,'pu');
+    }
+  }
+
+  return st;
+}
+
+async function playCard(cid, locIdx) {
+  const st = JSON.parse(JSON.stringify(G));
+  const me = st[myRole];
+  const card = getCard(cid);
+  const hand = me.hand || me.deck.slice(0,4);
+  if (!card||!hand.includes(cid)||me.played.includes(cid)||card.cost>me.energy) return;
+
+  me.energy -= card.cost;
+  me.played.push(cid);
+  // remove from hand
+  me.hand = hand.filter(c=>c!==cid);
+  const myKey = myRole==='p1'?'p1c':'p2c';
+  // Check 4-card limit per location
+  if((st.locs[locIdx][myKey]||[]).length >= 4){
+    addLog('Локация заполнена (макс. 4 карты)','b');
+    return;
+  }
+  st.locs[locIdx][myKey].push({cid, mod:0, immune:false});
+
+  // Fire OnReveal if ability matches
+  const abilText = card.ability || '';
+  if (abilText.toLowerCase().startsWith('on reveal')) {
+    applyOnReveal(st, cid, locIdx, true);
+  }
+
+  await pushState(st);
+  addLog(`Вы: «${card.name}» (⚔${card.power}) → лок.${locIdx+1}`,'g');
+}
+
+// ═══════════════════ END TURN ═══════════════════
+async function endTurn() {
+  if (!G[myRole]||G[myRole].ready||G.phase!=='playing') return;
+  const st = JSON.parse(JSON.stringify(G));
+  st[myRole].ready = true;
+  setUi(false);
+  document.getElementById('wait-badge').classList.add('show');
+  await pushState(st);
+  addLog('Ход завершён, ожидаем противника…','ev');
+}
+
+async function advanceTurn(st) {
+  st = JSON.parse(JSON.stringify(st));
+  st.p1.ready=false; st.p2.ready=false;
+  st.turn++;
+  ['p1','p2'].forEach(r=>{
+    st[r].maxEnergy=Math.min(st.turn,st.maxTurns);
+    st[r].energy=st[r].maxEnergy+(st[r].bonusEnergy||0);
+    st[r].bonusEnergy=0;
+    // draw 1 card into hand from deck
+    const idx = st[r].deckIdx || 3;
+    if(idx < st[r].deck.length) {
+      st[r].hand = [...(st[r].hand||[]), st[r].deck[idx]];
+      st[r].deckIdx = idx + 1;
+    }
+  });
+  if(st.turn>st.maxTurns){st.phase='ended';}
+  await pushState(st);
+}
+
+async function pushState(st) {
+  await sb.from('game_rooms').update({state:st,updated_at:new Date().toISOString()}).eq('id',roomId);
+}
+
+// ═══════════════════ SCORES ═══════════════════
+function calcScores(st) {
+  let me=0,opp=0;
+  st.locs.forEach(l=>{const mp=locSum(l,true),op=locSum(l,false);if(mp>op)me++;else if(op>mp)opp++;});
+  return{me,opp};
+}
+
+// ═══════════════════ END GAME ═══════════════════
+function showEndGame(st) {
+  const{me,opp}=calcScores(st);
+  const LN=['🌿 Лесная крепость','🌊 Морской порт','🔥 Вулканная цитадель'];
+  let html='';
+  st.locs.forEach((l,i)=>{
+    const mp=locSum(l,true),op=locSum(l,false);
+    const w=mp>op?'<span class="p">ВЫ</span>':op>mp?'<span class="e">ОПП</span>':'<span style="color:var(--muted)">—</span>';
+    html+=`<div class="ovl-l"><div class="ovl-ln">${LN[i]}</div><div class="ovl-sc">${w}·<span class="p">${mp}</span>vs<span class="e">${op}</span></div></div>`;
+  });
+  document.getElementById('ovl-ls').innerHTML=html;
+  const t=document.getElementById('ovl-t'),s=document.getElementById('ovl-s');
+  if(me>=2){t.textContent='🏆 ПОБЕДА';t.className='ovl-t win';s.textContent=`Вы захватили ${me} из 3 локаций!`;}
+  else if(opp>=2){t.textContent='💀 ПОРАЖЕНИЕ';t.className='ovl-t lose';s.textContent=`Противник захватил ${opp} из 3.`;}
+  else{t.textContent='⚖ НИЧЬЯ';t.className='ovl-t draw';s.textContent='По 1 локации каждому.';}
+  document.getElementById('ovl').classList.remove('off');
+}
+
+function closeOverlayViewField() {
+  document.getElementById('ovl').classList.add('off');
+  document.getElementById('post-game-btn').style.display = 'block';
+}
+
+function backToLobby() {
+  document.getElementById('ovl').classList.add('off');
+  if(subscription){sb.removeChannel(subscription);subscription=null;}
+  stopPoll();
+  roomId=null;myRole=null;G={};gameEntered=false;SESSION_OVERRIDES={};lastProcessedTurn=0;lastStateHash='';
+  document.getElementById('post-game-btn').style.display='none';
+  document.getElementById('btn-create').disabled=false;
+  document.getElementById('btn-join').disabled=false;
+  document.getElementById('code-display').classList.remove('show');
+  document.getElementById('inp-code').value='';
+  lobbyStatus('','');
+  clearLog();
+  showScreen('screen-lobby');
+}
+
+// ═══════════════════ RENDER ═══════════════════
+function renderHdr(me){
+  document.getElementById('turn-l').textContent=`ХОД ${G.turn} / ${G.maxTurns}`;
+  document.getElementById('p-enrg').textContent=`⚡ ${me.energy}/${me.maxEnergy}`;
+  const pips=document.getElementById('pips');pips.innerHTML='';
+  for(let i=1;i<=me.maxEnergy;i++){const d=document.createElement('div');d.className='pip'+(i<=me.energy?' on':'');pips.appendChild(d);}
+}
+
+function renderMyHand(me){
+  const ph=document.getElementById('p-hand');
+  const hand = me.hand || me.deck.slice(0,3);
+  const played = me.played || [];
+  
+  // Build desired state map
+  const desired = {}; // cid → {played, cantAfford}
+  hand.forEach(cid=>{
+    const card=getCard(cid); if(!card) return;
+    desired[cid] = {played:played.includes(cid), cantAfford:card.cost>me.energy};
+  });
+  
+  // Remove cards no longer in hand
+  Array.from(ph.querySelectorAll('.card[data-cid]')).forEach(el=>{
+    if(!desired[el.dataset.cid]) el.remove();
+  });
+  
+  // Add or update cards
+  hand.forEach((cid, idx)=>{
+    const card=getCard(cid); if(!card) return;
+    const {played:p, cantAfford:c} = desired[cid];
+    let el = ph.querySelector(`.card[data-cid="${cid}"]`);
+    if(!el){
+      // New card — create and insert at correct position
+      el = mkHandCard(card, p, c);
+      const children = ph.querySelectorAll('.card[data-cid]');
+      if(children[idx]) ph.insertBefore(el, children[idx]);
+      else ph.appendChild(el);
+    } else {
+      // Existing card — just update classes (no DOM rebuild = no img flicker)
+      el.classList.toggle('played', p);
+      el.classList.toggle('cant', c && !p);
+    }
+  });
+  
+  renderDeck(me);
+}
+
+function renderDeck(me){
+  const pd=document.getElementById('p-deck'); if(!pd) return;
+  const deckIdx = me.deckIdx || 4;
+  const remaining = me.deck.slice(deckIdx);
+  document.getElementById('deck-cnt').textContent = remaining.length + ' карт';
+  // Diff: only rebuild if deck changed
+  const currentCids = Array.from(pd.querySelectorAll('.card[data-cid]')).map(e=>e.dataset.cid).join(',');
+  const newCids = remaining.join(',');
+  if(currentCids === newCids) return;
+  pd.innerHTML='';
+  remaining.forEach(cid=>{
+    const card=getCard(cid); if(!card) return;
+    pd.appendChild(mkDeckCard(card));
+  });
+}
+
+function mkDeckCard(card){
+  const el=document.createElement('div');
+  el.className='card deck-card'; el.dataset.cid=card.cid;
+  const art=artUrl(card.carddefid,card.url);
+  const tag=abilTag(card.ability);
+  const tagHTML=tag?`<div class="ab-tag ${tag}" style="font-size:.35rem;padding:1px 3px;">${tag==='onreveal'?'R':tag==='ongoing'?'O':'E'}</div>`:'';
+  el.innerHTML=`
+    <div class="card-art">
+      <img src="${art}" alt="${card.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="card-art-fallback" style="display:none">🃏</div>
+      ${tagHTML}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${card.name}</div>
+      <div class="card-row">
+        <div class="cst pw">⚔${card.power}</div>
+        <div class="cst en">⚡${card.cost}</div>
+      </div>
+    </div>`;
+  el.addEventListener('pointerenter',ev=>showTip(card,ev));
+  el.addEventListener('pointerleave',hideTip);
+  return el;
+}
+
+
+function mkHandCard(card, played, cantAfford){
+  const el=document.createElement('div');
+  el.className='card'; el.dataset.cid=card.cid;
+  if(played)el.classList.add('played');
+  else if(cantAfford)el.classList.add('cant');
+  const art=artUrl(card.carddefid, card.url);
+  const tag=abilTag(card.ability);
+  const tagHTML=tag?`<div class="ab-tag ${tag}">${tag==='onreveal'?'Reveal':tag==='ongoing'?'On':'EoT'}</div>`:'';
+  el.innerHTML=`
+    <div class="card-art">
+      <img src="${art}" alt="${card.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="card-art-fallback" style="display:none">🃏</div>
+      ${tagHTML}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${card.name}</div>
+      <div class="card-row">
+        <div class="cst pw">⚔${card.power}</div>
+        <div class="cst en">⚡${card.cost}</div>
+      </div>
+    </div>`;
+  el.addEventListener('pointerenter',ev=>showTip(card,ev));
+  el.addEventListener('pointerleave',hideTip);
+  return el;
+}
+
+function renderLocs(st){
+  const myKey=myRole==='p1'?'p1c':'p2c';
+  const opKey=myRole==='p1'?'p2c':'p1c';
+  st.locs.forEach((loc,i)=>{
+    const mp=locSum(loc,true),op=locSum(loc,false);
+
+    // Update loc header if name available
+    const nameEl=document.getElementById(`l${i}-name`);
+    if(nameEl && loc.locName) {
+      const emoji = loc.locEmoji||'📍';
+      nameEl.textContent=`${emoji} ${loc.locName.toUpperCase()}`;
+    }
+    // Update loc background color
+    const locEl=document.getElementById(`loc-${i}`);
+    if(locEl && loc.locColor) {
+      locEl.style.background=`linear-gradient(180deg,${loc.locColor}88 0%,#08090f 100%)`;
+    }
+    // Update loc description
+    const descEl=document.getElementById(`l${i}-desc`);
+    if(descEl && loc.locDesc) descEl.textContent=loc.locDesc;
+    // Update loc art
+    const artEl=document.getElementById(`l${i}-art`);
+    if(artEl && loc.locKey && !artEl.dataset.loaded) {
+      artEl.src=getLocArt(loc.locKey);
+      artEl.onload=()=>artEl.classList.add('loaded');
+      artEl.dataset.loaded='1';
+    }
+
+    const ppEl=document.getElementById(`l${i}-pp`),epEl=document.getElementById(`l${i}-ep`);
+    ppEl.textContent=mp;epEl.textContent=op;
+    ppEl.classList.toggle('winning',mp>op);epEl.classList.toggle('winning',op>mp);
+    const ow=document.getElementById(`l${i}-ow`);
+    if(mp>op){ow.textContent='ВЫ';ow.className='loc-own p';}
+    else if(op>mp){ow.textContent='ОПП';ow.className='loc-own e';}
+    else{ow.textContent='—';ow.className='loc-own t';}
+
+    // Mark full locations
+    if(locEl)(loc[myKey]||[]).length>=4?locEl.classList.add('full-p'):locEl.classList.remove('full-p');
+    // Diff player slot — only add new cards
+    const ps=document.getElementById(`l${i}-ps`);
+    const pCards=loc[myKey]||[];
+    const pExisting=new Set(Array.from(ps.querySelectorAll('.mc')).map(e=>e.dataset.cid));
+    pCards.forEach(e=>{ if(!pExisting.has(e.cid)) ps.appendChild(mkMC(e,loc,true)); });
+
+    // Diff enemy slot — only add new cards
+    const es=document.getElementById(`l${i}-es`);
+    const eCards=loc[opKey]||[];
+    const eExisting=new Set(Array.from(es.querySelectorAll('.mc')).map(e=>e.dataset.cid));
+    eCards.forEach(e=>{ if(!eExisting.has(e.cid)) es.appendChild(mkMC(e,loc,false)); });
+  });
+}
+
+function mkMC(entry,loc,isMe){
+  const el=document.createElement('div');
+  el.className='mc '+(isMe?'pm':'em');
+  el.dataset.cid=entry.cid;
+  const card=getCard(entry.cid);
+  const art=card?artUrl(card.carddefid,card.url):'';
+  const ep=effPow(entry,loc,isMe);
+  const base=card?(card.power+(entry.mod||0)):0;
+  const pwCls=ep>base?'mc-pw buf':ep<base?'mc-pw ner':'mc-pw';
+  el.innerHTML=`
+    <img src="${art}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width:100%;height:68%;object-fit:cover;object-position:top;display:block;">
+    <div class="mc-fb" style="display:none">🃏</div>
+    <div class="${pwCls}">⚔${ep}</div>
+    <div class="mc-nm">${card?.name||'?'}</div>`;
+  return el;
+}
+
+function renderScores(st){
+  const{me,opp}=calcScores(st);
+  document.getElementById('sc-p').textContent=`ВЫ·${me}`;
+  document.getElementById('sc-e').textContent=`ОПП·${opp}`;
+}
+
+// ═══════════════════ DRAG & DROP ═══════════════════
+let D={on:false,cid:null,el:null,over:null};
+let ddInited=false;
+function initDD(){
+  if(ddInited)return; ddInited=true;
+  document.getElementById('p-hand').addEventListener('pointerdown',onPD,{passive:false});
+  document.addEventListener('pointermove',onPM,{passive:false});
+  document.addEventListener('pointerup',onPU);
+  document.addEventListener('pointercancel',onPU);
+}
+function onPD(ev){
+  if(!G[myRole]||G[myRole].ready||G.phase!=='playing')return;
+  const el=ev.target.closest('.card');if(!el)return;
+  const cid=el.dataset.cid;
+  const card=getCard(cid);
+  if(!card||G[myRole].played.includes(cid)||card.cost>G[myRole].energy)return;
+  ev.preventDefault();
+  D={on:true,cid,el,over:null};
+  el.classList.add('dragging');
+  try{el.setPointerCapture(ev.pointerId);}catch(e){}
+  const g=document.getElementById('ghost');
+  g.innerHTML=el.outerHTML;
+  g.querySelector('.card')?.classList.remove('dragging');
+  // Match ghost size to actual card
+  g.style.width=el.offsetWidth+'px';
+  g.style.height=el.offsetHeight+'px';
+  g.style.display='block';
+  mvG(ev);
+  setHint('Бросьте карту на локацию!');
+}
+function onPM(ev){
+  if(!D.on)return;ev.preventDefault();mvG(ev);
+  const under=document.elementsFromPoint(ev.clientX,ev.clientY);
+  const locEl=under.find(e=>e.classList&&e.classList.contains('loc'));
+  document.querySelectorAll('.loc').forEach(l=>l.classList.remove('over'));
+  if(locEl){locEl.classList.add('over');D.over=parseInt(locEl.dataset.i);}else D.over=null;
+}
+function onPU(){
+  if(!D.on)return;D.on=false;
+  document.getElementById('ghost').style.display='none';
+  document.querySelectorAll('.loc').forEach(l=>l.classList.remove('over'));
+  D.el?.classList.remove('dragging');
+  if(D.over!==null)playCard(D.cid,D.over);
+  else setHint('Перетащите карту на локацию');
+  D={on:false,cid:null,el:null,over:null};
+}
+function mvG(ev){
+  const g=document.getElementById('ghost');
+  // Use actual rendered card size instead of CSS var string
+  const cw=D.el?D.el.offsetWidth:80;
+  const ch=D.el?D.el.offsetHeight:115;
+  g.style.left=(ev.clientX-cw*.5)+'px';
+  g.style.top=(ev.clientY-ch*.65)+'px';
+}
+
+// ═══════════════════ UI HELPERS ═══════════════════
+function setUi(on){
+  document.getElementById('btn-end').disabled=!on;
+  document.getElementById('btn-pass').disabled=!on;
+  const myReady=G[myRole]?.ready;
+  document.getElementById('wait-badge').classList.toggle('show',!on&&myReady&&G.phase==='playing');
+  setHint(on?'Перетащите карту на локацию':'Ожидаем ход противника…');
+}
+function setHint(t){document.getElementById('hint').textContent=t;}
+function showBanner(t){const b=document.getElementById('banner');b.textContent=t;b.classList.add('on');}
+function hideBanner(){document.getElementById('banner').classList.remove('on');}
+function addLog(msg,type=''){const a=document.getElementById('log');const el=document.createElement('div');el.className='le'+(type?' '+type:'');el.textContent=msg;a.prepend(el);setTimeout(()=>el.remove(),6000);}
+function clearLog(){document.getElementById('log').innerHTML='';}
+
+function showTip(card,ev){
+  const art=artUrl(card.carddefid,card.url);
+  const tipArt=document.getElementById('tip-art');
+  tipArt.src=art; tipArt.style.display='block';
+  document.getElementById('tip-name').textContent=card.name;
+  document.getElementById('tip-stats').textContent=`⚔ ${card.power}  ⚡ ${card.cost}`;
+  document.getElementById('tip-ab').textContent=card.ability||'Нет способности';
+  document.getElementById('tip').classList.add('on');
+  mvTip(ev);
+}
+function hideTip(){document.getElementById('tip').classList.remove('on');}
+function mvTip(ev){
+  const t=document.getElementById('tip');
+  let x=ev.clientX+16,y=ev.clientY-10;
+  if(x+210>innerWidth)x=ev.clientX-220;
+  if(y+160>innerHeight)y=ev.clientY-170;
+  t.style.left=x+'px';t.style.top=y+'px';
+}
+document.addEventListener('pointermove',ev=>{if(document.getElementById('tip').classList.contains('on'))mvTip(ev);});
+document.getElementById('inp-code').addEventListener('input',function(){this.value=this.value.toUpperCase();});
+
+// ═══════════════════ COPY CODE ═══════════════════
+function copyCode() {
+  const code = roomId || document.getElementById('cd-code').textContent;
+  if (!code || code === '—') return;
+  navigator.clipboard.writeText(code).then(()=>{
+    const btn = document.getElementById('btn-copy-code');
+    const hint = document.getElementById('cd-hint');
+    if (btn) { const orig=btn.textContent; btn.textContent='✓ Скопировано!'; setTimeout(()=>btn.textContent=orig,2000); }
+    if (hint) { const orig=hint.textContent; hint.textContent='✓ Код скопирован!'; setTimeout(()=>hint.textContent=orig,2000); }
+  }).catch(()=>{
+    // Fallback for browsers without clipboard API
+    const ta=document.createElement('textarea');
+    ta.value=code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn=document.getElementById('btn-copy-code');
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Скопировано!';setTimeout(()=>btn.textContent=orig,2000);}
+  });
+}
+
+// ═══════════════════ BOOT ═══════════════════
+(async()=>{
+  await loadCards();
+  document.getElementById('screen-loading').classList.add('off');
+  showScreen('screen-lobby');
+})();
+</script>
 </body>
 </html>
