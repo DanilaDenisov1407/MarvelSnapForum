@@ -652,17 +652,21 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
 // ═══════════════════ CONFIG ═══════════════════
 const SB_URL = 'https://zzeigpzrakowapidaixo.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6ZWlncHpyYWtvd2FwaWRhaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDQyMjYsImV4cCI6MjA5MDM4MDIyNn0.CgoKtxwxTJKebewrEBfoRUh4q_F28By8HJUsYdYOdKc';
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT8oh1xCutds1aXA3wQ3Hyim4fvvhvHKBaXTP5PU4_bTKBNYyrfWQym_YZMUQliCBQqYhILC82gxgk4/pub?gid=2114523481&single=true&output=csv';
+const CSV_URL      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxTuE8QXRF3el7Olzneq-JSTaCgFw0BdXOyNQyj6xUpCx60yKfUayDHQMpZm2c0BVlx1zvJBfpP3xl/pub?gid=1187611724&single=true&output=csv';
+const CSV_LOCS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxTuE8QXRF3el7Olzneq-JSTaCgFw0BdXOyNQyj6xUpCx60yKfUayDHQMpZm2c0BVlx1zvJBfpP3xl/pub?gid=1610631644&single=true&output=csv';
 const ART_BASE = 'https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/';
 
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ═══════════════════ CARD DB ═══════════════════
-let ALL_CARDS = [];       // from Google Sheets
-let SESSION_OVERRIDES = {}; // cost/power overrides set by host this session
+let ALL_CARDS     = []; // from Google Sheets Cards tab
+let ALL_LOCATIONS = []; // from Google Sheets Locations tab
+let SESSION_OVERRIDES = {};
 
-function artUrl(carddefid, urlField) {
-  const VER = '?v=855'; // current asset version
+function artUrl(carddefid, urlField, directArtUrl) {
+  const VER = '?v=855';
+  // PRIORITY 0: direct full URL from new Sheets
+  if (directArtUrl && directArtUrl.trim().startsWith('http')) return directArtUrl.trim();
   // PRIMARY: extract slug from url field (most reliable — already correct format)
   // url field examples: "https://marvelsnapzone.com/cards/agent-venom__"
   //                     "https://marvelsnapzone.com/cards/mbaku__"
@@ -703,84 +707,108 @@ function abilTag(ability) {
   return '';
 }
 
-// Parse CSV
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-  return lines.slice(1).map(line => {
-    const vals = [];
-    let cur = '', inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; continue; }
-      if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
-      else cur += ch;
+  if (lines.length < 2) return [];
+  const raw = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  const col = (...names) => {
+    for (const n of names) {
+      let i = raw.findIndex(h => h.toLowerCase() === n.toLowerCase());
+      if (i >= 0) return i;
+    }
+    for (const n of names) {
+      let i = raw.findIndex(h => h.toLowerCase().includes(n.toLowerCase()));
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+  const iCid  = col('#','cid');
+  const iName = col('name','название');
+  const iCost = col('cost');
+  const iPow  = col('power');
+  const iAb   = col('ability','способность');
+  const iStat = col('status','статус');
+  const iSrc  = col('source');
+  const iDef  = col('carddefid');
+  const iType = col('type','тип');
+  const iArtU = col('art url','art_url');
+  const iUrl  = col('ссылка','card_url','url');
+  const iVar  = col('variants','варианты');
+
+  const g = (vals,i) => i>=0 && vals[i]!==undefined ? vals[i].trim() : '';
+  const parse = line => {
+    const vals=[]; let cur='',inQ=false;
+    for(const ch of line){
+      if(ch==='"'){inQ=!inQ;continue;}
+      if(ch===','&&!inQ){vals.push(cur.trim());cur='';}
+      else cur+=ch;
     }
     vals.push(cur.trim());
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = vals[i] || '');
-    return obj;
-  }).filter(r => {
+    return {
+      cid:g(vals,iCid), name:g(vals,iName), cost:g(vals,iCost), power:g(vals,iPow),
+      ability:g(vals,iAb), status:g(vals,iStat)||'released', source:g(vals,iSrc),
+      carddefid:g(vals,iDef), type:g(vals,iType), artUrl:g(vals,iArtU),
+      url:g(vals,iUrl), variants:g(vals,iVar),
+    };
+  };
+  return lines.slice(1).map(parse).filter(r => {
     if (!r.name) return false;
-    if (!r.source || r.source.trim() === '' || r.source.trim().toLowerCase() === 'none') return false;
-    // Keep released; unreleased only available via card abilities, not in pool
-    return true; // keep both released & unreleased in ALL_CARDS
+    const src = (r.source||'').trim().toLowerCase();
+    if (!src || src==='none') return false;
+    return true;
   });
 }
 
-async function loadCards() {
-  document.getElementById('loading-txt').textContent = 'Загрузка карт из базы…';
-  try {
-    const res = await fetch(CSV_URL);
-    const text = await res.text();
-    ALL_CARDS = parseCSV(text);
-    document.getElementById('loading-txt').textContent = `Загружено ${ALL_CARDS.length} карт ✓`;
-    await new Promise(r => setTimeout(r, 600));
-  } catch(e) {
-    document.getElementById('loading-txt').textContent = 'Ошибка загрузки карт. Проверьте соединение.';
-    await new Promise(r => setTimeout(r, 2000));
-  }
+function parseLocCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const raw = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  const col = (...names) => {
+    for (const n of names) {
+      let i = raw.findIndex(h => h.toLowerCase()===n.toLowerCase());
+      if (i>=0) return i;
+    }
+    for (const n of names) {
+      let i = raw.findIndex(h => h.toLowerCase().includes(n.toLowerCase()));
+      if (i>=0) return i;
+    }
+    return -1;
+  };
+  const iSlug = col('id (slug)','id','slug');
+  const iName = col('название','name');
+  const iDesc = col('описание','description');
+  const iEff  = col('эффект','effect');
+  const iArt  = col('art url','art_url');
+  const iUrl  = col('ссылка','url','loc_url');
+  const iStat = col('статус','status');
+
+  const g = (vals,i) => i>=0 && vals[i]!==undefined ? vals[i].trim() : '';
+  return lines.slice(1).map(line => {
+    const vals=[]; let cur='',inQ=false;
+    for(const ch of line){
+      if(ch==='"'){inQ=!inQ;continue;}
+      if(ch===','&&!inQ){vals.push(cur.trim());cur='';}
+      else cur+=ch;
+    }
+    vals.push(cur.trim());
+    return {slug:g(vals,iSlug), name:g(vals,iName), desc:g(vals,iDesc),
+            effect:g(vals,iEff), artUrl:g(vals,iArt), url:g(vals,iUrl),
+            status:g(vals,iStat)||'released'};
+  }).filter(l => l.slug && l.name);
 }
 
-// ═══════════════════ GLOBALS ═══════════════════
-let roomId = null, myRole = null, myName = '', oppName = '';
-let subscription = null, pollTimer = null, gameEntered = false;
-let G = {};
-let editorDraft = {}; // {cid: {cost, power}}
-
-const sh = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[b[i],b[j]]=[b[j],b[i]];} return b; };
-
-// ══════════ LOCATIONS DATABASE ══════════
-const LOCATIONS_DB = [
-  {id:'altar-of-death',     name:'Altar of Death',       emoji:'⚰️',  color:'#7c1c1c', desc:'After you play a card here, destroy it to get +2 Energy next turn.', effect:'destroyForEnergy'},
-  {id:'asgard',             name:'Asgard',                emoji:'⚡',  color:'#1c3a7c', desc:'At the end of Turn 4, whoever is winning here draws 2 cards.', effect:'drawOnWin'},
-  {id:'avengers-compound',  name:'Avengers Compound',     emoji:'🛡️',  color:'#1c2a4a', desc:'After you play a card here, give it +2 Power.', effect:'buffOnPlay'},
-  {id:'bar-with-no-name',   name:'Bar With No Name',      emoji:'🍺',  color:'#2a1c0a', desc:'Only the lowest-Power cards can play here.', effect:'lowestOnly'},
-  {id:'death-domain',       name:'Deaths Domain',         emoji:'💀',  color:'#2a0a2a', desc:'When a card is destroyed, add it here with +2 Power.', effect:'destroyRevive'},
-  {id:'deep-space',         name:'Deep Space',            emoji:'🌌',  color:'#0a0a2a', desc:'Cards played here have their Power doubled.', effect:'doublePower'},
-  {id:'dojo',               name:'Dojo',                  emoji:'🥋',  color:'#2a1a0a', desc:'At the end of each turn, +1 Power to the winning side here.', effect:'winnerBuff'},
-  {id:'ego',                name:'Ego',                   emoji:'🧠',  color:'#0a2a1c', desc:'Ego plays cards from your hand for you each turn.', effect:'autoPlay'},
-  {id:'flooded-vault',      name:'Flooded Vault',         emoji:'🌊',  color:'#0a1c2a', desc:'On Turn 6, move all cards here to other locations.', effect:'floodMove'},
-  {id:'lush-forest',        name:'Lush Forest',           emoji:'🌿',  color:'#0a2a0a', desc:'No special effect.', effect:'none'},
-  {id:'kyln',               name:'The Kyln',              emoji:'⛓️',  color:'#1c1c1c', desc:'Turn 3: Cards can no longer be added here.', effect:'lockTurn3'},
-  {id:'limbo',              name:'Limbo',                 emoji:'🌀',  color:'#1a0a2a', desc:'There is always a Turn 7.', effect:'turn7'},
-  {id:'monster-island',     name:'Monster Island',        emoji:'🦎',  color:'#0a2a0a', desc:'A 15-Power monster is guarding this location.', effect:'monster'},
-  {id:'muir-island',        name:'Muir Island',           emoji:'🏝️',  color:'#0a1a2a', desc:'After each turn, give all cards here +1 Power.', effect:'passiveBuff'},
-  {id:'museum-of-history',  name:'Museum of History',     emoji:'🏛️',  color:'#2a2a1a', desc:'1-Cost cards played here have their Power tripled.', effect:'tripleCost1'},
-  {id:'nexus',              name:'The Nexus',             emoji:'⚡',  color:'#2a1a0a', desc:'No special effect.', effect:'none'},
-  {id:'savage-land',        name:'Savage Land',           emoji:'🦕',  color:'#1a2a0a', desc:'No cards with abilities can be played here.', effect:'noAbilities'},
-  {id:'sokovia',            name:'Sokovia',               emoji:'💥',  color:'#2a1a1a', desc:'No special effect.', effect:'none'},
-  {id:'triskelion',         name:'Triskelion',            emoji:'🔱',  color:'#1a1a2a', desc:'No special effect.', effect:'none'},
-  {id:'wakanda',            name:'Wakanda',               emoji:'🌺',  color:'#0a1a0a', desc:'Cards here cannot be moved or destroyed.', effect:'immune'},
-];
-
-function pickLocations(seed) {
-  // Pick 3 random locations per game, seeded by room id for consistency
-  const picked = sh([...LOCATIONS_DB]).slice(0,3);
-  return picked;
+function pickLocations(roomId) {
+  const csvPool = (ALL_LOCATIONS||[])
+    .filter(l => l.status==='released')
+    .map(l => ({id:l.slug, name:l.name, emoji:'📍', color:'#1a1a2e',
+                desc:l.desc, effect:l.effect||'none', artUrl:l.artUrl}));
+  const pool = csvPool.length >= 3 ? csvPool : LOCATIONS_DB;
+  return sh([...pool]).slice(0,3);
 }
 
-function getLocArt(locId) {
-  return `https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/${locId}.webp?v=856`;
+function getLocArt(locId, artUrl) {
+  if (artUrl && artUrl.startsWith('http')) return artUrl;
+  return 'https://marvelsnapzone.com/wp-content/themes/blocksy-child/assets/media/cards/' + locId + '.webp?v=856';
 }
 
 // ═══════════════════ SCREENS ═══════════════════
@@ -836,7 +864,7 @@ async function createRoom() {
     p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
     locs: (() => {
       const picked = pickLocations(roomId);
-      return picked.map((loc,i)=>({id:i, locKey:loc.id, locName:loc.name, locEmoji:loc.emoji, locColor:loc.color, locDesc:loc.desc, locEffect:loc.effect, p1c:[], p2c:[]}));
+      return picked.map((loc,i)=>({id:i, locKey:loc.id, locName:loc.name, locEmoji:loc.emoji||'📍', locColor:loc.color||'#1a1a2e', locDesc:loc.desc, locEffect:loc.effect||'none', locArtUrl:loc.artUrl||'', p1c:[], p2c:[]}));
     })(),
   };
 
@@ -1315,7 +1343,7 @@ function renderDeck(me){
 function mkDeckCard(card){
   const el=document.createElement('div');
   el.className='card deck-card'; el.dataset.cid=card.cid;
-  const art=artUrl(card.carddefid,card.url);
+  const art=artUrl(card.carddefid,card.url,card.artUrl);
   const tag=abilTag(card.ability);
   const tagHTML=tag?`<div class="ab-tag ${tag}" style="font-size:.35rem;padding:1px 3px;">${tag==='onreveal'?'R':tag==='ongoing'?'O':'E'}</div>`:'';
   el.innerHTML=`
@@ -1343,7 +1371,7 @@ function mkHandCard(card, played, cantAfford){
   el.className='card'; el.dataset.cid=card.cid;
   if(played)el.classList.add('played');
   else if(cantAfford)el.classList.add('cant');
-  const art=artUrl(card.carddefid, card.url);
+  const art=artUrl(card.carddefid, card.url, card.artUrl);
   const tag=abilTag(card.ability);
   const tagHTML=tag?`<div class="ab-tag ${tag}">${tag==='onreveal'?'Reveal':tag==='ongoing'?'On':'EoT'}</div>`:'';
   el.innerHTML=`
@@ -1388,7 +1416,7 @@ function renderLocs(st){
     // Update loc art
     const artEl=document.getElementById(`l${i}-art`);
     if(artEl && loc.locKey && !artEl.dataset.loaded) {
-      artEl.src=getLocArt(loc.locKey);
+      artEl.src=getLocArt(loc.locKey, loc.locArtUrl);
       artEl.onload=()=>artEl.classList.add('loaded');
       artEl.dataset.loaded='1';
     }
@@ -1422,7 +1450,7 @@ function mkMC(entry,loc,isMe){
   el.className='mc '+(isMe?'pm':'em');
   el.dataset.cid=entry.cid;
   const card=getCard(entry.cid);
-  const art=card?artUrl(card.carddefid,card.url):'';
+  const art=card?artUrl(card.carddefid,card.url,card.artUrl):'';
   const ep=effPow(entry,loc,isMe);
   const base=card?(card.power+(entry.mod||0)):0;
   const pwCls=ep>base?'mc-pw buf':ep<base?'mc-pw ner':'mc-pw';
@@ -1510,7 +1538,7 @@ function addLog(msg,type=''){const a=document.getElementById('log');const el=doc
 function clearLog(){document.getElementById('log').innerHTML='';}
 
 function showTip(card,ev){
-  const art=artUrl(card.carddefid,card.url);
+  const art=artUrl(card.carddefid,card.url,card.artUrl);
   const tipArt=document.getElementById('tip-art');
   tipArt.src=art; tipArt.style.display='block';
   document.getElementById('tip-name').textContent=card.name;
