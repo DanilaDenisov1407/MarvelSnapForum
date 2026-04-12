@@ -437,15 +437,24 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
 /* ═══════════════════════════════════════════ LOADING */
 .loading-screen{position:fixed;inset:0;z-index:300;
   background:var(--bg);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:16px;}
+  align-items:center;justify-content:center;gap:14px;padding:24px;}
 .loading-screen.off{display:none;}
 .loading-logo{font-family:'Bebas Neue',sans-serif;font-size:3rem;
   letter-spacing:.25em;color:var(--gold);text-shadow:0 0 40px rgba(245,197,66,.4);}
-.loading-bar-wrap{width:220px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
-.loading-bar{height:100%;background:var(--gold);border-radius:2px;
-  animation:loadBar 1.5s ease-in-out infinite;}
-@keyframes loadBar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
-.loading-txt{font-size:.72rem;color:var(--muted);letter-spacing:.1em;}
+/* Progress bar */
+.loading-bar-wrap{width:min(320px,80vw);height:6px;background:var(--border);
+  border-radius:3px;overflow:hidden;}
+.loading-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));
+  border-radius:3px;width:0%;transition:width .4s ease;}
+/* Step list */
+.loading-steps{display:flex;flex-direction:column;gap:6px;width:min(320px,80vw);}
+.loading-step{display:flex;align-items:center;gap:8px;
+  font-size:.72rem;color:var(--muted);letter-spacing:.06em;transition:color .3s;}
+.loading-step.active{color:var(--gold);}
+.loading-step.done{color:var(--green);}
+.loading-step.error{color:var(--red);}
+.step-icon{width:16px;text-align:center;font-size:.75rem;flex-shrink:0;}
+.loading-txt{font-size:.65rem;color:var(--muted);letter-spacing:.1em;min-height:1em;}
 </style>
 </head>
 <body>
@@ -453,8 +462,19 @@ tbody td{padding:5px 8px;font-size:.8rem;vertical-align:middle;}
 <!-- Loading -->
 <div class="loading-screen" id="screen-loading">
   <div class="loading-logo">⚡SNAP</div>
-  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
-  <div class="loading-txt" id="loading-txt">Загрузка карт…</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+  <div class="loading-steps" id="loading-steps">
+    <div class="loading-step" id="step-cards">
+      <span class="step-icon">⏳</span><span>Загрузка карт из базы…</span>
+    </div>
+    <div class="loading-step" id="step-locs">
+      <span class="step-icon">⏳</span><span>Загрузка локаций…</span>
+    </div>
+    <div class="loading-step" id="step-init">
+      <span class="step-icon">⏳</span><span>Инициализация…</span>
+    </div>
+  </div>
+  <div class="loading-txt" id="loading-txt"></div>
 </div>
 
 <!-- LOBBY -->
@@ -1577,9 +1597,84 @@ function copyCode() {
   });
 }
 
+// ═══════════════════ LOADING HELPERS ═══════════════════
+function setStep(id, status, detail) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'loading-step ' + status;
+  const icon = el.querySelector('.step-icon');
+  if (icon) icon.textContent = status==='done'?'✓':status==='error'?'✗':status==='active'?'⟳':'⏳';
+  if (detail) document.getElementById('loading-txt').textContent = detail;
+}
+
+function setProgress(pct) {
+  const bar = document.getElementById('loading-bar');
+  if (bar) bar.style.width = pct + '%';
+}
+
 // ═══════════════════ BOOT ═══════════════════
 (async()=>{
-  await loadCards();
+  // Step 1: Load cards
+  setStep('step-cards','active');
+  setProgress(10);
+  let cardsOk = false;
+  try {
+    const res = await Promise.race([
+      fetch(CSV_URL),
+      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 15s')), 15000))
+    ]);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    ALL_CARDS = parseCSV(text);
+    if (ALL_CARDS.length === 0) throw new Error('Пустой ответ');
+    setStep('step-cards','done', `✓ ${ALL_CARDS.length} карт загружено`);
+    setProgress(45);
+    cardsOk = true;
+  } catch(e) {
+    setStep('step-cards','error', 'Ошибка карт: ' + e.message);
+    setProgress(45);
+    // Continue anyway with empty cards
+    ALL_CARDS = [];
+  }
+
+  // Step 2: Load locations
+  setStep('step-locs','active');
+  try {
+    const res2 = await Promise.race([
+      fetch(CSV_LOCS_URL),
+      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 15s')), 15000))
+    ]);
+    if (!res2.ok) throw new Error('HTTP ' + res2.status);
+    const text2 = await res2.text();
+    ALL_LOCATIONS = parseLocCSV(text2);
+    if (ALL_LOCATIONS.length === 0) throw new Error('Пустой ответ — используем встроенные');
+    setStep('step-locs','done', `✓ ${ALL_LOCATIONS.length} локаций загружено`);
+    setProgress(80);
+  } catch(e) {
+    // Fallback to hardcoded locations
+    ALL_LOCATIONS = [];
+    setStep('step-locs','done', `⚠ Локации: встроенная база (${e.message})`);
+    setProgress(80);
+  }
+
+  // Step 3: Init
+  setStep('step-init','active');
+  setProgress(95);
+  await new Promise(r => setTimeout(r, 300));
+
+  if (!cardsOk && ALL_CARDS.length === 0) {
+    setStep('step-init','error','Не удалось загрузить карты. Проверьте интернет и перезагрузите страницу.');
+    setProgress(95);
+    // Show retry button
+    document.getElementById('loading-txt').innerHTML =
+      '<button onclick="location.reload()" style="margin-top:12px;background:var(--gold);color:#000;border:none;padding:8px 20px;border-radius:5px;letter-spacing:.1em;cursor:pointer;font-size:.9rem;font-weight:700;">Перезагрузить</button>'
+    return;
+  }
+
+  setStep('step-init','done','Готово!');
+  setProgress(100);
+  await new Promise(r => setTimeout(r, 400));
+
   document.getElementById('screen-loading').classList.add('off');
   showScreen('screen-lobby');
 })();
