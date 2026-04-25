@@ -683,6 +683,34 @@ let ALL_CARDS     = []; // from Google Sheets Cards tab
 let ALL_LOCATIONS = []; // from Google Sheets Locations tab
 let SESSION_OVERRIDES = {};
 
+// ── Fallback cards (used when CSV fails to load) ──
+const FALLBACK_CARDS = [
+  {cid:'fb1', name:'Misty Knight',    cost:'1',power:'2',ability:'',status:'released',source:'Starter',carddefid:'MistyKnight',   artUrl:''},
+  {cid:'fb2', name:'Ant Man',         cost:'1',power:'1',ability:'Ongoing: If your side is full, +3 Power.',status:'released',source:'Starter',carddefid:'AntMan',artUrl:''},
+  {cid:'fb3', name:'Elektra',         cost:'1',power:'1',ability:'On Reveal: Destroy a 1-Cost enemy card here.',status:'released',source:'Starter',carddefid:'Elektra',artUrl:''},
+  {cid:'fb4', name:'Iron Fist',       cost:'1',power:'2',ability:'On Reveal: Move the next card you play one location to the left.',status:'released',source:'Starter',carddefid:'IronFist',artUrl:''},
+  {cid:'fb5', name:'Squirrel Girl',   cost:'1',power:'2',ability:'On Reveal: Add a 1-Power Squirrel to each other location.',status:'released',source:'Starter',carddefid:'SquirrelGirl',artUrl:''},
+  {cid:'fb6', name:'Nightcrawler',    cost:'1',power:'2',ability:'You can move this once.',status:'released',source:'Starter',carddefid:'Nightcrawler',artUrl:''},
+  {cid:'fb7', name:'Star-Lord',       cost:'2',power:'2',ability:'On Reveal: If your opponent played a card here this turn, +3 Power.',status:'released',source:'Starter',carddefid:'StarLord',artUrl:''},
+  {cid:'fb8', name:'Medusa',          cost:'2',power:'2',ability:'On Reveal: If this is the middle location, +3 Power.',status:'released',source:'Starter',carddefid:'Medusa',artUrl:''},
+  {cid:'fb9', name:'Shocker',         cost:'2',power:'3',ability:'',status:'released',source:'Starter',carddefid:'Shocker',artUrl:''},
+  {cid:'fb10',name:'Wolverine',       cost:'2',power:'2',ability:'When this is discarded or destroyed, regenerate it at a random location.',status:'released',source:'Starter',carddefid:'Wolverine',artUrl:''},
+  {cid:'fb11',name:'Cyclops',         cost:'3',power:'4',ability:'',status:'released',source:'Starter',carddefid:'Cyclops',artUrl:''},
+  {cid:'fb12',name:'Mister Fantastic', cost:'3',power:'2',ability:'Ongoing: Adjacent locations get +2 Power.',status:'released',source:'Starter',carddefid:'MisterFantastic',artUrl:''},
+  {cid:'fb13',name:'Thor',            cost:'3',power:'5',ability:'On Reveal: Add Mjolnir to your deck.',status:'released',source:'Starter',carddefid:'Thor',artUrl:''},
+  {cid:'fb14',name:'Sword Master',    cost:'3',power:'6',ability:'On Reveal: Discard a card from your hand.',status:'released',source:'Starter',carddefid:'SwordMaster',artUrl:''},
+  {cid:'fb15',name:'Hulk Buster',     cost:'3',power:'3',ability:'On Reveal: Merge with a random friendly card here.',status:'released',source:'Starter',carddefid:'HulkBuster',artUrl:''},
+  {cid:'fb16',name:'Ka-Zar',          cost:'4',power:'4',ability:'Ongoing: Your 1-Cost cards have +1 Power.',status:'released',source:'Starter',carddefid:'KaZar',artUrl:''},
+  {cid:'fb17',name:'Jessica Jones',   cost:'4',power:'4',ability:'On Reveal: If you do not play a card here next turn, +4 Power.',status:'released',source:'Starter',carddefid:'JessicaJones',artUrl:''},
+  {cid:'fb18',name:'Captain America', cost:'4',power:'3',ability:'On Reveal: Give adjacent friendly cards +1 Power.',status:'released',source:'Starter',carddefid:'CaptainAmerica',artUrl:''},
+  {cid:'fb19',name:'Abomination',     cost:'5',power:'9',ability:'',status:'released',source:'Starter',carddefid:'Abomination',artUrl:''},
+  {cid:'fb20',name:'Gamora',          cost:'5',power:'7',ability:'On Reveal: If your opponent played a card here this turn, +5 Power.',status:'released',source:'Starter',carddefid:'Gamora',artUrl:''},
+  {cid:'fb21',name:'Iron Man',        cost:'5',power:'0',ability:'Ongoing: Your total Power is doubled at this location.',status:'released',source:'Starter',carddefid:'IronMan',artUrl:''},
+  {cid:'fb22',name:'Spectrum',        cost:'6',power:'7',ability:'On Reveal: Give all your Ongoing cards +2 Power.',status:'released',source:'Starter',carddefid:'Spectrum',artUrl:''},
+  {cid:'fb23',name:'Hulk',            cost:'6',power:'12',ability:'',status:'released',source:'Starter',carddefid:'Hulk',artUrl:''},
+  {cid:'fb24',name:'Doctor Doom',     cost:'6',power:'5',ability:'On Reveal: Add a 5-Power Doombot to each other location.',status:'released',source:'Starter',carddefid:'DoctorDoom',artUrl:''},
+];
+
 function artUrl(carddefid, urlField, directArtUrl) {
   const VER = '?v=855';
   // PRIORITY 0: direct full URL from new Sheets
@@ -868,28 +896,65 @@ async function createRoom() {
   lobbyStatus('Создаём комнату…','wait');
 
   roomId = genCode();
-  // pick 12 random cards for each player
 
-  // Only released cards with valid source go into starting decks
-  const releasedPool = sh(ALL_CARDS.filter(c => c.status === 'released'));
-  const p1Deck = releasedPool.slice(0,12).map(c=>String(c.cid));
-  const p2Deck = releasedPool.slice(12,24).map(c=>String(c.cid));
-  // deck = full 12 cards (ordered), hand = first 3 drawn at start
+  // ── Build deck pool ──
+  let pool = sh(ALL_CARDS.filter(c =>
+    c.status === 'released' &&
+    c.source && c.source.trim().toLowerCase() !== 'none'
+  ));
+
+  // Fallback: if pool too small, use all cards regardless of filters
+  if (pool.length < 24) {
+    pool = sh(ALL_CARDS.length >= 24 ? ALL_CARDS : FALLBACK_CARDS);
+  }
+  // Last resort: generate placeholder cards
+  if (pool.length < 24) {
+    lobbyStatus('⚠ Мало карт в базе (' + ALL_CARDS.length + '). Проверьте загрузку.','err');
+    document.getElementById('btn-create').disabled = false;
+    document.getElementById('btn-join').disabled = false;
+    return;
+  }
+
+  const p1Deck = pool.slice(0,12).map(c => String(c.cid));
+  const p2Deck = pool.slice(12,24).map(c => String(c.cid));
+
+  // ── Pick locations ──
+  let locs;
+  try {
+    const picked = pickLocations(roomId);
+    locs = picked.map((loc,i) => ({
+      id:i, locKey:loc.id||'forest', locName:loc.name||'Локация '+(i+1),
+      locEmoji:loc.emoji||'📍', locColor:loc.color||'#1a1a2e',
+      locDesc:loc.desc||'', locEffect:loc.effect||'none',
+      locArtUrl:loc.artUrl||'', p1c:[], p2c:[],
+    }));
+  } catch(e) {
+    // Safe fallback locations
+    locs = [
+      {id:0,locKey:'lush-forest',locName:'Лесная крепость',locEmoji:'🌿',locColor:'#0c2218',locDesc:'',locEffect:'none',locArtUrl:'',p1c:[],p2c:[]},
+      {id:1,locKey:'deep-space', locName:'Морской порт',   locEmoji:'🌊',locColor:'#0c1022',locDesc:'',locEffect:'none',locArtUrl:'',p1c:[],p2c:[]},
+      {id:2,locKey:'sokovia',    locName:'Вулкан',          locEmoji:'🔥',locColor:'#220c0c',locDesc:'',locEffect:'none',locArtUrl:'',p1c:[],p2c:[]},
+    ];
+  }
+
   const initState = {
-    phase:'waiting',
-    turn:1, maxTurns:6,
-    overrides:{},
-    // Start with 3 cards + draw 1 at beginning of turn 1 = 4 cards in hand
-    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
-    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,4), deckIdx:4, played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
-    locs: (() => {
-      const picked = pickLocations(roomId);
-      return picked.map((loc,i)=>({id:i, locKey:loc.id, locName:loc.name, locEmoji:loc.emoji||'📍', locColor:loc.color||'#1a1a2e', locDesc:loc.desc, locEffect:loc.effect||'none', locArtUrl:loc.artUrl||'', p1c:[], p2c:[]}));
-    })(),
+    phase:'waiting', turn:1, maxTurns:6, overrides:{},
+    p1:{name:myName, deck:p1Deck, hand:p1Deck.slice(0,4), deckIdx:4,
+        played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    p2:{name:'', deck:p2Deck, hand:p2Deck.slice(0,4), deckIdx:4,
+        played:[], energy:1, maxEnergy:1, bonusEnergy:0, ready:false},
+    locs,
   };
 
-  const {error} = await sb.from('game_rooms').insert({id:roomId, state:initState});
-  if (error) { lobbyStatus('Ошибка: '+error.message,'err'); document.getElementById('btn-create').disabled=false; document.getElementById('btn-join').disabled=false; return; }
+  try {
+    const {error} = await sb.from('game_rooms').insert({id:roomId, state:initState});
+    if (error) throw new Error(error.message);
+  } catch(e) {
+    lobbyStatus('Ошибка Supabase: ' + e.message,'err');
+    document.getElementById('btn-create').disabled = false;
+    document.getElementById('btn-join').disabled = false;
+    return;
+  }
 
   myRole = 'p1';
   document.getElementById('cd-code').textContent = roomId;
