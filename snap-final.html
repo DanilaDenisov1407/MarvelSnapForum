@@ -919,16 +919,22 @@ async function createRoom() {
   };
 
   // ── Step 1: Build deck ──
-  lobbyStatus('1/3 Формируем колоду…','wait');
-  await new Promise(r => setTimeout(r, 0)); // yield to UI
+  lobbyStatus('1/3 Формируем колоду… (карт в базе: ' + ALL_CARDS.length + ')','wait');
+  await new Promise(r => setTimeout(r, 50)); // yield to UI
 
-  let pool = sh(ALL_CARDS.filter(c =>
-    c.status === 'released' &&
-    c.source && c.source.trim().toLowerCase() !== 'none'
-  ));
-  if (pool.length < 24) pool = sh(ALL_CARDS.length >= 24 ? ALL_CARDS : FALLBACK_CARDS);
+  let pool = [];
+  if (ALL_CARDS.length >= 24) {
+    // Try filtered first
+    const filtered = ALL_CARDS.filter(c =>
+      c.status === 'released' &&
+      c.source && c.source.trim().toLowerCase() !== 'none'
+    );
+    pool = sh(filtered.length >= 24 ? filtered : ALL_CARDS);
+  }
+  // Always fallback to built-in cards if not enough
   if (pool.length < 24) {
-    lobbyStatus('⚠ Мало карт (' + ALL_CARDS.length + '). Используем встроенные.','wait');
+    lobbyStatus('1/3 Карты из CSV недоступны — используем встроенные (' + FALLBACK_CARDS.length + ' карт)','wait');
+    await new Promise(r => setTimeout(r, 500));
     pool = sh(FALLBACK_CARDS);
   }
 
@@ -1686,6 +1692,16 @@ function copyCode() {
   });
 }
 
+// ═══════════════════ SUPABASE KEEP-ALIVE ═══════════════════
+// Pings Supabase every 4 days to prevent free-tier project pausing
+function startKeepAlive() {
+  const ping = async () => {
+    try { await sb.from('game_rooms').select('id').limit(1); } catch(e) {}
+  };
+  ping(); // immediate ping on load
+  setInterval(ping, 4 * 24 * 60 * 60 * 1000); // every 4 days
+}
+
 // ═══════════════════ LOADING HELPERS ═══════════════════
 function setStep(id, status, detail) {
   const el = document.getElementById(id);
@@ -1709,40 +1725,47 @@ function setProgress(pct) {
   let cardsOk = false;
   try {
     const res = await Promise.race([
-      fetch(CSV_URL),
-      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 15s')), 15000))
+      fetch(CSV_URL + '&t=' + Date.now()), // cache bust
+      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 20s')), 20000))
     ]);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
+    if (!text || text.trim().length < 10) throw new Error('Пустой ответ от сервера');
+    // Check it looks like CSV (has commas)
+    if (!text.includes(',')) throw new Error('Не похоже на CSV');
     ALL_CARDS = parseCSV(text);
-    if (ALL_CARDS.length === 0) throw new Error('Пустой ответ');
-    setStep('step-cards','done', `✓ ${ALL_CARDS.length} карт загружено`);
+    if (ALL_CARDS.length === 0) {
+      // Debug: show first line of CSV
+      const firstLine = text.split('\n')[0];
+      throw new Error('Парсер вернул 0 карт. Заголовки: ' + firstLine.substring(0,80));
+    }
+    setStep('step-cards','done', '✓ ' + ALL_CARDS.length + ' карт загружено');
     setProgress(45);
     cardsOk = true;
   } catch(e) {
-    setStep('step-cards','error', 'Ошибка карт: ' + e.message);
+    // Use fallback cards so game can still run
+    ALL_CARDS = FALLBACK_CARDS;
+    setStep('step-cards','error', '⚠ CSV недоступен: ' + e.message + ' — используем встроенные ' + FALLBACK_CARDS.length + ' карт');
     setProgress(45);
-    // Continue anyway with empty cards
-    ALL_CARDS = [];
+    cardsOk = true; // fallback is ok
   }
 
   // Step 2: Load locations
   setStep('step-locs','active');
   try {
     const res2 = await Promise.race([
-      fetch(CSV_LOCS_URL),
-      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 15s')), 15000))
+      fetch(CSV_LOCS_URL + '&t=' + Date.now()),
+      new Promise((_,rej) => setTimeout(()=>rej(new Error('Timeout 20s')), 20000))
     ]);
     if (!res2.ok) throw new Error('HTTP ' + res2.status);
     const text2 = await res2.text();
     ALL_LOCATIONS = parseLocCSV(text2);
-    if (ALL_LOCATIONS.length === 0) throw new Error('Пустой ответ — используем встроенные');
-    setStep('step-locs','done', `✓ ${ALL_LOCATIONS.length} локаций загружено`);
+    if (ALL_LOCATIONS.length === 0) throw new Error('Парсер вернул 0 локаций');
+    setStep('step-locs','done', '✓ ' + ALL_LOCATIONS.length + ' локаций загружено');
     setProgress(80);
   } catch(e) {
-    // Fallback to hardcoded locations
     ALL_LOCATIONS = [];
-    setStep('step-locs','done', `⚠ Локации: встроенная база (${e.message})`);
+    setStep('step-locs','done', '⚠ Локации: встроенные (' + e.message + ')');
     setProgress(80);
   }
 
@@ -1751,20 +1774,14 @@ function setProgress(pct) {
   setProgress(95);
   await new Promise(r => setTimeout(r, 300));
 
-  if (!cardsOk && ALL_CARDS.length === 0) {
-    setStep('step-init','error','Не удалось загрузить карты. Проверьте интернет и перезагрузите страницу.');
-    setProgress(95);
-    // Show retry button
-    document.getElementById('loading-txt').innerHTML =
-      '<button onclick="location.reload()" style="margin-top:12px;background:var(--gold);color:#000;border:none;padding:8px 20px;border-radius:5px;letter-spacing:.1em;cursor:pointer;font-size:.9rem;font-weight:700;">Перезагрузить</button>'
-    return;
-  }
+  if (ALL_CARDS.length === 0) ALL_CARDS = FALLBACK_CARDS; // always have cards
 
   setStep('step-init','done','Готово!');
   setProgress(100);
   await new Promise(r => setTimeout(r, 400));
 
   document.getElementById('screen-loading').classList.add('off');
+  startKeepAlive();
   showScreen('screen-lobby');
 })();
 </script>
