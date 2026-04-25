@@ -919,8 +919,8 @@ async function createRoom() {
   };
 
   // ── Step 1: Build deck ──
-  lobbyStatus('1/3 Формируем колоду… (карт в базе: ' + ALL_CARDS.length + ')','wait');
-  await new Promise(r => setTimeout(r, 50)); // yield to UI
+  lobbyStatus('1/3 Формируем колоду… (карт: ' + ALL_CARDS.length + ')','wait');
+  await new Promise(r => setTimeout(r, 80)); // ensure UI repaint before heavy work
 
   let pool = [];
   if (ALL_CARDS.length >= 24) {
@@ -943,7 +943,7 @@ async function createRoom() {
 
   // ── Step 2: Pick locations ──
   lobbyStatus('2/3 Выбираем локации…','wait');
-  await new Promise(r => setTimeout(r, 0));
+  await new Promise(r => setTimeout(r, 80));
 
   let locs;
   try {
@@ -971,17 +971,32 @@ async function createRoom() {
     locs,
   };
 
-  // ── Step 3: Save to Supabase ──
-  lobbyStatus('3/3 Сохраняем комнату…','wait');
-  await new Promise(r => setTimeout(r, 0));
+  // ── Step 2 done, show before Supabase ──
+  lobbyStatus('3/3 Сохраняем в Supabase…','wait');
+  await new Promise(r => setTimeout(r, 80)); // ensure repaint
+
+  // Wrap Supabase insert with manual timeout using AbortController pattern
+  let insertOk = false;
+  const insertTimeout = setTimeout(() => {
+    if (!insertOk) {
+      lobbyStatus('❌ Supabase не отвечает. Проект на паузе? Перезапусти на supabase.com', 'err');
+      resetBtns();
+    }
+  }, 8000);
 
   try {
-    const insertPromise = sb.from('game_rooms').insert({id:roomId, state:initState});
-    const timeoutPromise = new Promise((_,rej) => setTimeout(()=>rej(new Error('Supabase timeout — проверьте интернет')), 10000));
-    const {error} = await Promise.race([insertPromise, timeoutPromise]);
-    if (error) throw new Error(error.message);
+    const {error} = await sb.from('game_rooms').insert({id:roomId, state:initState});
+    insertOk = true;
+    clearTimeout(insertTimeout);
+    if (error) {
+      lobbyStatus('❌ Supabase error: ' + error.message, 'err');
+      resetBtns();
+      return;
+    }
   } catch(e) {
-    lobbyStatus('❌ ' + e.message, 'err');
+    insertOk = true;
+    clearTimeout(insertTimeout);
+    lobbyStatus('❌ Ошибка: ' + e.message, 'err');
     resetBtns();
     return;
   }
