@@ -6,7 +6,6 @@
 <title>Cube Log — Snap Save Viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
   :root{
     --void: #0a0713;
@@ -271,6 +270,23 @@
   .norm-ok{ color: var(--cube-cyan) !important; font-weight: 600; }
   .norm-fail{ color: var(--cube-red) !important; font-weight: 600; }
 
+  /* ---------- Vanilla charts (no external libs) ---------- */
+  .hbar-chart{ display:flex; flex-direction:column; gap:10px; }
+  .hbar-row{ display:grid; grid-template-columns: 140px 1fr 56px; align-items:center; gap:10px; }
+  .hbar-label{ font-size:12.5px; color: var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hbar-track{ background: var(--void-2); border-radius:6px; height:14px; overflow:hidden; border:1px solid var(--line-soft); }
+  .hbar-fill{ height:100%; border-radius:6px; transition: width .4s ease; }
+  .hbar-value{ font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--ink-dim); text-align:right; }
+
+  .vbar-legend{ display:flex; gap:16px; margin-bottom:14px; font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--ink-dim); }
+  .vbar-legend-item{ display:inline-flex; align-items:center; gap:6px; }
+  .vbar-legend-item i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .vbar-chart{ display:flex; align-items:flex-end; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .vbar-group{ display:flex; flex-direction:column; align-items:center; min-width:34px; height:100%; }
+  .vbar-bars{ display:flex; align-items:flex-end; gap:3px; height:calc(100% - 20px); }
+  .vbar-bar{ width:11px; border-radius:3px 3px 0 0; min-height:2px; transition: height .4s ease; }
+  .vbar-glabel{ margin-top:6px; font-size:10px; color: var(--ink-faint); writing-mode:vertical-rl; transform:rotate(180deg); max-height:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
   footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
 </style>
 </head>
@@ -453,9 +469,6 @@ function runBuildApp(){
   try{
     buildApp();
     log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
-    if(typeof Chart === 'undefined'){
-      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Графики будут заменены текстовой заметкой, остальные данные доступны как обычно.', 'err');
-    }
   }catch(err){
     log('Не удалось построить дашборд: ' + err.message, 'err');
     console.error(err);
@@ -689,7 +702,7 @@ function renderMastery(root){
   html += '</div>';
 
   html += '<div class="two-col">';
-  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div class="chart-wrap"><canvas id="masteryChart"></canvas></div></div></div>';
+  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div id="masteryChart"></div></div></div>';
 
   html += '<div class="block"><h2>Все герои</h2><div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody>';
   entries.forEach(e => {
@@ -701,28 +714,7 @@ function renderMastery(root){
   root.innerHTML = html;
 
   const top = entries.slice(0,20);
-  safeChart('masteryChart', {
-    type: 'bar',
-    data: {
-      labels: top.map(e=>e.name),
-      datasets: [{
-        label: 'Уровень мастерства',
-        data: top.map(e=>e.level),
-        backgroundColor: top.map((e,i) => `rgba(${155-i*3},${92+i*4},255,0.85)`),
-        borderRadius: 5,
-        maxBarThickness: 22
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Уровень ${c.raw}` } } },
-      scales:{
-        x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} }, max: 30 },
-        y:{ grid:{ display:false }, ticks:{ color:'#ece7fb', font:{family:'Space Grotesk', size:11.5} } }
-      }
-    }
-  }, root.querySelector('.card'));
+  renderHBarChart('masteryChart', top.map(e => ({ label: e.name, value: e.level })), { max: 30, color: 'var(--cube-purple)' });
 }
 
 /* ---------------------------------------------------------------- *
@@ -761,7 +753,7 @@ function renderClan(root){
     };
   }).sort((a,b) => b.bounty - a.bounty);
 
-  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div class="chart-wrap short"><canvas id="clanChart"></canvas></div>'
+  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div id="clanChart"></div>'
     + '<button id="saveSnapshotBtn" class="save-btn">💾 Сохранить снимок недели в таблицу</button>'
     + '<div id="saveSnapshotStatus" class="save-status"></div>'
     + '</div></div>';
@@ -778,24 +770,10 @@ function renderClan(root){
   root.innerHTML = html;
 
   const top = rows.slice(0,15);
-  safeChart('clanChart', {
-    type:'bar',
-    data:{
-      labels: top.map(r=>r.name),
-      datasets:[
-        { label:'Bounty', data: top.map(r=>r.bounty), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4, maxBarThickness:16 },
-        { label:'Cube', data: top.map(r=>r.cube), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4, maxBarThickness:16 }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:11} } } },
-      scales:{
-        x:{ grid:{display:false}, ticks:{ color:'#9d92c2', font:{size:10}, maxRotation:60, minRotation:40 } },
-        y:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} } }
-      }
-    }
-  }, root.querySelectorAll('.card')[1]);
+  renderGroupedBarChart('clanChart', top.map(r=>r.name), [
+    { label:'Bounty', data: top.map(r=>r.bounty), color:'#ffb23e' },
+    { label:'Cube', data: top.map(r=>r.cube), color:'#38e8e0' }
+  ], { height: 200 });
 
   const saveBtn = root.querySelector('#saveSnapshotBtn');
   const saveStatus = root.querySelector('#saveSnapshotStatus');
@@ -901,23 +879,9 @@ function renderEvents(root){
     const byTag = {};
     seen.forEach(s => { const t = s.Tag || 'Без тега'; byTag[t] = (byTag[t]||0)+1; });
     const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]);
-    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div class="chart-wrap"><canvas id="shopChart"></canvas></div></div></div>';
+    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div id="shopChart"></div></div></div>';
     root.innerHTML = html;
-    safeChart('shopChart', {
-      type:'bar',
-      data:{
-        labels: tagEntries.map(e=>e[0]),
-        datasets:[{ data: tagEntries.map(e=>e[1]), backgroundColor:'rgba(255,79,216,0.8)', borderRadius:5, maxBarThickness:26 }]
-      },
-      options:{
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{size:10} } },
-          y:{ grid:{display:false}, ticks:{ color:'#ece7fb', font:{size:11} } }
-        }
-      }
-    }, root.querySelector('.card'));
+    renderHBarChart('shopChart', tagEntries.map(e => ({ label: e[0], value: e[1] })), { color: 'var(--cube-magenta)' });
   } else {
     root.innerHTML = html;
   }
@@ -1098,23 +1062,54 @@ buildApp = function(){
   appEl.scrollIntoView({behavior:'smooth', block:'start'});
 };
 
-// Small helper: draws a chart if Chart.js loaded successfully, otherwise
-// leaves a quiet fallback note instead of throwing and blanking the page.
-function safeChart(canvasId, config, fallbackParent){
-  if(typeof Chart === 'undefined'){
-    if(fallbackParent){
-      const note = document.createElement('div');
-      note.className = 'empty-state';
-      note.textContent = 'График недоступен (не удалось загрузить библиотеку графиков). Данные всё равно доступны в таблице ниже.';
-      fallbackParent.appendChild(note);
-    }
-    return null;
-  }
-  const ctx = document.getElementById(canvasId);
-  if(!ctx) return null;
-  const c = new Chart(ctx, config);
-  charts.push(c);
-  return c;
+// Horizontal bar list — no external chart library, pure HTML/CSS.
+// items: [{label, value, color?}]
+function renderHBarChart(containerId, items, opts){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  opts = opts || {};
+  const color = opts.color || 'var(--cube-purple)';
+  const valueFmt = opts.valueFmt || fmtNum;
+  const max = opts.max || Math.max(1, ...items.map(it => it.value));
+  let html = '<div class="hbar-chart">';
+  items.forEach(it => {
+    const pct = Math.max(2, Math.round((it.value / max) * 100));
+    html += `<div class="hbar-row">
+      <div class="hbar-label" title="${esc(it.label)}">${esc(it.label)}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${it.color || color}"></div></div>
+      <div class="hbar-value">${valueFmt(it.value)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// Grouped vertical bars (e.g. Bounty vs Cube per player) — no external chart library.
+// series: [{label, data:[...], color}], labels: [...] (same length as each data array)
+function renderGroupedBarChart(containerId, labels, series, opts){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  opts = opts || {};
+  const valueFmt = opts.valueFmt || fmtNum;
+  const max = opts.max || Math.max(1, ...series.flatMap(s => s.data));
+  let html = '<div class="vbar-legend">';
+  series.forEach(s => { html += `<span class="vbar-legend-item"><i style="background:${s.color}"></i>${esc(s.label)}</span>`; });
+  html += '</div>';
+  html += `<div class="vbar-chart" style="height:${opts.height || 220}px">`;
+  labels.forEach((lab, i) => {
+    html += `<div class="vbar-group">`;
+    html += '<div class="vbar-bars">';
+    series.forEach(s => {
+      const v = s.data[i] || 0;
+      const pct = Math.max(2, Math.round((v / max) * 100));
+      html += `<div class="vbar-bar" style="height:${pct}%; background:${s.color}" title="${esc(lab)} — ${esc(s.label)}: ${valueFmt(v)}"></div>`;
+    });
+    html += '</div>';
+    html += `<div class="vbar-glabel" title="${esc(lab)}">${esc(lab)}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 })();
