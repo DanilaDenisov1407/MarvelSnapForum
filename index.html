@@ -1,138 +1,975 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Marvel Snap Forum</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cube Log — Snap Save Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --void: #0a0713;
+    --void-2: #120c22;
+    --panel: #16102a;
+    --panel-2: #1c1436;
+    --line: #2c2148;
+    --line-soft: #221a3a;
+    --ink: #ece7fb;
+    --ink-dim: #9d92c2;
+    --ink-faint: #6b6091;
+    --cube-purple: #9b5cff;
+    --cube-purple-2: #6f2dff;
+    --cube-magenta: #ff4fd8;
+    --cube-cyan: #38e8e0;
+    --cube-gold: #ffb23e;
+    --cube-red: #ff5470;
+    --rare-common: #8a94a8;
+    --rare-uncommon: #4fd1c5;
+    --rare-rare: #5b8def;
+    --rare-epic: #b45cff;
+    --rare-legendary: #ffb23e;
+    --shadow-glow: 0 0 60px -15px rgba(155, 92, 255, 0.55);
+  }
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background: url('1281451.png') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-    }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
 
-    /* Контейнер для заголовка */
-    .header-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 50px;
-    }
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -10%, rgba(155,92,255,0.20), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(56,232,224,0.10), transparent 55%),
+      var(--void);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
 
-    h1 {
-      font-size: 36px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px black;
-      text-align: center;
-    }
+  .stars{
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 140px 90px, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 260px 40px, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 340px 160px, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 420px 70px, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.3), transparent);
+    background-repeat: repeat;
+    background-size: 480px 260px;
+  }
 
-    /* Стили меню (по умолчанию — левый верхний угол) */
-    nav {
-      position: absolute;
-      top: 40px;
-      left: 30px;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 20px 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px black;
-    }
+  .wrap{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 40px 24px 100px; }
 
-    nav h2 {
-      margin-top: 0;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
+  /* ---------- Header ---------- */
+  header{ margin-bottom: 34px; }
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--cube-cyan); display:flex; align-items:center; gap:10px; margin-bottom: 14px;
+  }
+  .eyebrow::before{ content:''; width:26px; height:1px; background: var(--cube-cyan); display:inline-block; }
+  h1{
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(38px, 6vw, 64px);
+    letter-spacing: 0.5px;
+    margin: 0 0 10px;
+    line-height: 0.98;
+    background: linear-gradient(120deg, #fff 10%, var(--cube-purple) 55%, var(--cube-magenta) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub{ color: var(--ink-dim); font-size: 16px; max-width: 620px; }
+  .sub b{ color: var(--ink); font-weight: 600; }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+  /* ---------- Drop zone ---------- */
+  #dropzone{
+    margin-top: 28px;
+    border: 1.5px dashed var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(155,92,255,0.06), rgba(155,92,255,0.02));
+    padding: 40px 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  #dropzone::after{
+    content:''; position:absolute; inset:0; border-radius: 18px; padding:1px;
+    background: linear-gradient(120deg, transparent, rgba(155,92,255,0.4), transparent);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity .3s;
+  }
+  #dropzone:hover, #dropzone.drag{ border-color: var(--cube-purple); background: linear-gradient(180deg, rgba(155,92,255,0.12), rgba(155,92,255,0.04)); }
+  #dropzone:hover::after, #dropzone.drag::after{ opacity: 1; }
+  #dropzone.drag{ transform: scale(1.005); }
+  .dz-icon{ font-size: 34px; margin-bottom: 12px; filter: drop-shadow(0 0 18px rgba(155,92,255,0.6)); }
+  .dz-title{ font-weight: 600; font-size: 17px; margin-bottom: 6px; }
+  .dz-title span{ color: var(--cube-purple); text-decoration: underline; text-underline-offset: 3px; }
+  .dz-hint{ color: var(--ink-faint); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+  #fileInput{ display: none; }
 
-    li {
-      margin: 12px 0;
-    }
+  #fileChips{ display:flex; flex-wrap:wrap; gap: 8px; margin-top: 18px; }
+  .chip{
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-dim);
+    padding: 6px 12px; border-radius: 100px; display:flex; align-items:center; gap:7px;
+  }
+  .chip.ok{ color: var(--cube-cyan); border-color: rgba(56,232,224,0.35); }
+  .chip.unknown{ color: var(--ink-faint); }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
 
-    a {
-      color: white;
-      font-size: 18px;
-      text-decoration: none;
-      background-color: rgba(0, 0, 0, 0.4);
-      padding: 8px 14px;
-      border-radius: 8px;
-      transition: background-color 0.3s;
-      display: inline-block;
-    }
+  #status{ margin-top:14px; font-family:'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); min-height: 18px; }
 
-    a:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
+  #showBtn{
+    margin-top: 16px; font-family:'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+    background: linear-gradient(120deg, var(--cube-purple), var(--cube-purple-2));
+    color: #fff; border: none; padding: 12px 22px; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 8px 24px -8px rgba(155,92,255,0.6);
+  }
+  #showBtn:hover{ filter: brightness(1.1); }
 
-    /* ----------- АДАПТИВ ДЛЯ МОБИЛЬНЫХ ---------- */
-    @media (max-width: 768px) {
-      nav {
-        position: static; /* убираем абсолютное позиционирование */
-        margin: 20px auto 0 auto; /* отступ сверху + центрируем */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-width: 90%;
-      }
+  #logBox{
+    margin-top: 18px; background: var(--void-2); border: 1px solid var(--line-soft); border-radius: 12px;
+    padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dim);
+    max-height: 220px; overflow-y: auto;
+  }
+  #logBox .line{ padding: 2px 0; white-space: pre-wrap; word-break: break-word; }
+  #logBox .line.err{ color: var(--cube-red); }
+  #logBox .line.ok{ color: var(--cube-cyan); }
+  #logBox .line .t{ color: var(--ink-faint); margin-right: 8px; }
 
-      .header-container {
-        margin-top: 30px;
-      }
+  /* ---------- Nav tabs ---------- */
+  #app{ display:none; margin-top: 46px; }
+  #app.show{ display:block; }
 
-      h1 {
-        font-size: 28px;
-        padding: 8px 16px;
-      }
+  .tabs{
+    display:flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 30px; padding-bottom: 0;
+  }
+  .tab{
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.5px;
+    color: var(--ink-faint); background: none; border: none; cursor: pointer;
+    padding: 12px 16px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
+    text-transform: uppercase;
+  }
+  .tab:hover{ color: var(--ink); }
+  .tab.active{ color: var(--cube-purple); border-bottom-color: var(--cube-purple); }
 
-      a {
-        width: 100%; /* кнопки по ширине меню */
-        text-align: center;
-      }
-    }
-  </style>
+  .panel{ display:none; animation: fadeIn .35s ease; }
+  .panel.active{ display:block; }
+  @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* ---------- Stat grid ---------- */
+  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 26px; }
+  .stat{
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px 20px;
+    position: relative; overflow: hidden;
+  }
+  .stat::before{
+    content:''; position:absolute; top:-30px; right:-30px; width:90px; height:90px; border-radius:50%;
+    background: radial-gradient(circle, rgba(155,92,255,0.25), transparent 70%);
+  }
+  .stat .label{ font-family:'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-faint); margin-bottom: 8px; }
+  .stat .value{ font-family:'Anton', sans-serif; font-weight: 400; font-size: 30px; color: var(--ink); }
+  .stat .value.accent{ color: var(--cube-purple); }
+  .stat .value.gold{ color: var(--cube-gold); }
+  .stat .value.cyan{ color: var(--cube-cyan); }
+  .stat .sub2{ font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+  section.block{ margin-bottom: 34px; }
+  .block h2{
+    font-family: 'Anton', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .3px;
+    margin: 0 0 4px; color: var(--ink);
+  }
+  .block .desc{ color: var(--ink-faint); font-size: 13px; margin-bottom: 16px; }
+
+  .card{
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line-soft); border-radius: 16px; padding: 22px;
+  }
+
+  .chart-wrap{ position: relative; height: 340px; }
+  .chart-wrap.short{ height: 220px; }
+
+  table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
+  th{
+    text-align:left; font-family:'JetBrains Mono', monospace; font-size: 10.5px; text-transform:uppercase;
+    letter-spacing: 1px; color: var(--ink-faint); font-weight:500; padding: 10px 12px; border-bottom: 1px solid var(--line-soft);
+  }
+  td{ padding: 10px 12px; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background: rgba(155,92,255,0.05); }
+  .pill{ display:inline-block; padding: 2px 9px; border-radius: 100px; font-size: 11px; font-family:'JetBrains Mono',monospace; }
+  .pill.leader{ background: rgba(255,178,62,0.15); color: var(--cube-gold); }
+  .pill.officer{ background: rgba(155,92,255,0.18); color: var(--cube-purple); }
+  .pill.member{ background: rgba(157,146,194,0.12); color: var(--ink-dim); }
+  .num{ font-family:'JetBrains Mono', monospace; color: var(--ink-dim); }
+  .name-cell{ font-weight:600; }
+
+  .rarity-bar{ display:flex; height: 10px; border-radius: 6px; overflow:hidden; margin: 14px 0 10px; border:1px solid var(--line-soft); }
+  .rarity-legend{ display:flex; flex-wrap:wrap; gap: 14px; font-size: 12px; color: var(--ink-dim); }
+  .rarity-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .rarity-legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; }
+  .deck-item{
+    background: var(--void-2); border:1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px;
+  }
+  .deck-item .dname{ font-weight:600; font-size:13.5px; margin-bottom:2px; }
+  .deck-item .ddate{ font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-faint); }
+  .fav{ color: var(--cube-gold); margin-left: 4px; }
+
+  .two-col{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+  @media (max-width: 820px){ .two-col{ grid-template-columns: 1fr; } }
+
+  .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
+  .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
+  .kv dd{ margin:0; color: var(--ink); }
+
+  /* ---------- Raw JSON viewer ---------- */
+  .raw-file-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 18px; }
+  .raw-btn{
+    font-family:'JetBrains Mono', monospace; font-size:12px; background: var(--panel-2);
+    border:1px solid var(--line-soft); color: var(--ink-dim); padding:7px 13px; border-radius:9px; cursor:pointer;
+  }
+  .raw-btn.active{ color: var(--void); background: var(--cube-purple); border-color: var(--cube-purple); font-weight:600; }
+  .jt{ font-family:'JetBrains Mono', monospace; font-size: 12.5px; line-height:1.7; }
+  .jt-row{ white-space: pre; }
+  .jt-toggle{ cursor:pointer; color: var(--ink-faint); display:inline-block; width:14px; user-select:none; }
+  .jt-key{ color: var(--cube-cyan); }
+  .jt-str{ color: var(--cube-gold); }
+  .jt-num{ color: var(--cube-magenta); }
+  .jt-bool{ color: var(--rare-rare); }
+  .jt-null{ color: var(--ink-faint); font-style: italic; }
+  .jt-punct{ color: var(--ink-faint); }
+  .jt-children{ margin-left: 18px; border-left: 1px solid var(--line-soft); padding-left: 10px; }
+  .jt-count{ color: var(--ink-faint); font-size: 11px; }
+  .jt-wrap{ max-height: 640px; overflow:auto; background: var(--void-2); border-radius: 12px; padding: 16px 18px; border:1px solid var(--line-soft); }
+  .jt-search{
+    width:100%; margin-bottom: 12px; background: var(--void-2); border:1px solid var(--line-soft); color: var(--ink);
+    font-family:'JetBrains Mono', monospace; font-size: 13px; padding: 10px 14px; border-radius: 9px; outline:none;
+  }
+  .jt-search:focus{ border-color: var(--cube-purple); }
+  .jt-empty{ color: var(--ink-faint); text-align:center; padding: 30px; font-family:'JetBrains Mono', monospace; font-size: 13px; }
+
+  .empty-state{ text-align:center; padding: 50px 20px; color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 13px; }
+
+  footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
+</style>
 </head>
 <body>
+<div class="stars"></div>
+<div class="wrap">
 
-  <!-- Центрированный заголовок -->
-  <div class="header-container">
-    <h1>Marvel Snap Forum</h1>
+  <header>
+    <div class="eyebrow">Cube Log · offline · local save reader</div>
+    <h1>Snap Save Viewer</h1>
+    <p class="sub">Загрузи все файлы из своей папки с сохранением <b>Marvel Snap</b> (обычно 26 файлов вида <code>*State.json</code>) — соберу профиль, коллекцию, мастерство героев, клан и остальное в одну красивую панель. Всё происходит прямо в браузере, файлы никуда не отправляются.</p>
+
+    <div id="dropzone">
+      <div class="dz-icon">◆</div>
+      <div class="dz-title">Перетащи сюда файлы, или <span>выбери вручную</span></div>
+      <div class="dz-hint">поддерживается множественный выбор · .json</div>
+      <input id="fileInput" type="file" multiple accept=".json,application/json">
+    </div>
+    <div id="fileChips"></div>
+    <div id="status"></div>
+    <button id="showBtn" style="display:none;">Показать дашборд</button>
+    <div id="logBox" style="display:none;"></div>
+  </header>
+
+  <div id="app">
+    <nav class="tabs" id="tabs"></nav>
+    <div id="panels"></div>
   </div>
 
-  <!-- Меню навигации -->
-  <nav>
-    <h2>МЕНЮ:</h2>
-    <ul>
-      <li><a href="DeckGenerator/Generate/">Генератор Колод</a></li>
-      <li><a href="VariantGenerator/">Генератор Вариантов</a></li>
-      <li><a href="slot/slot.html">🎰 Слот Машина</a></li>
-      <li><a href="snap-final.html">SnapSkoleN</a></li>
-      <li><a href="slot/blackjack.html">Блек Джек</a></li>
+  <footer>Данные читаются локально в вашем браузере и никуда не передаются.</footer>
+</div>
 
-    </ul>
-  </nav>
+<script>
+(function(){
 
+/* ---------------------------------------------------------------- *
+ *  File intake
+ * ---------------------------------------------------------------- */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileChips = document.getElementById('fileChips');
+const statusEl = document.getElementById('status');
+const appEl = document.getElementById('app');
+const tabsEl = document.getElementById('tabs');
+const panelsEl = document.getElementById('panels');
+const showBtn = document.getElementById('showBtn');
+const logBox = document.getElementById('logBox');
+
+function log(msg, kind){
+  logBox.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = 'line' + (kind ? ' ' + kind : '');
+  const time = new Date().toLocaleTimeString('ru-RU');
+  line.innerHTML = `<span class="t">${time}</span>${esc(String(msg))}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Catch absolutely any uncaught error anywhere on the page and surface it,
+// instead of letting the page silently stay blank.
+window.addEventListener('error', e => {
+  log('Необработанная ошибка: ' + (e.message || e), 'err');
+});
+window.addEventListener('unhandledrejection', e => {
+  log('Необработанная ошибка (promise): ' + (e.reason && e.reason.message ? e.reason.message : e.reason), 'err');
+});
+
+showBtn.addEventListener('click', () => {
+  log('Ручной запуск построения дашборда…');
+  runBuildApp();
+});
+
+const KNOWN_FILES = [
+  'AccountState','AnalyticState','AssetCacheState','AudioState','BattlePassClientState',
+  'BrazeSdkManagerState','CacheGenerationState','CharacterMasteryState','ChatState','ClanState',
+  'CollectionState','ConquestClientState','CustomGameManagerState','FirstLaunchState','GameState',
+  'HighStakesTablesManagerState','InboxClientState','LocalizationState','MinigameEventState',
+  'PlayState','ProfileClientState','RenderingState','RewardClientState','SchemaState',
+  'ShopClientState','TimeClientState'
+];
+
+let store = {}; // filename (without .json) -> parsed object
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.json'));
+  if(!files.length){ statusEl.textContent = 'Не найдено .json файлов среди выбранных.'; log('Выбраны файлы без расширения .json — пропущены.', 'err'); return; }
+  statusEl.textContent = 'Читаю файлы…';
+  log(`Начинаю чтение ${files.length} файлов…`);
+  fileChips.innerHTML = '';
+  showBtn.style.display = 'none';
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const key = file.name.replace(/\.json$/i,'');
+      try{
+        let text = reader.result;
+        if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
+        const data = JSON.parse(text);
+        store[key] = data;
+        addChip(key, true);
+      }catch(err){
+        addChip(key, false);
+        log(`Не удалось разобрать ${file.name}: ${err.message}`, 'err');
+      }
+      loaded++;
+      if(loaded === files.length){
+        statusEl.textContent = `Загружено файлов: ${Object.keys(store).length}`;
+        log(`Готово: разобрано ${Object.keys(store).length} файлов. Строю дашборд…`, 'ok');
+        showBtn.style.display = 'inline-block';
+        runBuildApp();
+      }
+    };
+    reader.onerror = () => {
+      log(`Браузер не смог прочитать файл ${file.name}: ${reader.error}`, 'err');
+      loaded++;
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+// Wraps buildApp() with logging + error surfacing, so a failure never just
+// leaves the page blank with no explanation.
+function runBuildApp(){
+  try{
+    buildApp();
+    log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
+    if(typeof Chart === 'undefined'){
+      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Графики будут заменены текстовой заметкой, остальные данные доступны как обычно.', 'err');
+    }
+  }catch(err){
+    log('Не удалось построить дашборд: ' + err.message, 'err');
+    console.error(err);
+    appEl.classList.add('show');
+    appEl.style.display = 'block';
+    panelsEl.innerHTML = `<div class="empty-state">Произошла ошибка при построении дашборда: ${esc(err.message)}<br>Подробности — в логе выше. Нажмите «Показать дашборд», чтобы попробовать снова.</div>`;
+  }
+}
+
+function addChip(key, ok){
+  const chip = document.createElement('div');
+  chip.className = 'chip ' + (ok ? (KNOWN_FILES.includes(key) ? 'ok' : 'unknown') : '');
+  chip.innerHTML = `<span class="dot"></span>${key}${ok ? '' : ' — ошибка чтения'}`;
+  fileChips.appendChild(chip);
+}
+
+/* ---------------------------------------------------------------- *
+ *  Helpers
+ * ---------------------------------------------------------------- */
+function get(obj, path, fallback){
+  try{
+    const parts = path.split('.');
+    let cur = obj;
+    for(const p of parts){
+      if(cur == null) return fallback;
+      cur = cur[p];
+    }
+    return cur === undefined ? fallback : cur;
+  }catch(e){ return fallback; }
+}
+function fmtNum(n){ if(n==null || isNaN(n)) return '—'; return Number(n).toLocaleString('ru-RU'); }
+function fmtDate(s){
+  if(!s) return '—';
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short', year:'numeric'});
+}
+function daysAgo(s){
+  if(!s) return null;
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime())/86400000);
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function stripType(k){ return k === '$type' || k === '$id'; }
+
+const RARITY_COLORS = {
+  Common: 'var(--rare-common)', Uncommon: 'var(--rare-uncommon)', Rare: 'var(--rare-rare)',
+  Epic: 'var(--rare-epic)', Legendary: 'var(--rare-legendary)', Ultra: '#ff5470', Infinity: '#ffffff'
+};
+
+/* ---------------------------------------------------------------- *
+ *  App build
+ * ---------------------------------------------------------------- */
+let charts = [];
+function buildApp(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const tabs = [];
+
+  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
+  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
+  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
+  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+
+  tabsEl.innerHTML = '';
+  panelsEl.innerHTML = '';
+  tabs.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i===0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => switchTab(t.id);
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel' + (i===0 ? ' active' : '');
+    panel.id = 'panel-' + t.id;
+    panelsEl.appendChild(panel);
+    t.render(panel);
+  });
+
+  appEl.classList.add('show');
+  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.textContent === document.querySelector(`#panel-${id}`) ? true : b.classList.contains('active')));
+  document.querySelectorAll('.tabs .tab').forEach((b,i) => {
+    b.classList.toggle('active', b.getAttribute('data-id') === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+}
+// rewire tab buttons with data-id (simpler + reliable)
+function switchTabFix(){}
+
+/* ---------------------------------------------------------------- *
+ *  OVERVIEW
+ * ---------------------------------------------------------------- */
+function renderOverview(root){
+  const acc = store.AccountState;
+  const col = store.CollectionState;
+  const clan = store.ClanState;
+  const bp = store.BattlePassClientState;
+
+  const appVersion = get(acc,'ApplicationVersion') || get(col,'ApplicationVersion') || '—';
+  const region = get(acc,'ServerState.Account.AppRegion','—');
+  const regLoc = get(acc,'ServerState.Account.RegistrationLocation','—');
+  const created = get(acc,'ServerState.Account.TimeCreated');
+  const lastLogin = get(acc,'ClientState.LastLoginTime');
+  const ageDays = daysAgo(created);
+
+  const cards = get(col,'ServerState.Cards',[]);
+  const decks = get(col,'ServerState.Decks',[]);
+  const collScore = get(col,'ServerState.CollectionScore.Amount');
+  const clanName = get(clan,'ServerState.State.Identity.Name');
+  const clanTag = get(clan,'ServerState.State.Identity.Tag');
+  const season = get(bp,'LastSeenBattlePassDefId');
+
+  let html = '<div class="grid">';
+  html += stat('Версия клиента', appVersion, 'accent');
+  html += stat('Аккаунт создан', fmtDate(created), null, ageDays!=null ? `${fmtNum(ageDays)} дн. назад` : '');
+  html += stat('Регион', region, null, regLoc && regLoc !== region ? `регистрация: ${regLoc}` : '');
+  html += stat('Последний вход', fmtDate(lastLogin), 'cyan');
+  if(col) html += stat('Очки коллекции', fmtNum(collScore), 'gold');
+  if(col) html += stat('Карт в коллекции', fmtNum(cards.length), 'accent', `${fmtNum(new Set(cards.map(c=>c.CardDefId)).size)} героев`);
+  if(col) html += stat('Колод сохранено', fmtNum(decks.length));
+  if(clan) html += stat('Клан', clanTag ? `[${clanTag}] ${clanName}` : (clanName||'—'), 'cyan');
+  if(season) html += stat('Текущий сезон', season.replace(/^Season\d+/,''), null, season);
+  html += '</div>';
+
+  html += `<div class="block"><h2>Загруженные файлы</h2><p class="desc">Распознано ${Object.keys(store).length} из 26 стандартных файлов сохранения.</p>`;
+  html += '<div class="deck-grid">';
+  KNOWN_FILES.forEach(name => {
+    const present = !!store[name];
+    html += `<div class="deck-item" style="opacity:${present?1:0.35}">
+      <div class="dname">${present ? '●' : '○'} ${name}</div>
+      <div class="ddate">${present ? 'загружен' : 'отсутствует'}</div>
+    </div>`;
+  });
+  const extras = Object.keys(store).filter(k => !KNOWN_FILES.includes(k));
+  extras.forEach(name => {
+    html += `<div class="deck-item"><div class="dname">● ${name}</div><div class="ddate">доп. файл</div></div>`;
+  });
+  html += '</div></div>';
+
+  root.innerHTML = html;
+}
+
+function stat(label, value, cls, sub){
+  return `<div class="stat">
+    <div class="label">${esc(label)}</div>
+    <div class="value ${cls||''}">${value==null||value==='' ? '—' : esc(value)}</div>
+    ${sub ? `<div class="sub2">${esc(sub)}</div>` : ''}
+  </div>`;
+}
+
+/* ---------------------------------------------------------------- *
+ *  COLLECTION
+ * ---------------------------------------------------------------- */
+function renderCollection(root){
+  const col = store.CollectionState;
+  const cards = get(col,'ServerState.Cards',[]);
+  const decks = get(col,'ServerState.Decks',[]);
+  const cardBacks = get(col,'ServerState.CardBacks',[]);
+  const avatars = get(col,'ServerState.AvatarInventory.OwnedAvatars',[]);
+  const titles = get(col,'ServerState.TitleInventory.OwnedTitles',[]);
+
+  const rarityCounts = {};
+  cards.forEach(c => { const r = c.RarityDefId || 'Unknown'; rarityCounts[r] = (rarityCounts[r]||0)+1; });
+  const order = ['Common','Uncommon','Rare','Epic','Legendary','Ultra','Infinity'];
+  const rarityKeys = Object.keys(rarityCounts).sort((a,b) => order.indexOf(a)-order.indexOf(b));
+  const total = cards.length || 1;
+
+  let html = '<div class="block"><h2>Коллекция карт</h2><p class="desc">Всего вариантов карт в инвентаре, по редкости.</p><div class="card">';
+  html += '<div class="rarity-bar">';
+  rarityKeys.forEach(r => {
+    const pct = (rarityCounts[r]/total*100).toFixed(1);
+    html += `<div style="width:${pct}%; background:${RARITY_COLORS[r] || '#555'}"></div>`;
+  });
+  html += '</div><div class="rarity-legend">';
+  rarityKeys.forEach(r => {
+    html += `<span><i style="background:${RARITY_COLORS[r]||'#555'}"></i>${r}: ${fmtNum(rarityCounts[r])}</span>`;
+  });
+  html += '</div></div></div>';
+
+  html += '<div class="grid">';
+  html += stat('Уникальных героев', fmtNum(new Set(cards.map(c=>c.CardDefId)).size),'accent');
+  html += stat('Вариантов оформления', fmtNum(cards.filter(c=>c.ArtVariantDefId).length),'cyan');
+  html += stat('Рубашек карт', fmtNum(cardBacks.length));
+  html += stat('Аватаров', fmtNum(avatars.length));
+  html += stat('Титулов', fmtNum(titles.length));
+  html += '</div>';
+
+  html += `<div class="block"><h2>Сохранённые колоды</h2><p class="desc">${fmtNum(decks.length)} колод в профиле.</p><div class="deck-grid">`;
+  decks.slice().sort((a,b)=> (b.CardBack&&b.CardBack.TimeUpdated||'').localeCompare(a.CardBack&&a.CardBack.TimeUpdated||'')).forEach(d => {
+    const fav = get(d,'CardBack.Favorite', false);
+    html += `<div class="deck-item"><div class="dname">${esc(d.Name||'Без названия')}${fav?' <span class="fav">★</span>':''}</div><div class="ddate">рубашка: ${esc(get(d,'CardBack.CardBackDefId','—'))}</div></div>`;
+  });
+  html += '</div></div>';
+
+  root.innerHTML = html;
+}
+
+/* ---------------------------------------------------------------- *
+ *  MASTERY
+ * ---------------------------------------------------------------- */
+function renderMastery(root){
+  const cm = store.CharacterMasteryState;
+  const dataDict = get(cm,'ServerState.CharacterMasteryProgress.CharacterProgressData',{});
+  const entries = Object.keys(dataDict).filter(k => k!=='$type').map(k => {
+    const v = dataDict[k];
+    return {
+      name: k,
+      level: parseInt(v.LastClaimedLevel,10) || 0,
+      cap: parseInt(v.LevelCap,10) || 30,
+      exp: v.Experience || 0
+    };
+  });
+  entries.sort((a,b) => b.level - a.level || b.exp - a.exp);
+
+  const totalExp = entries.reduce((s,e)=>s+e.exp,0);
+  const maxed = entries.filter(e => e.level >= e.cap).length;
+  const avgLevel = entries.length ? (entries.reduce((s,e)=>s+e.level,0)/entries.length) : 0;
+
+  let html = '<div class="grid">';
+  html += stat('Героев прокачивается', fmtNum(entries.length),'accent');
+  html += stat('Максимальный уровень', fmtNum(maxed), 'gold', `из ${fmtNum(entries.length)}`);
+  html += stat('Средний уровень', avgLevel.toFixed(1),'cyan');
+  html += stat('Суммарный опыт', fmtNum(totalExp));
+  html += '</div>';
+
+  html += '<div class="two-col">';
+  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div class="chart-wrap"><canvas id="masteryChart"></canvas></div></div></div>';
+
+  html += '<div class="block"><h2>Все герои</h2><div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody>';
+  entries.forEach(e => {
+    html += `<tr><td class="name-cell">${esc(e.name)}</td><td class="num">${e.level}/${e.cap}</td><td class="num">${fmtNum(e.exp)}</td></tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  html += '</div>';
+
+  root.innerHTML = html;
+
+  const top = entries.slice(0,20);
+  safeChart('masteryChart', {
+    type: 'bar',
+    data: {
+      labels: top.map(e=>e.name),
+      datasets: [{
+        label: 'Уровень мастерства',
+        data: top.map(e=>e.level),
+        backgroundColor: top.map((e,i) => `rgba(${155-i*3},${92+i*4},255,0.85)`),
+        borderRadius: 5,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Уровень ${c.raw}` } } },
+      scales:{
+        x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} }, max: 30 },
+        y:{ grid:{ display:false }, ticks:{ color:'#ece7fb', font:{family:'Space Grotesk', size:11.5} } }
+      }
+    }
+  }, root.querySelector('.card'));
+}
+
+/* ---------------------------------------------------------------- *
+ *  CLAN
+ * ---------------------------------------------------------------- */
+function renderClan(root){
+  const clan = store.ClanState;
+  const identity = get(clan,'ServerState.State.Identity',{});
+  const members = get(clan,'ServerState.Members',[]);
+  const desc = get(clan,'ServerState.State.Description','');
+  const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
+
+  let html = '<div class="two-col">';
+  html += `<div class="block"><h2>[${esc(identity.Tag||'')}] ${esc(identity.Name||'Клан')}</h2>
+    <div class="card">
+      <dl class="kv">
+        <dt>Участников</dt><dd>${fmtNum(memberCount)}</dd>
+        <dt>Регион</dt><dd>${esc(identity.Region||'—')}</dd>
+        <dt>Приватность</dt><dd>${esc(get(clan,'ServerState.State.PrivacyType','—'))}</dd>
+        <dt>Язык</dt><dd>${esc(get(clan,'ServerState.State.Language','—'))}</dd>
+      </dl>
+      ${desc ? `<p style="margin-top:14px; color:var(--ink-dim); font-size:13.5px; border-top:1px solid var(--line-soft); padding-top:14px;">${esc(desc)}</p>` : ''}
+    </div>
+  </div>`;
+
+  // current period totals chart data prep happens after render; build leaderboard table meanwhile
+  const rows = members.map(m => {
+    const periods = get(m,'TimePeriodState.TimePeriodList',[]);
+    const latest = periods.slice().reverse().find(p => p.BountyPoints!=null || p.CubePoints!=null) || {};
+    return {
+      name: get(m,'PlayerInfo.Name','—'),
+      role: m.Role || 'Member',
+      score: get(m,'PlayerInfo.CollectionScore',0),
+      bounty: latest.BountyPoints || 0,
+      cube: latest.CubePoints || 0
+    };
+  }).sort((a,b) => b.bounty - a.bounty);
+
+  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div class="chart-wrap short"><canvas id="clanChart"></canvas></div></div></div>';
+  html += '</div>';
+
+  html += '<div class="block"><h2>Состав клана</h2><p class="desc">Отсортировано по очкам за текущий период.</p><div class="card" style="padding:0; max-height:460px; overflow:auto;">';
+  html += '<table><thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const roleClass = /leader/i.test(r.role) ? 'leader' : /officer/i.test(r.role) ? 'officer' : 'member';
+    html += `<tr><td class="name-cell">${esc(r.name)}</td><td><span class="pill ${roleClass}">${esc(r.role)}</span></td><td class="num">${fmtNum(r.score)}</td><td class="num">${fmtNum(r.bounty)}</td><td class="num">${fmtNum(r.cube)}</td></tr>`;
+  });
+  html += '</tbody></table></div></div>';
+
+  root.innerHTML = html;
+
+  const top = rows.slice(0,15);
+  safeChart('clanChart', {
+    type:'bar',
+    data:{
+      labels: top.map(r=>r.name),
+      datasets:[
+        { label:'Bounty', data: top.map(r=>r.bounty), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4, maxBarThickness:16 },
+        { label:'Cube', data: top.map(r=>r.cube), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4, maxBarThickness:16 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:11} } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color:'#9d92c2', font:{size:10}, maxRotation:60, minRotation:40 } },
+        y:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} } }
+      }
+    }
+  }, root.querySelectorAll('.card')[1]);
+}
+
+/* ---------------------------------------------------------------- *
+ *  SHOP / BATTLE PASS / EVENTS
+ * ---------------------------------------------------------------- */
+function renderEvents(root){
+  const shop = store.ShopClientState;
+  const bp = store.BattlePassClientState;
+  const hst = store.HighStakesTablesManagerState;
+
+  let html = '<div class="grid">';
+  if(bp){
+    html += stat('Сезон баттлпасса', get(bp,'LastSeenBattlePassDefId','—'),'accent');
+    html += stat('Начало сезона для игрока', fmtDate(get(bp,'FirstPlayDateAfterSeasonStart')));
+  }
+  if(shop){
+    const seen = get(shop,'CardShopNewCardSeenList',[]);
+    html += stat('Просмотрено в магазине', fmtNum(seen.length),'cyan');
+  }
+  html += '</div>';
+
+  if(shop){
+    const seen = get(shop,'CardShopNewCardSeenList',[]);
+    const byTag = {};
+    seen.forEach(s => { const t = s.Tag || 'Без тега'; byTag[t] = (byTag[t]||0)+1; });
+    const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]);
+    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div class="chart-wrap"><canvas id="shopChart"></canvas></div></div></div>';
+    root.innerHTML = html;
+    safeChart('shopChart', {
+      type:'bar',
+      data:{
+        labels: tagEntries.map(e=>e[0]),
+        datasets:[{ data: tagEntries.map(e=>e[1]), backgroundColor:'rgba(255,79,216,0.8)', borderRadius:5, maxBarThickness:26 }]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{size:10} } },
+          y:{ grid:{display:false}, ticks:{ color:'#ece7fb', font:{size:11} } }
+        }
+      }
+    }, root.querySelector('.card'));
+  } else {
+    root.innerHTML = html;
+  }
+
+  if(hst){
+    const pastEvents = get(hst,'ServerState.PastEvents',[]);
+    const div = document.createElement('div');
+    div.className = 'block';
+    div.innerHTML = `<h2>High Stakes — события</h2><p class="desc">Завершённых событий: ${fmtNum(pastEvents.length)}</p>`;
+    root.appendChild(div);
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ *  RAW JSON VIEWER
+ * ---------------------------------------------------------------- */
+function renderRaw(root){
+  const keys = Object.keys(store);
+  let html = '<div class="block"><h2>Все загруженные данные</h2><p class="desc">Полное дерево каждого файла — как в оригинальном JSON. Клик по стрелке разворачивает узел.</p>';
+  html += '<div class="raw-file-list">';
+  keys.forEach((k,i) => {
+    html += `<button class="raw-btn ${i===0?'active':''}" data-key="${esc(k)}">${esc(k)}</button>`;
+  });
+  html += '</div>';
+  html += '<input class="jt-search" id="jtSearch" placeholder="Поиск по ключам и значениям… (например: CardDefId, Legendary)">';
+  html += '<div class="jt-wrap"><div class="jt" id="jtRoot"></div></div></div>';
+  root.innerHTML = html;
+
+  let currentKey = keys[0];
+  const jtRoot = root.querySelector('#jtRoot');
+  const search = root.querySelector('#jtSearch');
+
+  function draw(){
+    jtRoot.innerHTML = '';
+    const q = search.value.trim().toLowerCase();
+    jtRoot.appendChild(buildNode(currentKey, store[currentKey], 0, q));
+  }
+
+  root.querySelectorAll('.raw-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      root.querySelectorAll('.raw-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentKey = btn.getAttribute('data-key');
+      draw();
+    });
+  });
+  search.addEventListener('input', () => draw());
+  draw();
+}
+
+// Recursive JSON tree builder. q = lowercase search filter (matches key or primitive value).
+function buildNode(key, value, depth, q){
+  const row = document.createElement('div');
+
+  const isObj = value !== null && typeof value === 'object' && !Array.isArray(value);
+  const isArr = Array.isArray(value);
+
+  if(isObj || isArr){
+    const rawKeys = isArr ? value.map((_,i)=>i) : Object.keys(value).filter(k=>!stripType(k));
+    let childKeys = rawKeys;
+    if(q){
+      childKeys = rawKeys.filter(ck => {
+        const cv = value[ck];
+        if(String(ck).toLowerCase().includes(q)) return true;
+        if(cv !== null && typeof cv === 'object') return JSON.stringify(cv).toLowerCase().includes(q);
+        return String(cv).toLowerCase().includes(q);
+      });
+      if(!childKeys.length && !String(key).toLowerCase().includes(q)) {
+        row.style.display = 'none';
+      }
+    }
+
+    const header = document.createElement('div');
+    header.className = 'jt-row';
+    const count = rawKeys.length;
+    const collapsedDefault = depth >= 2 && !q;
+    const toggle = document.createElement('span');
+    toggle.className = 'jt-toggle';
+    toggle.textContent = collapsedDefault ? '▸' : '▾';
+    header.appendChild(toggle);
+
+    const keySpan = document.createElement('span');
+    keySpan.className = 'jt-key';
+    keySpan.textContent = (key === '' ? '' : key + ': ');
+    header.appendChild(keySpan);
+
+    const punct = document.createElement('span');
+    punct.className = 'jt-punct';
+    punct.textContent = (isArr ? '[' : '{') + `  ` ;
+    header.appendChild(punct);
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'jt-count';
+    countSpan.textContent = `${count} ${isArr ? (count===1?'элемент':'элементов') : (count===1?'поле':'полей')}`;
+    header.appendChild(countSpan);
+
+    row.appendChild(header);
+
+    const childrenWrap = document.createElement('div');
+    childrenWrap.className = 'jt-children';
+    childrenWrap.style.display = collapsedDefault ? 'none' : 'block';
+    childKeys.forEach(ck => {
+      childrenWrap.appendChild(buildNode(ck, value[ck], depth+1, q));
+    });
+    row.appendChild(childrenWrap);
+
+    toggle.addEventListener('click', () => {
+      const open = childrenWrap.style.display !== 'none';
+      childrenWrap.style.display = open ? 'none' : 'block';
+      toggle.textContent = open ? '▸' : '▾';
+    });
+  } else {
+    if(q && !String(key).toLowerCase().includes(q) && !String(value).toLowerCase().includes(q)){
+      row.style.display = 'none';
+    }
+    const line = document.createElement('div');
+    line.className = 'jt-row';
+    line.style.marginLeft = '14px';
+    let valSpan;
+    if(value === null){ valSpan = `<span class="jt-null">null</span>`; }
+    else if(typeof value === 'number'){ valSpan = `<span class="jt-num">${value}</span>`; }
+    else if(typeof value === 'boolean'){ valSpan = `<span class="jt-bool">${value}</span>`; }
+    else { valSpan = `<span class="jt-str">"${esc(value)}"</span>`; }
+    line.innerHTML = `<span class="jt-key">${esc(key)}</span><span class="jt-punct">: </span>${valSpan}`;
+    row.appendChild(line);
+  }
+
+  return row;
+}
+
+/* ---------------------------------------------------------------- *
+ *  Tab wiring fix (use data-id properly)
+ * ---------------------------------------------------------------- */
+const origBuildApp = buildApp;
+buildApp = function(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const tabs = [];
+  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
+  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
+  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
+  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+
+  tabsEl.innerHTML = '';
+  panelsEl.innerHTML = '';
+  tabs.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i===0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.setAttribute('data-id', t.id);
+    btn.onclick = () => {
+      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.toggle('active', b===btn));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.id));
+    };
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel' + (i===0 ? ' active' : '');
+    panel.id = 'panel-' + t.id;
+    panelsEl.appendChild(panel);
+    try{
+      t.render(panel);
+    }catch(err){
+      console.error('Ошибка при отрисовке вкладки', t.id, err);
+      panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${t.label}»: ${esc(err.message)}</div>`;
+    }
+  });
+
+  appEl.classList.add('show');
+  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+// Small helper: draws a chart if Chart.js loaded successfully, otherwise
+// leaves a quiet fallback note instead of throwing and blanking the page.
+function safeChart(canvasId, config, fallbackParent){
+  if(typeof Chart === 'undefined'){
+    if(fallbackParent){
+      const note = document.createElement('div');
+      note.className = 'empty-state';
+      note.textContent = 'График недоступен (не удалось загрузить библиотеку графиков). Данные всё равно доступны в таблице ниже.';
+      fallbackParent.appendChild(note);
+    }
+    return null;
+  }
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return null;
+  const c = new Chart(ctx, config);
+  charts.push(c);
+  return c;
+}
+
+})();
+</script>
 </body>
 </html>
-
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=105434520', 'ym');
-
-    ym(105434520, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/105434520" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
