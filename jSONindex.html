@@ -372,29 +372,71 @@ let store = {}; // filename (without .json) -> parsed object
 
 /* ---------------------------------------------------------------- *
  *  Google Sheets backend (Apps Script Web App)
- * ---------------------------------------------------------------- *
- *  Вставьте сюда URL вашего развёрнутого Apps Script Web App
- *  (см. инструкцию, которую прислал Claude). Пример:
- *  'https://script.google.com/macros/s/AKfycbx.../exec'
  * ---------------------------------------------------------------- */
 const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbw3dXCX7PbmSnUFHLtVzRUKnNgPwSGkT_LZ3SYLk7wQM2wK1RvCfakB59LoAj1Kx50rOw/exec';
 const BOUNTY_NORM = 3500;
+const CLAN_CAPACITY = 30; // стандартный лимит участников клана — используется для "X из 30", если в файле нет своего значения
 
 function sheetsConfigured(){
   return SHEETS_API_URL && !SHEETS_API_URL.includes('ВСТАВЬ_СЮДА');
 }
 
-// Sends the current clan roster (name/role/bounty/cube/score) as one "snapshot"
-// row-set to the Apps Script backend. Uses text/plain to dodge CORS preflight.
-async function saveSnapshotToSheet(clanName, rows){
-  if(!sheetsConfigured()){
-    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код (см. инструкцию).');
+// TimePeriodList entries don't have a guaranteed field name across save versions,
+// so we probe a list of likely date/id fields and fall back to the array position
+// (periods are stored oldest→newest, so position is stable within one file at least).
+const PERIOD_KEY_FIELDS = [
+  'PeriodId','Id','WeekId','SeasonId','WeekNumber','Number',
+  'StartDate','StartTime','PeriodStart','WeekStart','Start',
+  'EndDate','EndTime','PeriodEnd','WeekEnd','End','Date','Timestamp'
+];
+
+function extractPeriodKey(period, orderIndex){
+  for(const f of PERIOD_KEY_FIELDS){
+    if(period[f] !== undefined && period[f] !== null && period[f] !== ''){
+      return { key: `${f}:${period[f]}`, label: String(period[f]), order: orderIndex, sourceField: f };
+    }
   }
-  const payload = {
-    timestamp: new Date().toISOString(),
-    clanName: clanName || '',
-    members: rows.map(r => ({ name: r.name, role: r.role, score: r.score, bounty: r.bounty, cube: r.cube }))
-  };
+  return { key: `idx:${orderIndex}`, label: `Период #${orderIndex+1}`, order: orderIndex, sourceField: null };
+}
+
+// Pulls EVERY week found in ClanState (not just the latest) for every member,
+// grouped by period. Also logs what field it used to identify weeks, so we can
+// verify/adjust if the save format doesn't match our guesses.
+function extractAllWeeksFromClan(clan){
+  const members = get(clan,'ServerState.Members',[]);
+  const weeksMap = {}; // periodKey -> { periodKey, weekLabel, order, members: [] }
+  let loggedSample = false;
+
+  members.forEach(m => {
+    const periods = get(m,'TimePeriodState.TimePeriodList',[]);
+    const name = get(m,'PlayerInfo.Name','—');
+    const role = m.Role || 'Member';
+    const score = get(m,'PlayerInfo.CollectionScore',0);
+
+    if(!loggedSample && periods.length){
+      log(`Пример полей одного периода (TimePeriodList[0]) у игрока ${name}: ${Object.keys(periods[0]).join(', ')}`, 'ok');
+      loggedSample = true;
+    }
+
+    periods.forEach((p, i) => {
+      if(p.BountyPoints == null && p.CubePoints == null) return; // пустой/нерелевантный период
+      const pk = extractPeriodKey(p, i);
+      if(!weeksMap[pk.key]) weeksMap[pk.key] = { periodKey: pk.key, weekLabel: pk.label, order: pk.order, members: [] };
+      weeksMap[pk.key].members.push({ name, role, score, bounty: p.BountyPoints || 0, cube: p.CubePoints || 0 });
+    });
+  });
+
+  return Object.values(weeksMap).sort((a,b) => a.order - b.order);
+}
+
+// Sends every detected week (with its full member list) to the Apps Script backend
+// in one request. The backend upserts by (clan, player, periodKey) instead of
+// blindly appending, so re-saving the same week updates it rather than duplicating it.
+async function saveSnapshotToSheet(clanName, weeks){
+  if(!sheetsConfigured()){
+    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код.');
+  }
+  const payload = { clanName: clanName || '', weeks };
   const res = await fetch(SHEETS_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -408,12 +450,12 @@ async function saveSnapshotToSheet(clanName, rows){
 // Reads back every previously saved snapshot from the sheet.
 async function fetchHistory(){
   if(!sheetsConfigured()){
-    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код (см. инструкцию).');
+    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код.');
   }
   const res = await fetch(SHEETS_API_URL, { method: 'GET' });
   const data = await res.json();
   if(!data.ok) throw new Error(data.error || 'Неизвестная ошибка при чтении.');
-  return data.rows; // [{Timestamp, ClanName, Player, Role, CollectionScore, BountyPoints, CubePoints}, ...]
+  return data.rows; // [{PeriodKey, WeekLabel, Order, ClanName, Player, Role, CollectionScore, BountyPoints, CubePoints, UploadedAt}, ...]
 }
 
 dropzone.addEventListener('click', () => fileInput.click());
@@ -726,12 +768,13 @@ function renderClan(root){
   const members = get(clan,'ServerState.Members',[]);
   const desc = get(clan,'ServerState.State.Description','');
   const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
+  const capacity = get(clan,'ServerState.State.MaxMemberCount', get(clan,'ServerState.State.MemberCapacity', CLAN_CAPACITY));
 
   let html = '<div class="two-col">';
   html += `<div class="block"><h2>[${esc(identity.Tag||'')}] ${esc(identity.Name||'Клан')}</h2>
     <div class="card">
       <dl class="kv">
-        <dt>Участников</dt><dd>${fmtNum(memberCount)}</dd>
+        <dt>Участников</dt><dd>${fmtNum(memberCount)} из ${fmtNum(capacity)}</dd>
         <dt>Регион</dt><dd>${esc(identity.Region||'—')}</dd>
         <dt>Приватность</dt><dd>${esc(get(clan,'ServerState.State.PrivacyType','—'))}</dd>
         <dt>Язык</dt><dd>${esc(get(clan,'ServerState.State.Language','—'))}</dd>
@@ -740,7 +783,7 @@ function renderClan(root){
     </div>
   </div>`;
 
-  // current period totals chart data prep happens after render; build leaderboard table meanwhile
+  // Текущая неделя, отсортирована по возрастанию Bounty (как просили).
   const rows = members.map(m => {
     const periods = get(m,'TimePeriodState.TimePeriodList',[]);
     const latest = periods.slice().reverse().find(p => p.BountyPoints!=null || p.CubePoints!=null) || {};
@@ -751,28 +794,28 @@ function renderClan(root){
       bounty: latest.BountyPoints || 0,
       cube: latest.CubePoints || 0
     };
-  }).sort((a,b) => b.bounty - a.bounty);
+  }).sort((a,b) => a.bounty - b.bounty);
 
   html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div id="clanChart"></div>'
-    + '<button id="saveSnapshotBtn" class="save-btn">💾 Сохранить снимок недели в таблицу</button>'
+    + '<button id="saveSnapshotBtn" class="save-btn">💾 Сохранить все недели в таблицу</button>'
     + '<div id="saveSnapshotStatus" class="save-status"></div>'
     + '</div></div>';
   html += '</div>';
 
-  html += '<div class="block"><h2>Состав клана</h2><p class="desc">Отсортировано по очкам за текущий период.</p><div class="card" style="padding:0; max-height:460px; overflow:auto;">';
-  html += '<table><thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>';
-  rows.forEach(r => {
+  html += `<div class="block"><h2>Состав клана</h2><p class="desc">${fmtNum(memberCount)} из ${fmtNum(capacity)} участников · отсортировано по Bounty за текущую неделю (по возрастанию).</p><div class="card" style="padding:0; max-height:460px; overflow:auto;">`;
+  html += '<table><thead><tr><th>#</th><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>';
+  rows.forEach((r,i) => {
     const roleClass = /leader/i.test(r.role) ? 'leader' : /officer/i.test(r.role) ? 'officer' : 'member';
-    html += `<tr><td class="name-cell">${esc(r.name)}</td><td><span class="pill ${roleClass}">${esc(r.role)}</span></td><td class="num">${fmtNum(r.score)}</td><td class="num">${fmtNum(r.bounty)}</td><td class="num">${fmtNum(r.cube)}</td></tr>`;
+    html += `<tr><td class="num">${i+1}</td><td class="name-cell">${esc(r.name)}</td><td><span class="pill ${roleClass}">${esc(r.role)}</span></td><td class="num">${fmtNum(r.score)}</td><td class="num">${fmtNum(r.bounty)}</td><td class="num">${fmtNum(r.cube)}</td></tr>`;
   });
   html += '</tbody></table></div></div>';
 
   root.innerHTML = html;
 
-  const top = rows.slice(0,15);
-  renderGroupedBarChart('clanChart', top.map(r=>r.name), [
-    { label:'Bounty', data: top.map(r=>r.bounty), color:'#ffb23e' },
-    { label:'Cube', data: top.map(r=>r.cube), color:'#38e8e0' }
+  const chartRows = rows.slice(-15); // 15 наибольших, слева направо по возрастанию
+  renderGroupedBarChart('clanChart', chartRows.map(r=>r.name), [
+    { label:'Bounty', data: chartRows.map(r=>r.bounty), color:'#ffb23e' },
+    { label:'Cube', data: chartRows.map(r=>r.cube), color:'#38e8e0' }
   ], { height: 200 });
 
   const saveBtn = root.querySelector('#saveSnapshotBtn');
@@ -780,13 +823,16 @@ function renderClan(root){
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     saveStatus.className = 'save-status';
-    saveStatus.textContent = 'Сохраняю…';
+    saveStatus.textContent = 'Извлекаю недели из файла…';
     try{
       const clanName = identity.Name || '';
-      const res = await saveSnapshotToSheet(clanName, rows);
-      saveStatus.textContent = `Готово: сохранено ${res.added} игроков.`;
+      const weeks = extractAllWeeksFromClan(clan);
+      if(!weeks.length) throw new Error('В файле не нашлось ни одного периода с Bounty/Cube — нечего сохранять.');
+      saveStatus.textContent = `Отправляю ${weeks.length} недель(и) в таблицу…`;
+      const res = await saveSnapshotToSheet(clanName, weeks);
+      saveStatus.textContent = `Готово: недель ${weeks.length}, новых строк ${res.added}, обновлено ${res.updated}.`;
       saveStatus.classList.add('ok');
-      log(`Снимок клана сохранён в таблицу (${res.added} игроков).`, 'ok');
+      log(`Сохранено в таблицу: недель — ${weeks.length}, новых строк — ${res.added}, обновлено — ${res.updated}.`, 'ok');
     }catch(err){
       saveStatus.textContent = 'Ошибка: ' + err.message;
       saveStatus.classList.add('err');
@@ -802,12 +848,12 @@ function renderClan(root){
  * ---------------------------------------------------------------- */
 async function renderHistory(root){
   root.innerHTML = `<div class="block"><h2>Норма Bounty ${BOUNTY_NORM} по неделям</h2>
-    <p class="desc">Данные берутся из Google Таблицы, куда снимки сохраняются кнопкой «Сохранить снимок недели» на вкладке «Клан».</p>
+    <p class="desc">Данные берутся из Google Таблицы. Нажмите «Сохранить все недели в таблицу» на вкладке «Клан», чтобы обновить.</p>
     <div class="card" id="historyCard"><div class="empty-state">Загружаю историю…</div></div></div>`;
   const card = root.querySelector('#historyCard');
 
   if(!sheetsConfigured()){
-    card.innerHTML = '<div class="empty-state">SHEETS_API_URL не настроен в коде страницы. Вставьте URL вашего Apps Script Web App, чтобы включить историю.</div>';
+    card.innerHTML = '<div class="empty-state">SHEETS_API_URL не настроен в коде страницы.</div>';
     return;
   }
 
@@ -825,25 +871,32 @@ async function renderHistory(root){
     return;
   }
 
-  // Group by timestamp -> that's one "week" snapshot.
-  const weeks = [...new Set(rowsRaw.map(r => r.Timestamp))].sort();
+  // Недели идентифицируются по PeriodKey (стабильно при повторном сохранении),
+  // подписываются WeekLabel и сортируются по Order (по возрастанию — старые слева).
+  const weekByKey = {};
+  rowsRaw.forEach(r => {
+    if(!weekByKey[r.PeriodKey]) weekByKey[r.PeriodKey] = { key: r.PeriodKey, label: r.WeekLabel || r.PeriodKey, order: Number(r.Order) || 0 };
+  });
+  const weeks = Object.values(weekByKey).sort((a,b) => a.order - b.order);
+
   const players = [...new Set(rowsRaw.map(r => r.Player))].sort((a,b)=>a.localeCompare(b));
 
+  // Кто состоит в клане ПРЯМО СЕЙЧАС — по текущей загруженной вкладке "Клан",
+  // чтобы отметить игроков, которых в истории видно, а в текущем составе уже нет.
+  const currentMembers = new Set(get(store.ClanState,'ServerState.Members',[]).map(m => get(m,'PlayerInfo.Name','—')));
+  const knowCurrentRoster = currentMembers.size > 0;
+
   const byWeekPlayer = {};
-  rowsRaw.forEach(r => { byWeekPlayer[r.Timestamp + '|' + r.Player] = r; });
+  rowsRaw.forEach(r => { byWeekPlayer[r.PeriodKey + '|' + r.Player] = r; });
 
-  const fmtWeek = ts => {
-    const d = new Date(ts);
-    return isNaN(d) ? ts : d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit' });
-  };
-
-  let html = '<div style="overflow:auto;"><table><thead><tr><th>Игрок</th>';
-  weeks.forEach(w => { html += `<th>${esc(fmtWeek(w))}</th>`; });
+  let html = '<div style="overflow:auto;"><table><thead><tr><th>#</th><th>Игрок</th>';
+  weeks.forEach(w => { html += `<th>${esc(w.label)}</th>`; });
   html += '</tr></thead><tbody>';
-  players.forEach(p => {
-    html += `<tr><td class="name-cell">${esc(p)}</td>`;
+  players.forEach((p,i) => {
+    const isFormer = knowCurrentRoster && !currentMembers.has(p);
+    html += `<tr${isFormer ? ' style="opacity:.55"' : ''}><td class="num">${i+1}</td><td class="name-cell">${esc(p)}${isFormer ? ' <span class="pill member" style="color:var(--cube-red); border:1px solid rgba(255,84,112,0.35)">не в клане</span>' : ''}</td>`;
     weeks.forEach(w => {
-      const cell = byWeekPlayer[w + '|' + p];
+      const cell = byWeekPlayer[w.key + '|' + p];
       if(!cell){ html += '<td class="num" style="color:var(--ink-faint)">—</td>'; return; }
       const bounty = Number(cell.BountyPoints) || 0;
       const ok = bounty >= BOUNTY_NORM;
