@@ -258,6 +258,19 @@
 
   .empty-state{ text-align:center; padding: 50px 20px; color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 13px; }
 
+  .save-btn{
+    margin-top: 14px; font-family:'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600;
+    background: linear-gradient(120deg, var(--cube-cyan), #2bb3ac); color: #05231f; border: none;
+    padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  }
+  .save-btn:hover{ filter: brightness(1.08); }
+  .save-btn:disabled{ opacity: 0.6; cursor: default; }
+  .save-status{ margin-top: 8px; font-family:'JetBrains Mono', monospace; font-size: 12px; min-height: 16px; color: var(--ink-faint); }
+  .save-status.ok{ color: var(--cube-cyan); }
+  .save-status.err{ color: var(--cube-red); }
+  .norm-ok{ color: var(--cube-cyan) !important; font-weight: 600; }
+  .norm-fail{ color: var(--cube-red) !important; font-weight: 600; }
+
   footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
 </style>
 </head>
@@ -340,6 +353,52 @@ const KNOWN_FILES = [
 ];
 
 let store = {}; // filename (without .json) -> parsed object
+
+/* ---------------------------------------------------------------- *
+ *  Google Sheets backend (Apps Script Web App)
+ * ---------------------------------------------------------------- *
+ *  Вставьте сюда URL вашего развёрнутого Apps Script Web App
+ *  (см. инструкцию, которую прислал Claude). Пример:
+ *  'https://script.google.com/macros/s/AKfycbx.../exec'
+ * ---------------------------------------------------------------- */
+const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbw3dXCX7PbmSnUFHLtVzRUKnNgPwSGkT_LZ3SYLk7wQM2wK1RvCfakB59LoAj1Kx50rOw/exec';
+const BOUNTY_NORM = 3500;
+
+function sheetsConfigured(){
+  return SHEETS_API_URL && !SHEETS_API_URL.includes('ВСТАВЬ_СЮДА');
+}
+
+// Sends the current clan roster (name/role/bounty/cube/score) as one "snapshot"
+// row-set to the Apps Script backend. Uses text/plain to dodge CORS preflight.
+async function saveSnapshotToSheet(clanName, rows){
+  if(!sheetsConfigured()){
+    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код (см. инструкцию).');
+  }
+  const payload = {
+    timestamp: new Date().toISOString(),
+    clanName: clanName || '',
+    members: rows.map(r => ({ name: r.name, role: r.role, score: r.score, bounty: r.bounty, cube: r.cube }))
+  };
+  const res = await fetch(SHEETS_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || 'Неизвестная ошибка при сохранении.');
+  return data;
+}
+
+// Reads back every previously saved snapshot from the sheet.
+async function fetchHistory(){
+  if(!sheetsConfigured()){
+    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код (см. инструкцию).');
+  }
+  const res = await fetch(SHEETS_API_URL, { method: 'GET' });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || 'Неизвестная ошибка при чтении.');
+  return data.rows; // [{Timestamp, ClanName, Player, Role, CollectionScore, BountyPoints, CubePoints}, ...]
+}
 
 dropzone.addEventListener('click', () => fileInput.click());
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -702,7 +761,10 @@ function renderClan(root){
     };
   }).sort((a,b) => b.bounty - a.bounty);
 
-  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div class="chart-wrap short"><canvas id="clanChart"></canvas></div></div></div>';
+  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div class="chart-wrap short"><canvas id="clanChart"></canvas></div>'
+    + '<button id="saveSnapshotBtn" class="save-btn">💾 Сохранить снимок недели в таблицу</button>'
+    + '<div id="saveSnapshotStatus" class="save-status"></div>'
+    + '</div></div>';
   html += '</div>';
 
   html += '<div class="block"><h2>Состав клана</h2><p class="desc">Отсортировано по очкам за текущий период.</p><div class="card" style="padding:0; max-height:460px; overflow:auto;">';
@@ -734,6 +796,85 @@ function renderClan(root){
       }
     }
   }, root.querySelectorAll('.card')[1]);
+
+  const saveBtn = root.querySelector('#saveSnapshotBtn');
+  const saveStatus = root.querySelector('#saveSnapshotStatus');
+  saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true;
+    saveStatus.className = 'save-status';
+    saveStatus.textContent = 'Сохраняю…';
+    try{
+      const clanName = identity.Name || '';
+      const res = await saveSnapshotToSheet(clanName, rows);
+      saveStatus.textContent = `Готово: сохранено ${res.added} игроков.`;
+      saveStatus.classList.add('ok');
+      log(`Снимок клана сохранён в таблицу (${res.added} игроков).`, 'ok');
+    }catch(err){
+      saveStatus.textContent = 'Ошибка: ' + err.message;
+      saveStatus.classList.add('err');
+      log('Не удалось сохранить снимок: ' + err.message, 'err');
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
+}
+
+/* ---------------------------------------------------------------- *
+ *  HISTORY / WEEKLY BOUNTY NORM (from Google Sheet)
+ * ---------------------------------------------------------------- */
+async function renderHistory(root){
+  root.innerHTML = `<div class="block"><h2>Норма Bounty ${BOUNTY_NORM} по неделям</h2>
+    <p class="desc">Данные берутся из Google Таблицы, куда снимки сохраняются кнопкой «Сохранить снимок недели» на вкладке «Клан».</p>
+    <div class="card" id="historyCard"><div class="empty-state">Загружаю историю…</div></div></div>`;
+  const card = root.querySelector('#historyCard');
+
+  if(!sheetsConfigured()){
+    card.innerHTML = '<div class="empty-state">SHEETS_API_URL не настроен в коде страницы. Вставьте URL вашего Apps Script Web App, чтобы включить историю.</div>';
+    return;
+  }
+
+  let rowsRaw;
+  try{
+    rowsRaw = await fetchHistory();
+  }catch(err){
+    card.innerHTML = `<div class="empty-state">Не удалось загрузить историю: ${esc(err.message)}</div>`;
+    log('Не удалось загрузить историю из таблицы: ' + err.message, 'err');
+    return;
+  }
+
+  if(!rowsRaw || !rowsRaw.length){
+    card.innerHTML = '<div class="empty-state">В таблице пока нет ни одного снимка. Сохраните первый на вкладке «Клан».</div>';
+    return;
+  }
+
+  // Group by timestamp -> that's one "week" snapshot.
+  const weeks = [...new Set(rowsRaw.map(r => r.Timestamp))].sort();
+  const players = [...new Set(rowsRaw.map(r => r.Player))].sort((a,b)=>a.localeCompare(b));
+
+  const byWeekPlayer = {};
+  rowsRaw.forEach(r => { byWeekPlayer[r.Timestamp + '|' + r.Player] = r; });
+
+  const fmtWeek = ts => {
+    const d = new Date(ts);
+    return isNaN(d) ? ts : d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit' });
+  };
+
+  let html = '<div style="overflow:auto;"><table><thead><tr><th>Игрок</th>';
+  weeks.forEach(w => { html += `<th>${esc(fmtWeek(w))}</th>`; });
+  html += '</tr></thead><tbody>';
+  players.forEach(p => {
+    html += `<tr><td class="name-cell">${esc(p)}</td>`;
+    weeks.forEach(w => {
+      const cell = byWeekPlayer[w + '|' + p];
+      if(!cell){ html += '<td class="num" style="color:var(--ink-faint)">—</td>'; return; }
+      const bounty = Number(cell.BountyPoints) || 0;
+      const ok = bounty >= BOUNTY_NORM;
+      html += `<td class="num ${ok ? 'norm-ok' : 'norm-fail'}">${fmtNum(bounty)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  card.innerHTML = html;
 }
 
 /* ---------------------------------------------------------------- *
@@ -918,6 +1059,7 @@ buildApp = function(){
   if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
   if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
   if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ClanState) tabs.push({ id:'history', label:'Норма 3500', render: renderHistory });
   if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
   tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
 
@@ -939,7 +1081,13 @@ buildApp = function(){
     panel.id = 'panel-' + t.id;
     panelsEl.appendChild(panel);
     try{
-      t.render(panel);
+      const result = t.render(panel);
+      if(result && typeof result.catch === 'function'){
+        result.catch(err => {
+          console.error('Ошибка при отрисовке вкладки', t.id, err);
+          panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${esc(t.label)}»: ${esc(err.message)}</div>`;
+        });
+      }
     }catch(err){
       console.error('Ошибка при отрисовке вкладки', t.id, err);
       panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${t.label}»: ${esc(err.message)}</div>`;
