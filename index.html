@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08090f">
+<title>SNAP HUB — Marvel Snap Forum</title>
+<meta name="description" content="Card Battle, генераторы колод и вариантов, мини-игры и просмотр сейва — всё для Marvel Snap.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090f; --surf:#10121e; --surf2:#181a28;
+  --border:#1e2140; --border2:#2a2d50;
+  --gold:#f5c542; --gold2:#fde68a;
+  --blue:#4a9eff; --red:#ff4a6a;
+  --green:#3effa0; --purple:#c084fc; --orange:#fb923c;
+  --energy:#facc15; --muted:#767ba8; --text:#c0c4e0;
+}
+*,::before,::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);
+  min-height:100dvh;position:relative;overflow-x:hidden;
+}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -10%,#1c1870 0%,transparent 55%),
+    radial-gradient(ellipse 60% 40% at 5% 110%,#22063a 0%,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 95% 110%,#060e3a 0%,transparent 50%);
+}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:52px 20px 80px;}
+
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:52px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.35em;
+  text-transform:uppercase;color:var(--gold);display:inline-flex;align-items:center;gap:10px;margin-bottom:18px;}
+.eyebrow::before,.eyebrow::after{content:'';width:24px;height:1px;background:var(--gold);opacity:.6;}
+.logo-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,11vw,5.2rem);
+  letter-spacing:.2em;color:var(--gold);text-shadow:0 0 60px rgba(245,197,66,.45);line-height:1;}
+.logo-sub{margin-top:8px;font-size:.85rem;letter-spacing:.08em;color:var(--muted);}
+
+/* ── ENERGY GEMS (signature: cost pips like in-game) ── */
+.pip-row{display:flex;justify-content:center;gap:6px;margin-top:22px;}
+.pip{width:16px;height:16px;background:var(--energy);
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  box-shadow:0 0 10px rgba(250,204,21,.55);animation:pulse 2.4s ease-in-out infinite;}
+.pip:nth-child(2){animation-delay:.2s}.pip:nth-child(3){animation-delay:.4s}
+.pip:nth-child(4){animation-delay:.6s}.pip:nth-child(5){animation-delay:.8s}.pip:nth-child(6){animation-delay:1s}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+.tool{position:relative;display:flex;flex-direction:column;gap:10px;text-align:left;
+  background:var(--surf);border:1px solid var(--border);border-radius:14px;
+  padding:22px 20px 20px;text-decoration:none;color:var(--text);
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;overflow:hidden;}
+.tool::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;
+  background:radial-gradient(160px 100px at 20% 0%,var(--accent,var(--gold)) 0%,transparent 70%);}
+.tool:hover{transform:translateY(-4px);border-color:var(--border2);
+  box-shadow:0 14px 34px -14px rgba(0,0,0,.6);}
+.tool:hover::before{opacity:.16;}
+.tool:active{transform:translateY(-1px) scale(.99);}
+.tool-cost{position:relative;z-index:1;width:34px;height:34px;flex-shrink:0;
+  background:var(--accent,var(--gold));color:#08090f;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:1.15rem;}
+.tool-name{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;
+  font-size:1.3rem;letter-spacing:.06em;color:#fff;margin-top:2px;}
+.tool-desc{position:relative;z-index:1;font-size:.82rem;line-height:1.45;color:var(--muted);flex:1;}
+.tool-tag{position:relative;z-index:1;align-self:flex-start;font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent,var(--gold));
+  border:1px solid currentColor;border-radius:20px;padding:3px 10px;opacity:.85;}
+
+/* group heading */
+.group-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.25em;
+  text-transform:uppercase;color:var(--muted);margin:40px 0 14px;padding-left:2px;}
+.group-label:first-of-type{margin-top:0;}
+
+footer{position:relative;z-index:1;text-align:center;margin-top:60px;
+  font-size:.72rem;color:var(--muted);letter-spacing:.03em;}
+footer a{color:var(--gold);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Community Toolkit</div>
+    <div class="logo-big">SNAP HUB</div>
+    <div class="logo-sub">Marvel Snap Forum — игры, генераторы и утилиты в одном месте</div>
+    <div class="pip-row" aria-hidden="true">
+      <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+      <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+    </div>
+  </div>
+
+  <div class="group-label">Играть</div>
+  <div class="grid">
+    <a class="tool" style="--accent:var(--gold)" href="snap-final.html">
+      <div class="tool-cost">6</div>
+      <div class="tool-name">Card Battle</div>
+      <div class="tool-desc">Полноценный онлайн-дуэль по правилам Snap: лобби по коду, редактор колоды, реалтайм через Supabase.</div>
+      <div class="tool-tag">Мультиплеер</div>
+    </a>
+    <a class="tool" style="--accent:var(--red)" href="blackjack.html">
+      <div class="tool-cost">3</div>
+      <div class="tool-name">Блэкджек</div>
+      <div class="tool-desc">Карточный блэкджек в стилистике Snap — быстрая мини-игра на пару минут.</div>
+      <div class="tool-tag">Мини-игра</div>
+    </a>
+    <a class="tool" style="--accent:var(--purple)" href="slot/slot.html">
+      <div class="tool-cost">2</div>
+      <div class="tool-name">Слот-машина у Баки</div>
+      <div class="tool-desc">Крутите барабан с картами и коллекционируйте комбинации.</div>
+      <div class="tool-tag">Мини-игра</div>
+    </a>
+  </div>
+
+  <div class="group-label">Генераторы</div>
+  <div class="grid">
+    <a class="tool" style="--accent:var(--blue)" href="DeckGenerator/Generate/index.html">
+      <div class="tool-cost">4</div>
+      <div class="tool-name">Deck Generator</div>
+      <div class="tool-desc">Соберите колоду коллажем или вручную из полной базы карт и выгрузите картинку или код.</div>
+      <div class="tool-tag">Инструмент</div>
+    </a>
+    <a class="tool" style="--accent:var(--green)" href="VariantGenerator/index.html">
+      <div class="tool-cost">3</div>
+      <div class="tool-name">Variant Generator</div>
+      <div class="tool-desc">Создавайте собственные визуальные варианты карт для превью и обсуждений.</div>
+      <div class="tool-tag">Инструмент</div>
+    </a>
+    <a class="tool" style="--accent:var(--orange)" href="VariantGenerator/BundleGenerator.html">
+      <div class="tool-cost">3</div>
+      <div class="tool-name">Bundle Generator</div>
+      <div class="tool-desc">Собирайте превью магазинных бандлов: карта, титул, спрей и цена.</div>
+      <div class="tool-tag">Инструмент</div>
+    </a>
+  </div>
+
+  <div class="group-label">Аналитика</div>
+  <div class="grid">
+    <a class="tool" style="--accent:#38e8e0" href="jSONindex.html">
+      <div class="tool-cost">1</div>
+      <div class="tool-name">Snap Save Viewer</div>
+      <div class="tool-desc">Загрузите файлы сохранения — коллекция, колоды, мастерство героев и клан в наглядных графиках.</div>
+      <div class="tool-tag">Cube Log</div>
+    </a>
+  </div>
+
+  <footer>
+    tgmarvelsnap.ru · сделано фанатами для фанатов Marvel Snap
+  </footer>
+</div>
+</body>
+</html>
