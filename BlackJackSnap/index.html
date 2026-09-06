@@ -721,9 +721,9 @@ button:disabled {
 
     id="deckSize"
 
-    min="10"
+    min="2"
 
-    max="50"
+    max="52"
 
     value="20"
 
@@ -1098,7 +1098,7 @@ async function loadCards()
 
 
         const response =
-        await fetch(API_URL);
+        await fetch("./data/cards.json");
 
 
         if (!response.ok)
