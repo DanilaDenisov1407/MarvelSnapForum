@@ -1,1 +1,15 @@
+  const cards = raw.success.cards.map(c => ({ // путь до массива подставь свой
+    id: c.cid,
+    name: c.name,
+    power: c.power,
+    cost: c.cost,
+    description: c.ability ?? "",
+    image: c.art
+  }));
 
+  await fs.mkdir("data", { recursive: true });
+  await fs.writeFile(
+    "data/cards.json",
+    JSON.stringify({ updated: new Date().toISOString().slice(0, 10), cards }, null, 2)
+  );
+  console.log(`Сохранено карт: ${cards.length}`);
