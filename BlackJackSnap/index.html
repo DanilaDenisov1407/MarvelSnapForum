@@ -2,12 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marvel Snap 21</title>
 
 <style>
@@ -18,37 +13,23 @@
 
 body {
     margin: 0;
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
+    font-family: Georgia, "Times New Roman", serif;
     background:
-        radial-gradient(
-            circle at top,
-            #172b55,
-            #070b14 70%
-        );
-
-    color: white;
-
+        radial-gradient(ellipse at center, #0d6b46 0%, #063a26 55%, #021a10 100%);
+    color: #f2ead6;
     min-height: 100vh;
 }
 
 
 /* =========================
-   APP
+   APP / TABLE FRAME
 ========================= */
 
 .app {
-
     width: 100%;
-    max-width: 1400px;
-
+    max-width: 1200px;
     margin: auto;
-
-    padding: 30px;
-
+    padding: 30px 20px 60px;
 }
 
 
@@ -57,59 +38,38 @@ body {
 ========================= */
 
 header {
-
     text-align: center;
-
-    margin-bottom: 35px;
-
+    margin-bottom: 30px;
 }
 
 header h1 {
-
     margin: 0;
-
-    font-size: 42px;
-
-    letter-spacing: 2px;
-
+    font-size: 40px;
+    letter-spacing: 4px;
+    color: #ffd76a;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6);
 }
 
 header p {
-
-    color: #9fb4d9;
-
-    margin-top: 10px;
-
+    color: #cfe9d9;
+    margin-top: 8px;
+    font-style: italic;
 }
 
 
 /* =========================
-   PANELS
+   PANELS (felt table look)
 ========================= */
 
 .panel {
-
     background:
-        linear-gradient(
-            145deg,
-            rgba(28,45,80,.95),
-            rgba(10,16,30,.95)
-        );
-
-    border:
-
-        1px solid
-        rgba(110,160,255,.25);
-
+        linear-gradient(145deg, rgba(9,60,40,.9), rgba(3,25,16,.92));
+    border: 2px solid rgba(255,215,120,.35);
     border-radius: 18px;
-
     padding: 25px;
-
     box-shadow:
-
-        0 15px 50px
-        rgba(0,0,0,.35);
-
+        0 15px 40px rgba(0,0,0,.5),
+        inset 0 0 40px rgba(0,0,0,.35);
 }
 
 
@@ -118,64 +78,33 @@ header p {
 ========================= */
 
 #setup {
-
-    max-width: 650px;
-
+    max-width: 620px;
     margin: auto;
-
 }
 
-.setting {
-
-    margin-top: 25px;
-
-}
-
-.setting label {
-
-    display: block;
-
-    font-size: 18px;
-
-    margin-bottom: 15px;
-
-}
-
-
-/* RANGE */
-
-.range-row {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 20px;
-
-}
-
-input[type="range"] {
-
-    width: 100%;
-
-}
-
-.deck-number {
-
-    min-width: 75px;
-
+#setup h2 {
+    color: #ffd76a;
     text-align: center;
+    letter-spacing: 1px;
+}
 
-    padding: 12px;
+#setup > p {
+    text-align: center;
+    color: #cfe9d9;
+}
 
-    border-radius: 10px;
+.deck-fixed-note {
+    text-align: center;
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.25);
+    border: 1px dashed rgba(255,215,120,.4);
+    font-size: 15px;
+}
 
-    background: #111d34;
-
-    font-size: 22px;
-
-    font-weight: bold;
-
+.deck-fixed-note b {
+    color: #ffd76a;
 }
 
 
@@ -184,100 +113,48 @@ input[type="range"] {
 ========================= */
 
 button {
-
     border: none;
-
-    border-radius: 12px;
-
+    border-radius: 10px;
     padding: 14px 22px;
-
     cursor: pointer;
-
-    font-size: 17px;
-
+    font-size: 16px;
     font-weight: bold;
-
-    transition:
-
-        transform .2s,
-        opacity .2s;
-
+    font-family: inherit;
+    letter-spacing: .5px;
+    transition: transform .15s, opacity .15s, box-shadow .15s;
+    box-shadow: 0 6px 16px rgba(0,0,0,.35);
 }
 
-button:hover {
-
+button:hover:not(:disabled) {
     transform: translateY(-2px);
-
 }
 
 button:disabled {
-
-    opacity: .4;
-
+    opacity: .35;
     cursor: not-allowed;
-
     transform: none;
-
 }
 
 .primary {
-
-    background:
-
-        linear-gradient(
-            135deg,
-            #4d8dff,
-            #7b4dff
-        );
-
-    color: white;
-
+    background: linear-gradient(135deg, #ffd76a, #d9a020);
+    color: #26160a;
     width: 100%;
-
-    margin-top: 30px;
-
+    margin-top: 26px;
 }
 
 .green {
-
-    background:
-
-        linear-gradient(
-            135deg,
-            #23c483,
-            #14a66c
-        );
-
+    background: linear-gradient(135deg, #2fbf78, #1c8a54);
     color: white;
-
 }
 
 .red {
-
-    background:
-
-        linear-gradient(
-            135deg,
-            #e5484d,
-            #a61b22
-        );
-
+    background: linear-gradient(135deg, #d9464b, #921f24);
     color: white;
-
 }
 
 .blue {
-
-    background:
-
-        linear-gradient(
-            135deg,
-            #4387ff,
-            #315ac9
-        );
-
+    background: linear-gradient(135deg, #4a7fd6, #2c4f9c);
     color: white;
-
 }
 
 
@@ -286,13 +163,9 @@ button:disabled {
 ========================= */
 
 .status {
-
-    margin-top: 20px;
-
+    margin-top: 18px;
     text-align: center;
-
-    color: #9fb4d9;
-
+    color: #cfe9d9;
 }
 
 
@@ -301,9 +174,7 @@ button:disabled {
 ========================= */
 
 #game {
-
     display: none;
-
 }
 
 
@@ -312,252 +183,143 @@ button:disabled {
 ========================= */
 
 .scoreboard {
-
     display: grid;
-
-    grid-template-columns:
-        repeat(3,1fr);
-
-    gap: 20px;
-
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
     margin-bottom: 30px;
-
 }
 
 .score-box {
-
     text-align: center;
-
-    padding: 20px;
-
-    border-radius: 15px;
-
-    background:
-
-        rgba(255,255,255,.05);
-
-    border:
-
-        1px solid
-        rgba(255,255,255,.08);
-
+    padding: 16px 8px;
+    border-radius: 14px;
+    background: rgba(0,0,0,.25);
+    border: 1px solid rgba(255,215,120,.25);
 }
 
 .score-label {
-
-    color: #9fb4d9;
-
-    font-size: 14px;
-
+    color: #cfe9d9;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .score-value {
-
-    font-size: 36px;
-
+    font-size: 32px;
     font-weight: bold;
-
-    margin-top: 8px;
-
+    margin-top: 6px;
+    color: #ffd76a;
 }
 
 
 /* =========================
-   CARDS
+   HAND SECTIONS
 ========================= */
 
-.cards-area {
-
-    min-height: 360px;
-
-    padding: 25px;
-
-    border-radius: 20px;
-
-    background:
-
-        rgba(0,0,0,.18);
-
-    border:
-
-        1px solid
-        rgba(255,255,255,.06);
-
+.hand-section {
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(0,0,0,.18);
+    border: 1px solid rgba(255,255,255,.08);
+    margin-bottom: 20px;
 }
 
-.cards-title {
-
+.hand-title {
     text-align: center;
-
-    font-size: 20px;
-
-    margin-bottom: 25px;
-
+    font-size: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #cfe9d9;
+    margin-bottom: 18px;
 }
-
-
-/* CARD GRID */
 
 .cards {
-
     display: flex;
-
     flex-wrap: wrap;
-
     justify-content: center;
-
-    gap: 20px;
-
+    gap: 16px;
+    min-height: 190px;
 }
 
 
 /* =========================
-   MARVEL CARD
+   CARD (playing-card proportions)
 ========================= */
 
 .card {
-
-    width: 170px;
-
-    height: 250px;
-
+    width: 130px;
+    aspect-ratio: 5 / 7;
     position: relative;
-
-    border-radius: 15px;
-
+    border-radius: 12px;
     overflow: hidden;
-
-    background:
-
-        linear-gradient(
-            135deg,
-            #263d68,
-            #111827
-        );
-
-    border:
-
-        2px solid
-        rgba(120,170,255,.5);
-
-    box-shadow:
-
-        0 10px 30px
-        rgba(0,0,0,.4);
-
-    animation:
-
-        cardAppear .35s ease;
-
+    background: linear-gradient(135deg, #263d68, #111827);
+    border: 3px solid #ffd76a;
+    box-shadow: 0 10px 24px rgba(0,0,0,.5);
+    animation: cardAppear .35s ease;
 }
-
 
 @keyframes cardAppear {
-
-    from {
-
-        transform:
-            translateY(25px)
-            scale(.9);
-
-        opacity: 0;
-
-    }
-
-    to {
-
-        transform:
-            translateY(0)
-            scale(1);
-
-        opacity: 1;
-
-    }
-
+    from { transform: translateY(20px) scale(.9); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
 }
-
 
 .card img {
-
     width: 100%;
-
     height: 100%;
-
     object-fit: cover;
-
+    object-position: 50% 15%;
 }
 
-
-/* OVERLAY */
-
 .card-info {
-
     position: absolute;
-
     left: 0;
     right: 0;
     bottom: 0;
-
-    padding: 12px;
-
-    background:
-
-        linear-gradient(
-            transparent,
-            rgba(0,0,0,.95)
-        );
-
-    padding-top: 50px;
-
+    padding: 8px 6px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,.92) 55%);
+    text-align: center;
 }
-
 
 .card-name {
-
     font-weight: bold;
+    font-size: 13px;
+    line-height: 1.2;
+}
 
-    font-size: 16px;
-
-    text-align: center;
-
+.card-power-inline {
+    font-size: 12px;
+    color: #ffd76a;
+    margin-top: 2px;
 }
 
 
-.card-power {
+/* CARD BACK (hidden dealer card) */
 
-    position: absolute;
-
-    top: 8px;
-    right: 8px;
-
-    width: 48px;
-    height: 48px;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    border-radius: 50%;
-
+.card-back {
+    width: 130px;
+    aspect-ratio: 5 / 7;
+    border-radius: 12px;
+    border: 3px solid #ffd76a;
     background:
-
-        linear-gradient(
-            135deg,
-            #ffb300,
-            #ff6b00
+        repeating-linear-gradient(
+            45deg,
+            #7a1f2b,
+            #7a1f2b 10px,
+            #5e1620 10px,
+            #5e1620 20px
         );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 24px rgba(0,0,0,.5);
+    animation: cardAppear .35s ease;
+}
 
-    color: white;
-
-    font-size: 22px;
-
+.card-back span {
+    font-size: 34px;
     font-weight: bold;
-
-    border:
-
-        3px solid white;
-
+    color: rgba(255,215,120,.85);
+    text-shadow: 0 2px 4px rgba(0,0,0,.6);
 }
 
 
@@ -566,17 +328,11 @@ button:disabled {
 ========================= */
 
 .controls {
-
     display: flex;
-
     justify-content: center;
-
-    gap: 15px;
-
-    margin-top: 25px;
-
+    gap: 14px;
+    margin-top: 22px;
     flex-wrap: wrap;
-
 }
 
 
@@ -585,32 +341,12 @@ button:disabled {
 ========================= */
 
 .result {
-
-    margin-top: 25px;
-
+    margin-top: 22px;
     text-align: center;
-
-    font-size: 24px;
-
+    font-size: 22px;
     font-weight: bold;
-
-    min-height: 35px;
-
-}
-
-
-/* =========================
-   LOADING
-========================= */
-
-.loading {
-
-    text-align: center;
-
-    padding: 40px;
-
-    color: #9fb4d9;
-
+    min-height: 32px;
+    color: #ffd76a;
 }
 
 
@@ -620,43 +356,21 @@ button:disabled {
 
 @media (max-width: 700px) {
 
-    .app {
+    .app { padding: 15px; }
 
-        padding: 15px;
-
-    }
-
-    header h1 {
-
-        font-size: 30px;
-
-    }
+    header h1 { font-size: 26px; letter-spacing: 2px; }
 
     .scoreboard {
-
-        gap: 8px;
-
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .score-box {
+    .score-value { font-size: 24px; }
 
-        padding: 12px 5px;
-
+    .card, .card-back {
+        width: 96px;
     }
 
-    .score-value {
-
-        font-size: 26px;
-
-    }
-
-    .card {
-
-        width: 135px;
-
-        height: 200px;
-
-    }
+    .card-name { font-size: 11px; }
 
 }
 
@@ -668,105 +382,31 @@ button:disabled {
 
 <div class="app">
 
-
 <header>
-
 <h1>MARVEL SNAP 21</h1>
-
-<p>
-Набери 21 силу, используя карты Marvel Snap
-</p>
-
+<p>Набери 21 силу, используя карты Marvel Snap — и обыграй дилера</p>
 </header>
-
 
 
 <!-- =========================
      SETUP
 ========================= -->
 
-<div
-    id="setup"
-    class="panel"
->
+<div id="setup" class="panel">
 
+<h2>Готовимся к игре</h2>
 
-<h2>
-Настройка колоды
-</h2>
+<p>В игру попадут только карты с силой от <b>1</b> до <b>11</b>.</p>
 
-
-<p>
-
-В игру попадут только карты с силой
-от <b>1</b> до <b>11</b>.
-
-</p>
-
-
-<div class="setting">
-
-<label>
-
-Размер колоды
-
-</label>
-
-
-<div class="range-row">
-
-<input
-
-    type="range"
-
-    id="deckSize"
-
-    min="2"
-
-    max="52"
-
-    value="20"
-
->
-
-
-<div
-    id="deckNumber"
-    class="deck-number"
->
-
-20
-
+<div class="deck-fixed-note">
+    Колода фиксированная — <b>52 карты</b> (или все доступные, если подходящих карт меньше).
 </div>
 
-</div>
+<div id="availableInfo" class="status">Загрузка базы карт...</div>
+
+<button id="startButton" class="primary" disabled>НАЧАТЬ ИГРУ</button>
 
 </div>
-
-
-<div
-    id="availableInfo"
-    class="status"
->
-
-Загрузка базы карт...
-
-</div>
-
-
-<button
-    id="startButton"
-    class="primary"
-    disabled
->
-
-НАЧАТЬ ИГРУ
-
-</button>
-
-
-</div>
-
 
 
 <!-- =========================
@@ -775,147 +415,55 @@ button:disabled {
 
 <div id="game">
 
-
 <div class="scoreboard">
 
+    <div class="score-box">
+        <div class="score-label">Твоя сила</div>
+        <div id="playerScore" class="score-value">0</div>
+    </div>
 
-<div class="score-box">
+    <div class="score-box">
+        <div class="score-label">Сила дилера</div>
+        <div id="dealerScoreDisplay" class="score-value">?</div>
+    </div>
 
-<div class="score-label">
+    <div class="score-box">
+        <div class="score-label">Осталось в колоде</div>
+        <div id="deckRemaining" class="score-value">0</div>
+    </div>
 
-ТВОЯ СИЛА
-
-</div>
-
-
-<div
-    id="playerScore"
-    class="score-value"
->
-
-0
-
-</div>
-
-</div>
-
-
-
-<div class="score-box">
-
-<div class="score-label">
-
-ОСТАЛОСЬ В КОЛОДЕ
+    <div class="score-box">
+        <div class="score-label">Цель</div>
+        <div class="score-value">21</div>
+    </div>
 
 </div>
 
 
-<div
-    id="deckRemaining"
-    class="score-value"
->
-
-0
-
-</div>
-
+<div class="hand-section">
+    <div class="hand-title">Карты дилера</div>
+    <div id="dealerCards" class="cards"></div>
 </div>
 
 
-
-<div class="score-box">
-
-<div class="score-label">
-
-ЦЕЛЬ
-
+<div class="hand-section">
+    <div class="hand-title">Твои карты</div>
+    <div id="playerCards" class="cards"></div>
 </div>
-
-
-<div class="score-value">
-
-21
-
-</div>
-
-</div>
-
-
-</div>
-
-
-
-<div class="cards-area">
-
-
-<div class="cards-title">
-
-Твои карты
-
-</div>
-
-
-<div
-    id="playerCards"
-    class="cards"
->
-
-</div>
-
-
-</div>
-
 
 
 <div class="controls">
-
-
-<button
-    id="hitButton"
-    class="green"
->
-
-ВЗЯТЬ КАРТУ
-
-</button>
-
-
-<button
-    id="standButton"
-    class="red"
->
-
-СТОП
-
-</button>
-
-
-<button
-    id="restartButton"
-    class="blue"
->
-
-НОВАЯ ИГРА
-
-</button>
-
-
+    <button id="hitButton" class="green">ВЗЯТЬ КАРТУ</button>
+    <button id="standButton" class="red">СТОП</button>
+    <button id="restartButton" class="blue">НОВАЯ ИГРА</button>
 </div>
 
-
-<div
-    id="result"
-    class="result"
->
+<div id="result" class="result"></div>
 
 </div>
 
 
 </div>
-
-
-</div>
-
 
 
 <script>
@@ -925,1102 +473,431 @@ button:disabled {
    CONFIG
 ================================= */
 
-
-/*
-    JSON ENDPOINT
-*/
-
-const API_URL =
-"https://marvelsnapzone.com/getinfo/?searchtype=cards&searchcardstype=true";
-
-
-/*
-    GAME SETTINGS
-*/
-
 const MIN_POWER = 1;
-
-
-/*
-    ACE = 11
-
-    Все карты с Power > 11
-    исключаются.
-*/
-
 const MAX_POWER = 11;
-
-
 const TARGET_SCORE = 21;
-
+const FIXED_DECK_SIZE = 52;
 
 
 /* =================================
    ELEMENTS
 ================================= */
 
+const availableInfo   = document.getElementById("availableInfo");
+const startButton      = document.getElementById("startButton");
+const setup            = document.getElementById("setup");
+const game              = document.getElementById("game");
 
-const deckSizeInput =
-document.getElementById("deckSize");
+const playerCardsElement  = document.getElementById("playerCards");
+const dealerCardsElement  = document.getElementById("dealerCards");
 
+const playerScoreElement       = document.getElementById("playerScore");
+const dealerScoreDisplay       = document.getElementById("dealerScoreDisplay");
+const deckRemainingElement     = document.getElementById("deckRemaining");
+const resultElement            = document.getElementById("result");
 
-const deckNumber =
-document.getElementById("deckNumber");
-
-
-const availableInfo =
-document.getElementById("availableInfo");
-
-
-const startButton =
-document.getElementById("startButton");
-
-
-const setup =
-document.getElementById("setup");
-
-
-const game =
-document.getElementById("game");
-
-
-const playerCardsElement =
-document.getElementById("playerCards");
-
-
-const playerScoreElement =
-document.getElementById("playerScore");
-
-
-const deckRemainingElement =
-document.getElementById("deckRemaining");
-
-
-const resultElement =
-document.getElementById("result");
-
-
-const hitButton =
-document.getElementById("hitButton");
-
-
-const standButton =
-document.getElementById("standButton");
-
-
-const restartButton =
-document.getElementById("restartButton");
-
+const hitButton      = document.getElementById("hitButton");
+const standButton     = document.getElementById("standButton");
+const restartButton   = document.getElementById("restartButton");
 
 
 /* =================================
    DATA
 ================================= */
 
-
-/*
-    Все загруженные карты
-*/
-
 let allCards = [];
-
-
-/*
-    Только карты,
-    подходящие для игры
-*/
-
 let validCards = [];
-
-
-/*
-    Текущая игровая колода
-*/
 
 let gameDeck = [];
 
-
-/*
-    Карты игрока
-*/
-
 let playerCards = [];
-
-
-/*
-    Текущий счет
-*/
+let dealerCards = [];
 
 let playerScore = 0;
+let dealerScore = 0;
 
-
-/*
-    Игра закончена?
-*/
-
+let dealerRevealed = false;
 let gameOver = false;
-
-
-
-/* =================================
-   RANGE
-================================= */
-
-
-deckSizeInput.addEventListener(
-    "input",
-    function()
-    {
-
-        deckNumber.textContent =
-        deckSizeInput.value;
-
-    }
-);
-
 
 
 /* =================================
    LOAD CARDS
 ================================= */
 
+async function loadCards() {
 
-async function loadCards()
-{
+    availableInfo.textContent = "Загрузка карт Marvel Snap...";
 
+    try {
 
-    availableInfo.textContent =
-    "Загрузка карт Marvel Snap...";
+        const response = await fetch("./data/cards.json");
 
-
-    try
-    {
-
-
-        const response =
-        await fetch("./data/cards.json");
-
-
-        if (!response.ok)
-        {
-
-            throw new Error(
-                "Ошибка загрузки"
-            );
-
+        if (!response.ok) {
+            throw new Error("Ошибка загрузки");
         }
 
+        const data = await response.json();
 
-        const data =
-        await response.json();
+        console.log("RAW DATA:", data);
 
-
-        console.log(
-            "RAW API DATA:",
-            data
-        );
-
-
-        /*
-            Определяем структуру JSON.
-
-            Иногда API возвращает:
-            []
-
-            Иногда:
-            { cards: [] }
-        */
-
-
-        if (Array.isArray(data))
-        {
-
+        if (Array.isArray(data)) {
             allCards = data;
-
-        }
-
-
-        else if (
-            Array.isArray(data.cards)
-        )
-        {
-
+        } else if (Array.isArray(data.cards)) {
             allCards = data.cards;
-
+        } else {
+            const values = Object.values(data);
+            const arrayFound = values.find(value => Array.isArray(value));
+            if (arrayFound) {
+                allCards = arrayFound;
+            }
         }
 
+        validCards = allCards.filter(card => {
 
-        else
-        {
+            let power = card.power ?? card.Power ?? card.card_power ?? card.cardPower;
+            power = Number(power);
 
-            /*
-                Попытка найти массив
-                внутри объекта
-            */
-
-            const values =
-            Object.values(data);
-
-
-            const arrayFound =
-            values.find(
-                value =>
-                Array.isArray(value)
-            );
-
-
-            if (arrayFound)
-            {
-
-                allCards =
-                arrayFound;
-
+            if (Number.isNaN(power)) {
+                return false;
             }
 
-        }
+            return power >= MIN_POWER && power <= MAX_POWER;
 
-
-
-        /*
-            FILTER CARDS
-        */
-
-
-        validCards =
-        allCards.filter(
-            card =>
-            {
-
-
-                /*
-                    Пробуем разные
-                    варианты названия Power
-                */
-
-
-                let power =
-                card.power ??
-                card.Power ??
-                card.card_power ??
-                card.cardPower;
-
-
-                /*
-                    Превращаем
-                    в число
-                */
-
-
-                power =
-                Number(power);
-
-
-                /*
-                    Проверяем
-                */
-
-
-                if (
-                    Number.isNaN(power)
-                )
-                {
-
-                    return false;
-
-                }
-
-
-                return (
-
-                    power >= MIN_POWER
-
-                    &&
-
-                    power <= MAX_POWER
-
-                );
-
-
-            }
-        );
-
-
-
-        /*
-            UPDATE UI
-        */
-
+        });
 
         availableInfo.textContent =
+            "Доступно карт для игры: " + validCards.length +
+            " (в игре будет использовано " + Math.min(FIXED_DECK_SIZE, validCards.length) + ")";
 
-        "Доступно карт для игры: "
-
-        +
-
-        validCards.length;
-
-
-
-        /*
-            Если карт меньше,
-            чем максимальный
-            размер колоды
-        */
-
-
-        deckSizeInput.max =
-        validCards.length;
-
-
-
-        /*
-            Если выбранное число
-            больше доступного
-        */
-
-
-        if (
-
-            Number(deckSizeInput.value)
-
-            >
-
-            validCards.length
-
-        )
-        {
-
-            deckSizeInput.value =
-            validCards.length;
-
+        if (validCards.length >= 10) {
+            startButton.disabled = false;
+        } else {
+            availableInfo.textContent = "Недостаточно подходящих карт. Проверь структуру JSON.";
         }
 
-
-
-        deckNumber.textContent =
-        deckSizeInput.value;
-
-
-
-        /*
-            ENABLE BUTTON
-        */
-
-
-        if (
-            validCards.length >= 10
-        )
-        {
-
-            startButton.disabled =
-            false;
-
-        }
-
-
-        else
-        {
-
-            availableInfo.textContent =
-
-            "Недостаточно подходящих карт. " +
-
-            "Проверь структуру JSON.";
-
-        }
-
-
-    }
-
-
-    catch(error)
-    {
-
+    } catch (error) {
 
         console.error(error);
 
-
         availableInfo.innerHTML =
-
-        "Не удалось загрузить API.<br><br>"
-
-        +
-
-        "Возможная причина: CORS или изменение структуры JSON.<br><br>"
-
-        +
-
-        "Открой консоль браузера (F12) для проверки.";
-
+            "Не удалось загрузить базу карт.<br><br>" +
+            "Возможная причина: файл data/cards.json недоступен или повреждён.<br><br>" +
+            "Открой консоль браузера (F12) для проверки.";
 
     }
 
-
 }
-
 
 
 /* =================================
    SHUFFLE
 ================================= */
 
+function shuffle(array) {
 
-function shuffle(array)
-{
+    const copy = [...array];
 
-
-    const copy =
-    [...array];
-
-
-    for (
-
-        let i =
-        copy.length - 1;
-
-        i > 0;
-
-        i--
-
-    )
-    {
-
-
-        const j =
-        Math.floor(
-
-            Math.random()
-
-            *
-
-            (i + 1)
-
-        );
-
-
-        [
-            copy[i],
-            copy[j]
-
-        ]
-
-        =
-
-        [
-            copy[j],
-            copy[i]
-
-        ];
-
-
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
     }
-
 
     return copy;
 
-
 }
 
+
+/* =================================
+   HELPERS
+================================= */
+
+function getCardPower(card) {
+    const power = card.power ?? card.Power ?? card.card_power ?? card.cardPower;
+    return Number(power);
+}
+
+function getCardName(card) {
+    return card.name ?? card.Name ?? card.title ?? card.card_name ?? "Unknown";
+}
+
+function getCardImage(card) {
+    return card.image ?? card.image_url ?? card.art_url ?? card.art ?? card.thumbnail ?? "";
+}
 
 
 /* =================================
    START GAME
 ================================= */
 
+function startGame() {
 
-function startGame()
-{
+    const deckSize = Math.min(FIXED_DECK_SIZE, validCards.length);
 
-
-    /*
-        Размер колоды
-    */
-
-
-    const selectedDeckSize =
-    Number(
-        deckSizeInput.value
-    );
-
-
-
-    /*
-        Перемешиваем все
-        доступные карты
-    */
-
-
-    const shuffledCards =
-    shuffle(validCards);
-
-
-
-    /*
-        Берем нужное
-        количество карт
-    */
-
-
-    gameDeck =
-    shuffledCards.slice(
-
-        0,
-
-        selectedDeckSize
-
-    );
-
-
-
-    /*
-        RESET
-    */
-
+    gameDeck = shuffle(validCards).slice(0, deckSize);
 
     playerCards = [];
-
+    dealerCards = [];
 
     playerScore = 0;
+    dealerScore = 0;
 
-
+    dealerRevealed = false;
     gameOver = false;
 
+    playerCardsElement.innerHTML = "";
+    dealerCardsElement.innerHTML = "";
 
+    resultElement.textContent = "";
 
-    /*
-        UI
-    */
+    playerScoreElement.textContent = "0";
+    dealerScoreDisplay.textContent = "?";
+    deckRemainingElement.textContent = gameDeck.length;
 
+    /* сбрасываем кнопки после прошлой игры — иначе они остаются заблокированными */
+    hitButton.disabled = false;
+    standButton.disabled = false;
 
-    playerCardsElement.innerHTML =
-    "";
+    setup.style.display = "none";
+    game.style.display = "block";
 
-
-    resultElement.textContent =
-    "";
-
-
-    playerScoreElement.textContent =
-    "0";
-
-
-    deckRemainingElement.textContent =
-    gameDeck.length;
-
-
-
-    /*
-        SHOW GAME
-    */
-
-
-    setup.style.display =
-    "none";
-
-
-    game.style.display =
-    "block";
-
-
-
-    /*
-        В Blackjack
-        игрок начинает
-        с двух карт
-    */
-
-
-    drawCard();
-
-
-    drawCard();
-
+    /* игрок получает 2 карты, дилер — 2 скрытые */
+    drawPlayerCard();
+    drawDealerCard();
+    drawPlayerCard();
+    drawDealerCard();
 
 }
 
 
-
 /* =================================
-   DRAW CARD
+   DRAW — PLAYER
 ================================= */
 
+function drawPlayerCard() {
 
-function drawCard()
-{
+    if (gameOver) return;
 
-
-    if (gameOver)
-    {
-
+    if (gameDeck.length === 0) {
+        finishRound();
         return;
-
     }
 
+    const card = gameDeck.shift();
+    playerCards.push(card);
 
+    playerScore += getCardPower(card);
 
-    /*
-        Проверяем колоду
-    */
+    renderPlayerCard(card);
 
+    playerScoreElement.textContent = playerScore;
+    deckRemainingElement.textContent = gameDeck.length;
 
-    if (
-        gameDeck.length === 0
-    )
-    {
-
-        endGame(
-            "В колоде закончились карты!"
-        );
-
-        return;
-
+    if (playerScore === TARGET_SCORE) {
+        endGame("🎉 21! ТЫ ПОБЕДИЛ!");
+    } else if (playerScore > TARGET_SCORE) {
+        endGame("💀 ПЕРЕБОР! ДИЛЕР ПОБЕЖДАЕТ", true);
     }
-
-
-
-    /*
-        Берем карту
-    */
-
-
-    const card =
-    gameDeck.shift();
-
-
-
-    /*
-        Добавляем игроку
-    */
-
-
-    playerCards.push(
-        card
-    );
-
-
-
-    /*
-        POWER
-    */
-
-
-    const power =
-    getCardPower(card);
-
-
-
-    /*
-        SCORE
-    */
-
-
-    playerScore +=
-    power;
-
-
-
-    /*
-        SHOW CARD
-    */
-
-
-    renderCard(card);
-
-
-
-    /*
-        UPDATE UI
-    */
-
-
-    playerScoreElement.textContent =
-    playerScore;
-
-
-    deckRemainingElement.textContent =
-    gameDeck.length;
-
-
-
-    /*
-        CHECK RESULT
-    */
-
-
-    if (
-        playerScore === TARGET_SCORE
-    )
-    {
-
-        endGame(
-            "🎉 21! ТЫ ПОБЕДИЛ!"
-        );
-
-    }
-
-
-    else if (
-
-        playerScore >
-
-        TARGET_SCORE
-
-    )
-    {
-
-        endGame(
-            "💀 ПЕРЕБОР!"
-        );
-
-    }
-
 
 }
-
 
 
 /* =================================
-   GET POWER
+   DRAW — DEALER (скрытая карта)
 ================================= */
 
+function drawDealerCard() {
 
-function getCardPower(card)
-{
+    if (gameDeck.length === 0) return;
 
+    const card = gameDeck.shift();
+    dealerCards.push(card);
 
-    const power =
+    dealerScore += getCardPower(card);
 
-    card.power ??
+    renderDealerCardBack();
 
-    card.Power ??
-
-    card.card_power ??
-
-    card.cardPower;
-
-
-    return Number(power);
-
+    deckRemainingElement.textContent = gameDeck.length;
 
 }
 
 
-
 /* =================================
-   GET NAME
+   HIT (игрок берёт карту)
 ================================= */
 
+function hit() {
 
-function getCardName(card)
-{
+    if (gameOver) return;
 
+    drawPlayerCard();
 
-    return (
-
-        card.name ??
-
-        card.Name ??
-
-        card.title ??
-
-        card.card_name ??
-
-        "Unknown"
-
-    );
-
-
-}
-
-
-
-/* =================================
-   GET IMAGE
-================================= */
-
-
-function getCardImage(card)
-{
-
-
-    /*
-        Пробуем разные
-        возможные поля
-    */
-
-
-    return (
-
-        card.image ??
-
-        card.image_url ??
-
-        card.art_url ??
-
-        card.art ??
-
-        card.thumbnail ??
-
-        ""
-
-    );
-
-
-}
-
-
-
-/* =================================
-   RENDER CARD
-================================= */
-
-
-function renderCard(card)
-{
-
-
-    const name =
-    getCardName(card);
-
-
-    const power =
-    getCardPower(card);
-
-
-    const image =
-    getCardImage(card);
-
-
-
-    const cardElement =
-    document.createElement("div");
-
-
-    cardElement.className =
-    "card";
-
-
-    /*
-        Если есть картинка
-    */
-
-
-    if (image)
-    {
-
-
-        cardElement.innerHTML =
-
-        `
-
-        <img
-            src="${image}"
-            alt="${name}"
-        >
-
-
-        <div class="card-power">
-
-            ${power}
-
-        </div>
-
-
-        <div class="card-info">
-
-            <div class="card-name">
-
-                ${name}
-
-            </div>
-
-        </div>
-
-        `;
-
-
+    if (!gameOver) {
+        drawDealerCard();
     }
 
-
-    /*
-        Если картинки нет
-    */
+}
 
 
-    else
-    {
+/* =================================
+   STAND / ЗАВЕРШЕНИЕ РАУНДА
+================================= */
 
+function stand() {
 
-        cardElement.innerHTML =
+    if (gameOver) return;
 
-        `
-
-        <div
-            class="card-power"
-        >
-
-            ${power}
-
-        </div>
-
-
-        <div
-            class="card-info"
-        >
-
-            <div
-                class="card-name"
-            >
-
-                ${name}
-
-            </div>
-
-        </div>
-
-        `;
-
-
-    }
-
-
-
-    playerCardsElement.appendChild(
-        cardElement
-    );
-
+    finishRound();
 
 }
 
+function finishRound() {
+
+    revealDealer();
+
+    let message;
+
+    if (dealerScore > TARGET_SCORE) {
+        message = "🏆 ДИЛЕР ПЕРЕБРАЛ! ТЫ ПОБЕДИЛ (" + playerScore + " против " + dealerScore + ")";
+    } else if (dealerScore > playerScore) {
+        message = "😔 ДИЛЕР ПОБЕЖДАЕТ (" + dealerScore + " против " + playerScore + ")";
+    } else if (dealerScore < playerScore) {
+        message = "🏆 ТЫ ПОБЕДИЛ (" + playerScore + " против " + dealerScore + ")";
+    } else {
+        message = "🤝 НИЧЬЯ (" + playerScore + " : " + dealerScore + ")";
+    }
+
+    endGame(message);
+
+}
+
+
+/* =================================
+   REVEAL DEALER
+================================= */
+
+function revealDealer() {
+
+    if (dealerRevealed) return;
+
+    dealerRevealed = true;
+
+    dealerCardsElement.innerHTML = "";
+
+    dealerCards.forEach(card => renderDealerCardFace(card));
+
+    dealerScoreDisplay.textContent = dealerScore;
+
+}
+
+
+/* =================================
+   RENDER — PLAYER CARD
+================================= */
+
+function renderPlayerCard(card) {
+
+    const name = getCardName(card);
+    const power = getCardPower(card);
+    const image = getCardImage(card);
+
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML =
+        (image ? `<img src="${image}" alt="${name}">` : "") +
+        `<div class="card-info">
+            <div class="card-name">${name}</div>
+            <div class="card-power-inline">Сила: ${power}</div>
+        </div>`;
+
+    playerCardsElement.appendChild(el);
+
+}
+
+
+/* =================================
+   RENDER — DEALER CARD (скрытая)
+================================= */
+
+function renderDealerCardBack() {
+
+    const el = document.createElement("div");
+    el.className = "card-back";
+    el.innerHTML = `<span>?</span>`;
+
+    dealerCardsElement.appendChild(el);
+
+}
+
+
+/* =================================
+   RENDER — DEALER CARD (открытая)
+================================= */
+
+function renderDealerCardFace(card) {
+
+    const name = getCardName(card);
+    const power = getCardPower(card);
+    const image = getCardImage(card);
+
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML =
+        (image ? `<img src="${image}" alt="${name}">` : "") +
+        `<div class="card-info">
+            <div class="card-name">${name}</div>
+            <div class="card-power-inline">Сила: ${power}</div>
+        </div>`;
+
+    dealerCardsElement.appendChild(el);
+
+}
 
 
 /* =================================
    END GAME
 ================================= */
 
-
-function endGame(message)
-{
-
+function endGame(message, playerBusted) {
 
     gameOver = true;
 
-
-    resultElement.textContent =
-    message;
-
-
-    hitButton.disabled =
-    true;
-
-
-    standButton.disabled =
-    true;
-
-
-}
-
-
-
-/* =================================
-   STAND
-================================= */
-
-
-function stand()
-{
-
-
-    if (gameOver)
-    {
-
-        return;
-
+    if (playerBusted) {
+        revealDealer();
     }
 
+    resultElement.textContent = message;
 
-    endGame(
-
-        "🏆 Твой результат: "
-
-        +
-
-        playerScore
-
-    );
-
+    hitButton.disabled = true;
+    standButton.disabled = true;
 
 }
-
 
 
 /* =================================
    NEW GAME
 ================================= */
 
-
-function newGame()
-{
-
-
-    game.style.display =
-    "none";
-
-
-    setup.style.display =
-    "block";
-
-
+function newGame() {
+    game.style.display = "none";
+    setup.style.display = "block";
 }
-
 
 
 /* =================================
    EVENTS
 ================================= */
 
-
-startButton.addEventListener(
-
-    "click",
-
-    startGame
-
-);
-
-
-hitButton.addEventListener(
-
-    "click",
-
-    drawCard
-
-);
-
-
-standButton.addEventListener(
-
-    "click",
-
-    stand
-
-);
-
-
-restartButton.addEventListener(
-
-    "click",
-
-    newGame
-
-);
-
+startButton.addEventListener("click", startGame);
+hitButton.addEventListener("click", hit);
+standButton.addEventListener("click", stand);
+restartButton.addEventListener("click", newGame);
 
 
 /* =================================
    START
 ================================= */
-
 
 loadCards();
 
