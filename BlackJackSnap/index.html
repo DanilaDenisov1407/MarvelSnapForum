@@ -184,9 +184,12 @@ button:disabled {
 
 .scoreboard {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     margin-bottom: 30px;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .score-box {
@@ -247,7 +250,7 @@ button:disabled {
 ========================= */
 
 .card {
-    width: 130px;
+    width: 190px;
     aspect-ratio: 5 / 7;
     position: relative;
     border-radius: 12px;
@@ -296,7 +299,7 @@ button:disabled {
 /* CARD BACK (hidden dealer card) */
 
 .card-back {
-    width: 130px;
+    width: 190px;
     aspect-ratio: 5 / 7;
     border-radius: 12px;
     border: 3px solid #ffd76a;
@@ -356,21 +359,56 @@ button:disabled {
 
 @media (max-width: 700px) {
 
-    .app { padding: 15px; }
+    .app { padding: 12px 10px 40px; }
 
-    header h1 { font-size: 26px; letter-spacing: 2px; }
-
-    .scoreboard {
-        grid-template-columns: repeat(2, 1fr);
+    header h1 {
+        font-size: clamp(22px, 7vw, 30px);
+        letter-spacing: 2px;
     }
 
-    .score-value { font-size: 24px; }
+    header p { font-size: 14px; }
+
+    .panel { padding: 16px; border-radius: 14px; }
+
+    .scoreboard {
+        max-width: 100%;
+        gap: 10px;
+    }
+
+    .score-box { padding: 10px 4px; }
+
+    .score-value { font-size: 22px; }
+
+    .hand-section { padding: 12px; }
+
+    .cards { gap: 10px; min-height: 150px; }
 
     .card, .card-back {
-        width: 96px;
+        width: 30vw;
+        max-width: 130px;
+        min-width: 88px;
     }
 
     .card-name { font-size: 11px; }
+    .card-power-inline { font-size: 10px; }
+    .card-back span { font-size: 26px; }
+
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .controls button {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 380px) {
+
+    .card, .card-back {
+        width: 42vw;
+    }
 
 }
 
@@ -425,16 +463,6 @@ button:disabled {
     <div class="score-box">
         <div class="score-label">Сила дилера</div>
         <div id="dealerScoreDisplay" class="score-value">?</div>
-    </div>
-
-    <div class="score-box">
-        <div class="score-label">Осталось в колоде</div>
-        <div id="deckRemaining" class="score-value">0</div>
-    </div>
-
-    <div class="score-box">
-        <div class="score-label">Цель</div>
-        <div class="score-value">21</div>
     </div>
 
 </div>
@@ -493,7 +521,6 @@ const dealerCardsElement  = document.getElementById("dealerCards");
 
 const playerScoreElement       = document.getElementById("playerScore");
 const dealerScoreDisplay       = document.getElementById("dealerScoreDisplay");
-const deckRemainingElement     = document.getElementById("deckRemaining");
 const resultElement            = document.getElementById("result");
 
 const hitButton      = document.getElementById("hitButton");
@@ -651,7 +678,6 @@ function startGame() {
 
     playerScoreElement.textContent = "0";
     dealerScoreDisplay.textContent = "?";
-    deckRemainingElement.textContent = gameDeck.length;
 
     /* сбрасываем кнопки после прошлой игры — иначе они остаются заблокированными */
     hitButton.disabled = false;
@@ -690,7 +716,6 @@ function drawPlayerCard() {
     renderPlayerCard(card);
 
     playerScoreElement.textContent = playerScore;
-    deckRemainingElement.textContent = gameDeck.length;
 
     if (playerScore === TARGET_SCORE) {
         endGame("🎉 21! ТЫ ПОБЕДИЛ!");
@@ -716,7 +741,6 @@ function drawDealerCard() {
 
     renderDealerCardBack();
 
-    deckRemainingElement.textContent = gameDeck.length;
 
 }
 
@@ -876,12 +900,12 @@ function endGame(message, playerBusted) {
 
 
 /* =================================
-   NEW GAME
+   NEW GAME — сразу новый раунд,
+   без возврата на экран настройки
 ================================= */
 
 function newGame() {
-    game.style.display = "none";
-    setup.style.display = "block";
+    startGame();
 }
 
 
