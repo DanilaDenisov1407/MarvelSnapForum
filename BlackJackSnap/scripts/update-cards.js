@@ -1,47 +1,37 @@
-import fs from "fs/promises";
+name: Update Marvel Snap Cards
 
-const API_URL = "https://marvelsnapzone.com/getinfo/?searchtype=cards&searchcardstype=true";
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 20 * * *"
 
-// убирает служебные теги вида <color=#ff2c2c>...</color> и лишние ! в начале
-function clean(str) {
-  return (str || "")
-    .replace(/<[^>]+>/g, "")
-    .trim();
-}
+permissions:
+  contents: write
 
-async function main() {
-  const res = await fetch(API_URL, {
-    headers: { "User-Agent": "Mozilla/5.0" }
-  });
-  if (!res.ok) throw new Error(`Ошибка загрузки: ${res.status}`);
+jobs:
+  update-cards:
+    runs-on: ubuntu-latest
 
-  const raw = await res.json();
-  const rawCards = raw.success.cards;
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-  const cards = rawCards
-    .filter(c => c.status === "released")   // только вышедшие карты, без тестовых/скилл-карт
-    .filter(c => c.type !== "Ability")       // на всякий случай убираем не-персонажей, если такие есть
-    .map(c => ({
-      id: c.carddefid,
-      name: clean(c.name),
-      power: c.power,
-      cost: c.cost,
-      description: clean(c.ability),
-      image: clean(c.art)
-    }))
-    .filter(c => c.name.length > 0);
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
 
-  const output = {
-    updated: new Date().toISOString().slice(0, 10),
-    cards
-  };
+      - name: Update cards
+        run: node BlackJackSnap/scripts/update-cards.js
 
-  await fs.mkdir("BlackJackSnap/data", { recursive: true });
-  await fs.writeFile("BlackJackSnap/data/cards.json", JSON.stringify(output, null, 2));
-  console.log(`Сохранено карт: ${cards.length}`);
-}
+      - name: Commit changes
+        run: |
+          git config user.name "Marvel Snap Bot"
+          git config user.email "bot@github.com"
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+          git add BlackJackSnap/data/cards.json
+
+          git diff --cached --quiet || (
+            git commit -m "Update Marvel Snap cards"
+            git push
+          )
