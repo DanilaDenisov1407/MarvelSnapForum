@@ -36,8 +36,8 @@ async function main() {
     cards
   };
 
-  await fs.mkdir("data", { recursive: true });
-  await fs.writeFile("data/cards.json", JSON.stringify(output, null, 2));
+  await fs.mkdir("BlackJackSnap/data", { recursive: true });
+  await fs.writeFile("BlackJackSnap/data/cards.json", JSON.stringify(output, null, 2));
   console.log(`Сохранено карт: ${cards.length}`);
 }
 
