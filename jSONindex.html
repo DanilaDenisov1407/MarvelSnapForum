@@ -194,6 +194,7 @@
 
   .chart-wrap{ position: relative; height: 340px; }
   .chart-wrap.short{ height: 220px; }
+  .chart-wrap:has(.mini-chart){ height:auto; }
 
   table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
   th{
@@ -235,6 +236,15 @@
   .sync-row input{ width:100%; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:10px 14px; border-radius:9px; outline:none; }
   .sync-btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; background:linear-gradient(120deg,var(--cube-purple),var(--cube-purple-2)); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; }
   .sync-btn:disabled{ opacity:.6; } .sync-status{ margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink-faint); } .sync-status.ok{ color:var(--cube-cyan);} .sync-status.err{ color:var(--cube-red);}
+  .card table thead th{ position:sticky; top:0; background:var(--panel-2); z-index:2; }
+  #clanTable th:first-child,#clanTable td:first-child{ position:sticky; left:0; background:var(--panel); z-index:1; white-space:nowrap; }
+  #clanTable thead th:first-child{ z-index:3; background:var(--panel-2); }
+  #clanTable tr.clickable{ cursor:pointer; } #clanTable tr.clickable:hover td{ background:#1d1536; }
+  #clanTable tr.clickable:hover td:first-child{ background:#1d1536; color:var(--cube-purple); }
+  .modal{ position:fixed; inset:0; background:rgba(5,3,12,.8); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; }
+  .modal-box{ background:var(--panel); border:1px solid var(--line); border-radius:18px; width:100%; max-width:820px; padding:26px; position:relative; box-shadow:var(--shadow-glow); }
+  .modal-x{ position:absolute; top:14px; right:16px; background:none; border:none; color:var(--ink-dim); font-size:22px; cursor:pointer; }
+  .modal-box h2{ font-family:'Anton',sans-serif; font-weight:400; font-size:30px; margin:0 0 4px; }
   .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
   .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
   .kv dd{ margin:0; color: var(--ink); }
@@ -404,7 +414,7 @@ function runBuildApp(){
     buildApp();
     log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
     if(typeof Chart === 'undefined'){
-      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Графики будут заменены текстовой заметкой, остальные данные доступны как обычно.', 'err');
+      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Используются встроенные графики — всё работает без интернета.', 'err');
     }
   }catch(err){
     log('Не удалось построить дашборд: ' + err.message, 'err');
@@ -739,7 +749,7 @@ function renderClan(root){
       <label>Норма Bounty<input id="fNorm" type="number" min="0" value="2670"></label>
       <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили</option><option value="low">Не выполнили</option></select></label>
     </div>
-    <div class="card" style="padding:0; max-height:480px; overflow:auto;"><table id="clanTable"></table></div>
+    <div class="card" style="padding:0; max-height:72vh; overflow:auto;"><table id="clanTable"></table></div>
     <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
   </div>
   <div class="block"><h2>Синхронизация с Google Таблицей</h2>
@@ -766,10 +776,10 @@ function renderClan(root){
     let h;
     if(view==='week'){
       h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th><th>Норма</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${val(d)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-val(d))+'</span>'}</td></tr>`).join('');
+        rows.map(d=>`<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${val(d)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-val(d))+'</span>'}</td></tr>`).join('');
     } else {
       h = '<thead><tr><th>Игрок</th>' + keys.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num" style="${view==='bounty'&&(!d.weeks[k]||d.weeks[k].bounty<norm)?'color:var(--cube-red)':''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
+        rows.map(d=>`<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num" style="${view==='bounty'&&(!d.weeks[k]||d.weeks[k].bounty<norm)?'color:var(--cube-red)':''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
     }
     $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
     if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
@@ -782,6 +792,36 @@ function renderClan(root){
   }
   ['fWeek','fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
   update();
+
+  function openPlayer(id){
+    const d = data.find(x=>x.id===id); if(!d) return;
+    const norm = Number($('fNorm').value)||0;
+    const done = keys.filter(k=>k!==current && d.weeks[k]);
+    const bs = done.map(k=>d.weeks[k].bounty), sum = a=>a.reduce((x,y)=>x+y,0);
+    const okN = bs.filter(v=>v>=norm).length;
+    const m = document.createElement('div'); m.className='modal';
+    m.innerHTML = `<div class="modal-box"><button class="modal-x">✕</button>
+      <h2>${esc(d.name)}</h2><p class="desc">${esc(d.role)} · счёт коллекции ${fmtNum(d.score)}</p>
+      <div class="grid">${stat('Среднее Bounty', bs.length?fmtNum(Math.round(sum(bs)/bs.length)):'—','gold','за завершённые недели')}
+        ${stat('Лучшая неделя', bs.length?fmtNum(Math.max(...bs)):'—','cyan')}
+        ${stat('Норма '+fmtNum(norm), okN+' из '+bs.length,'accent','завершённых недель')}</div>
+      <div class="card"><div class="chart-wrap short"><canvas id="pChart"></canvas></div></div>
+      <div class="card" style="margin-top:14px;padding:0"><table><thead><tr><th>Неделя</th><th>Bounty</th><th>Cube</th><th>Норма</th></tr></thead><tbody>
+      ${keys.map(k=>{ const w=d.weeks[k]; return `<tr><td>${weekLabel(k)}${k===current?' (текущая)':''}</td><td class="num">${w?fmtNum(w.bounty):'—'}</td><td class="num">${w?fmtNum(w.cube):'—'}</td><td>${w&&w.bounty>=norm?'✓':'<span style="color:var(--cube-red)">нет</span>'}</td></tr>`; }).join('')}
+      </tbody></table></div></div>`;
+    document.body.appendChild(m);
+    const close = () => { m.remove(); document.removeEventListener('keydown', esc2); };
+    const esc2 = e => { if(e.key==='Escape') close(); };
+    document.addEventListener('keydown', esc2);
+    m.addEventListener('click', e => { if(e.target===m || e.target.className==='modal-x') close(); });
+    const pc = safeChart('pChart', { type:'bar', data:{ labels: keys.map(weekLabel), datasets:[
+      {label:'Bounty', data: keys.map(k=>(d.weeks[k]||{}).bounty||0), backgroundColor: keys.map(k=>((d.weeks[k]||{}).bounty||0)>=norm?'rgba(56,232,224,0.85)':'rgba(255,84,112,0.85)'), borderRadius:4},
+      {label:'Cube', data: keys.map(k=>(d.weeks[k]||{}).cube||0), type:'line', borderColor:'#ffb23e', backgroundColor:'#ffb23e', yAxisID:'y1'},
+      {label:'Норма', data: keys.map(()=>norm), type:'line', borderColor:'#ff5470', borderDash:[5,4], pointRadius:0, yAxisID:'y'}]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},y1:{position:'right',grid:{display:false}},x:{ticks:{color:'#9d92c2'}}}} });
+    m.addEventListener('click', e => { if(e.target.className==='modal-x'||e.target===m){ if(pc) charts=charts.filter(c=>c!==pc); } });
+  }
+  $('clanTable').addEventListener('click', e => { const tr = e.target.closest('tr.clickable'); if(tr) openPlayer(tr.dataset.id); });
 
   const tot = f => keys.map(k => data.reduce((s,d)=>s+((d.weeks[k]||{})[f]||0),0));
   safeChart('clanWeeks', { type:'bar', data:{ labels: keys.map(k=>weekLabel(k)+(k===current?'*':'')), datasets:[
@@ -1024,18 +1064,52 @@ buildApp = function(){
 
 // Small helper: draws a chart if Chart.js loaded successfully, otherwise
 // leaves a quiet fallback note instead of throwing and blanking the page.
-function safeChart(canvasId, config, fallbackParent){
-  if(typeof Chart === 'undefined'){
-    if(fallbackParent){
-      const note = document.createElement('div');
-      note.className = 'empty-state';
-      note.textContent = 'График недоступен (не удалось загрузить библиотеку графиков). Данные всё равно доступны в таблице ниже.';
-      fallbackParent.appendChild(note);
-    }
-    return null;
+/* Встроенные SVG-графики: работают без интернета, если Chart.js недоступен */
+function miniChart(canvas, cfg){
+  const labels=cfg.data.labels, ds=cfg.data.datasets, o=cfg.options||{}, horiz=o.indexAxis==='y';
+  const bars=ds.filter(d=>d.type!=='line'), lines=ds.filter(d=>d.type==='line');
+  const sec=lines.some(d=>d.yAxisID==='y1');
+  const col=(d,i)=>Array.isArray(d.backgroundColor)?d.backgroundColor[i]:d.backgroundColor;
+  const nice=v=>{v=Math.max(1,v);const p=Math.pow(10,Math.floor(Math.log10(v))),m=v/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;};
+  const mx=a=>nice(Math.max(1,...a.flatMap(d=>d.data)));
+  const fmt=v=>v>=1000?(v/1000).toFixed(v%1000?1:0)+'k':String(Math.round(v));
+  const cap=((o.scales||{})[horiz?'x':'y']||{}).max;
+  const max1=cap||mx(ds.filter(d=>d.yAxisID!=='y1')), max2=sec?mx(lines.filter(d=>d.yAxisID==='y1')):1;
+  const W=760, T=30; let H, s='', L, R;
+  const legend = !(o.plugins&&o.plugins.legend&&o.plugins.legend.display===false) && ds.length>1;
+  if(!horiz){
+    L=46; R=sec?46:12; const B=labels.length>8?70:34; H=330;
+    const pw=W-L-R, ph=H-T-B, gw=pw/labels.length, bw=Math.min(28,gw*0.7/Math.max(1,bars.length));
+    for(let t=0;t<=4;t++){ const y=T+ph-ph*t/4;
+      s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#221a3a"/><text x="${L-6}" y="${y+4}" text-anchor="end" fill="#9d92c2" font-size="10">${fmt(max1*t/4)}</text>`;
+      if(sec) s+=`<text x="${W-R+6}" y="${y+4}" fill="#38e8e0" font-size="10">${fmt(max2*t/4)}</text>`; }
+    labels.forEach((lb,i)=>{ const cx=L+gw*(i+.5), ty=T+ph+14;
+      bars.forEach((d,j)=>{ const v=d.data[i]||0, h=ph*v/max1, x=cx-bw*bars.length/2+bw*j;
+        s+=`<rect x="${x}" y="${T+ph-h}" width="${bw-1}" height="${h}" rx="3" fill="${col(d,i)}"><title>${esc(lb)} · ${esc(d.label||'')}: ${fmtNum(v)}</title></rect>`; });
+      s+= labels.length>8 ? `<text transform="translate(${cx},${ty}) rotate(-45)" text-anchor="end" fill="#9d92c2" font-size="10">${esc(String(lb).slice(0,12))}</text>`
+                          : `<text x="${cx}" y="${ty}" text-anchor="middle" fill="#9d92c2" font-size="11">${esc(lb)}</text>`; });
+    lines.forEach(d=>{ const m=d.yAxisID==='y1'?max2:max1, pts=d.data.map((v,i)=>[L+gw*(i+.5),T+ph-ph*v/m]);
+      s+=`<polyline fill="none" stroke="${d.borderColor}" stroke-width="2" ${d.borderDash?'stroke-dasharray="5 4"':''} points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+      if(!d.borderDash) s+=pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${d.borderColor}"><title>${esc(d.label||'')}: ${fmtNum(d.data[i])}</title></circle>`).join(''); });
+  } else {
+    L=120; R=44; const rh=10*bars.length+10, B=20; H=T+B+labels.length*rh; const pw=W-L-R;
+    for(let t=0;t<=4;t++){ const x=L+pw*t/4; s+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${H-B}" stroke="#221a3a"/><text x="${x}" y="${H-6}" text-anchor="middle" fill="#9d92c2" font-size="10">${fmt(max1*t/4)}</text>`; }
+    labels.forEach((lb,i)=>{ const y=T+i*rh;
+      s+=`<text x="${L-8}" y="${y+rh/2+4}" text-anchor="end" fill="#ece7fb" font-size="11">${esc(String(lb).slice(0,18))}</text>`;
+      bars.forEach((d,j)=>{ const v=d.data[i]||0, w=pw*v/max1;
+        s+=`<rect x="${L}" y="${y+4+j*10}" width="${w}" height="9" rx="3" fill="${col(d,i)}"><title>${esc(lb)}: ${fmtNum(v)}</title></rect><text x="${L+w+5}" y="${y+12+j*10}" fill="#9d92c2" font-size="10">${fmtNum(v)}</text>`; }); });
   }
+  if(legend) s+=ds.map((d,i)=>`<rect x="${L+i*130}" y="8" width="10" height="10" rx="2" fill="${d.borderColor||col(d,0)}"/><text x="${L+i*130+15}" y="17" fill="#9d92c2" font-size="11">${esc(d.label||'')}</text>`).join('');
+  const box=document.createElement('div'); box.className='mini-chart';
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-family:'JetBrains Mono',monospace">${s}</svg>`;
+  canvas.style.display='none'; canvas.parentNode.appendChild(box);
+  return { destroy(){ box.remove(); canvas.style.display=''; } };
+}
+
+function safeChart(canvasId, config, fallbackParent){
   const ctx = document.getElementById(canvasId);
   if(!ctx) return null;
+  if(typeof Chart === 'undefined'){ const m = miniChart(ctx, config); charts.push(m); return m; }
   const c = new Chart(ctx, config);
   charts.push(c);
   return c;
