@@ -736,6 +736,8 @@ function renderClan(root){
       <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
       <label>Игрок<input id="fName" placeholder="поиск по нику"></label>
       <label>Bounty от<input id="fMin" type="number" min="0" placeholder="0"></label>
+      <label>Норма Bounty<input id="fNorm" type="number" min="0" value="2670"></label>
+      <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили</option><option value="low">Не выполнили</option></select></label>
     </div>
     <div class="card" style="padding:0; max-height:480px; overflow:auto;"><table id="clanTable"></table></div>
     <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
@@ -756,18 +758,18 @@ function renderClan(root){
   let topChart = null;
   function update(){
     const wk = $('fWeek').value, view = $('fView').value, role = $('fRole').value;
-    const q = $('fName').value.trim().toLowerCase(), min = Number($('fMin').value)||0;
+    const q = $('fName').value.trim().toLowerCase(), min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0, ok = $('fOk').value;
     const val = d => (d.weeks[wk]||{}).bounty||0;
-    const rows = data.filter(d => (!role||d.role===role) && (!q||d.name.toLowerCase().includes(q)) && val(d)>=min)
+    const rows = data.filter(d => (!role||d.role===role) && (!q||d.name.toLowerCase().includes(q)) && val(d)>=min && (!ok || (ok==='ok') === (val(d)>=norm)))
                      .sort((a,b)=> view==='week' ? val(b)-val(a) : sumW(b,view)-sumW(a,view));
     function sumW(d,f){ return keys.reduce((s,k)=>s+((d.weeks[k]||{})[f]||0),0); }
     let h;
     if(view==='week'){
-      h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td></tr>`).join('');
+      h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th><th>Норма</th></tr></thead><tbody>' +
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${val(d)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-val(d))+'</span>'}</td></tr>`).join('');
     } else {
       h = '<thead><tr><th>Игрок</th>' + keys.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num" style="${view==='bounty'&&(!d.weeks[k]||d.weeks[k].bounty<norm)?'color:var(--cube-red)':''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
     }
     $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
     if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
@@ -778,7 +780,7 @@ function renderClan(root){
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
         scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
   }
-  ['fWeek','fView','fRole','fName','fMin'].forEach(id => $(id).addEventListener('input', update));
+  ['fWeek','fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
   update();
 
   const tot = f => keys.map(k => data.reduce((s,d)=>s+((d.weeks[k]||{})[f]||0),0));
