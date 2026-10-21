@@ -3,156 +3,1043 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#08090f">
-<title>SNAP HUB — Marvel Snap Forum</title>
-<meta name="description" content="Card Battle, генераторы колод и вариантов, мини-игры и просмотр сейва — всё для Marvel Snap.">
+<title>Cube Log — Snap Save Viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
-:root{
-  --bg:#08090f; --surf:#10121e; --surf2:#181a28;
-  --border:#1e2140; --border2:#2a2d50;
-  --gold:#f5c542; --gold2:#fde68a;
-  --blue:#4a9eff; --red:#ff4a6a;
-  --green:#3effa0; --purple:#c084fc; --orange:#fb923c;
-  --energy:#facc15; --muted:#767ba8; --text:#c0c4e0;
-}
-*,::before,::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
-body{
-  background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);
-  min-height:100dvh;position:relative;overflow-x:hidden;
-}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 120% 60% at 50% -10%,#1c1870 0%,transparent 55%),
-    radial-gradient(ellipse 60% 40% at 5% 110%,#22063a 0%,transparent 50%),
-    radial-gradient(ellipse 60% 40% at 95% 110%,#060e3a 0%,transparent 50%);
-}
-.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:52px 20px 80px;}
+  :root{
+    --void: #0a0713;
+    --void-2: #120c22;
+    --panel: #16102a;
+    --panel-2: #1c1436;
+    --line: #2c2148;
+    --line-soft: #221a3a;
+    --ink: #ece7fb;
+    --ink-dim: #9d92c2;
+    --ink-faint: #6b6091;
+    --cube-purple: #9b5cff;
+    --cube-purple-2: #6f2dff;
+    --cube-magenta: #ff4fd8;
+    --cube-cyan: #38e8e0;
+    --cube-gold: #ffb23e;
+    --cube-red: #ff5470;
+    --rare-common: #8a94a8;
+    --rare-uncommon: #4fd1c5;
+    --rare-rare: #5b8def;
+    --rare-epic: #b45cff;
+    --rare-legendary: #ffb23e;
+    --shadow-glow: 0 0 60px -15px rgba(155, 92, 255, 0.55);
+  }
 
-/* ── HERO ── */
-.hero{text-align:center;margin-bottom:52px;}
-.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.35em;
-  text-transform:uppercase;color:var(--gold);display:inline-flex;align-items:center;gap:10px;margin-bottom:18px;}
-.eyebrow::before,.eyebrow::after{content:'';width:24px;height:1px;background:var(--gold);opacity:.6;}
-.logo-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,11vw,5.2rem);
-  letter-spacing:.2em;color:var(--gold);text-shadow:0 0 60px rgba(245,197,66,.45);line-height:1;}
-.logo-sub{margin-top:8px;font-size:.85rem;letter-spacing:.08em;color:var(--muted);}
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
 
-/* ── ENERGY GEMS (signature: cost pips like in-game) ── */
-.pip-row{display:flex;justify-content:center;gap:6px;margin-top:22px;}
-.pip{width:16px;height:16px;background:var(--energy);
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-  box-shadow:0 0 10px rgba(250,204,21,.55);animation:pulse 2.4s ease-in-out infinite;}
-.pip:nth-child(2){animation-delay:.2s}.pip:nth-child(3){animation-delay:.4s}
-.pip:nth-child(4){animation-delay:.6s}.pip:nth-child(5){animation-delay:.8s}.pip:nth-child(6){animation-delay:1s}
-@keyframes pulse{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -10%, rgba(155,92,255,0.20), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(56,232,224,0.10), transparent 55%),
+      var(--void);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
 
-/* ── GRID ── */
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
-.tool{position:relative;display:flex;flex-direction:column;gap:10px;text-align:left;
-  background:var(--surf);border:1px solid var(--border);border-radius:14px;
-  padding:22px 20px 20px;text-decoration:none;color:var(--text);
-  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;overflow:hidden;}
-.tool::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;
-  background:radial-gradient(160px 100px at 20% 0%,var(--accent,var(--gold)) 0%,transparent 70%);}
-.tool:hover{transform:translateY(-4px);border-color:var(--border2);
-  box-shadow:0 14px 34px -14px rgba(0,0,0,.6);}
-.tool:hover::before{opacity:.16;}
-.tool:active{transform:translateY(-1px) scale(.99);}
-.tool-cost{position:relative;z-index:1;width:34px;height:34px;flex-shrink:0;
-  background:var(--accent,var(--gold));color:#08090f;
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Bebas Neue',sans-serif;font-size:1.15rem;}
-.tool-name{position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;
-  font-size:1.3rem;letter-spacing:.06em;color:#fff;margin-top:2px;}
-.tool-desc{position:relative;z-index:1;font-size:.82rem;line-height:1.45;color:var(--muted);flex:1;}
-.tool-tag{position:relative;z-index:1;align-self:flex-start;font-family:'JetBrains Mono',monospace;
-  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent,var(--gold));
-  border:1px solid currentColor;border-radius:20px;padding:3px 10px;opacity:.85;}
+  .stars{
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1px 1px at 140px 90px, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 260px 40px, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 340px 160px, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 420px 70px, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.3), transparent);
+    background-repeat: repeat;
+    background-size: 480px 260px;
+  }
 
-/* group heading */
-.group-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.25em;
-  text-transform:uppercase;color:var(--muted);margin:40px 0 14px;padding-left:2px;}
-.group-label:first-of-type{margin-top:0;}
+  .wrap{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 40px 24px 100px; }
 
-footer{position:relative;z-index:1;text-align:center;margin-top:60px;
-  font-size:.72rem;color:var(--muted);letter-spacing:.03em;}
-footer a{color:var(--gold);text-decoration:none;}
+  /* ---------- Header ---------- */
+  header{ margin-bottom: 34px; }
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--cube-cyan); display:flex; align-items:center; gap:10px; margin-bottom: 14px;
+  }
+  .eyebrow::before{ content:''; width:26px; height:1px; background: var(--cube-cyan); display:inline-block; }
+  h1{
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(38px, 6vw, 64px);
+    letter-spacing: 0.5px;
+    margin: 0 0 10px;
+    line-height: 0.98;
+    background: linear-gradient(120deg, #fff 10%, var(--cube-purple) 55%, var(--cube-magenta) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub{ color: var(--ink-dim); font-size: 16px; max-width: 620px; }
+  .sub b{ color: var(--ink); font-weight: 600; }
+
+  /* ---------- Drop zone ---------- */
+  #dropzone{
+    margin-top: 28px;
+    border: 1.5px dashed var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(155,92,255,0.06), rgba(155,92,255,0.02));
+    padding: 40px 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  #dropzone::after{
+    content:''; position:absolute; inset:0; border-radius: 18px; padding:1px;
+    background: linear-gradient(120deg, transparent, rgba(155,92,255,0.4), transparent);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity .3s;
+  }
+  #dropzone:hover, #dropzone.drag{ border-color: var(--cube-purple); background: linear-gradient(180deg, rgba(155,92,255,0.12), rgba(155,92,255,0.04)); }
+  #dropzone:hover::after, #dropzone.drag::after{ opacity: 1; }
+  #dropzone.drag{ transform: scale(1.005); }
+  .dz-icon{ font-size: 34px; margin-bottom: 12px; filter: drop-shadow(0 0 18px rgba(155,92,255,0.6)); }
+  .dz-title{ font-weight: 600; font-size: 17px; margin-bottom: 6px; }
+  .dz-title span{ color: var(--cube-purple); text-decoration: underline; text-underline-offset: 3px; }
+  .dz-hint{ color: var(--ink-faint); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+  #fileInput{ display: none; }
+
+  #fileChips{ display:flex; flex-wrap:wrap; gap: 8px; margin-top: 18px; }
+  .chip{
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-dim);
+    padding: 6px 12px; border-radius: 100px; display:flex; align-items:center; gap:7px;
+  }
+  .chip.ok{ color: var(--cube-cyan); border-color: rgba(56,232,224,0.35); }
+  .chip.unknown{ color: var(--ink-faint); }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
+
+  #status{ margin-top:14px; font-family:'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); min-height: 18px; }
+
+  #showBtn{
+    margin-top: 16px; font-family:'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+    background: linear-gradient(120deg, var(--cube-purple), var(--cube-purple-2));
+    color: #fff; border: none; padding: 12px 22px; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 8px 24px -8px rgba(155,92,255,0.6);
+  }
+  #showBtn:hover{ filter: brightness(1.1); }
+
+  #logBox{
+    margin-top: 18px; background: var(--void-2); border: 1px solid var(--line-soft); border-radius: 12px;
+    padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dim);
+    max-height: 220px; overflow-y: auto;
+  }
+  #logBox .line{ padding: 2px 0; white-space: pre-wrap; word-break: break-word; }
+  #logBox .line.err{ color: var(--cube-red); }
+  #logBox .line.ok{ color: var(--cube-cyan); }
+  #logBox .line .t{ color: var(--ink-faint); margin-right: 8px; }
+
+  /* ---------- Nav tabs ---------- */
+  #app{ display:none; margin-top: 46px; }
+  #app.show{ display:block; }
+
+  .tabs{
+    display:flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 30px; padding-bottom: 0;
+  }
+  .tab{
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.5px;
+    color: var(--ink-faint); background: none; border: none; cursor: pointer;
+    padding: 12px 16px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
+    text-transform: uppercase;
+  }
+  .tab:hover{ color: var(--ink); }
+  .tab.active{ color: var(--cube-purple); border-bottom-color: var(--cube-purple); }
+
+  .panel{ display:none; animation: fadeIn .35s ease; }
+  .panel.active{ display:block; }
+  @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  /* ---------- Stat grid ---------- */
+  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 26px; }
+  .stat{
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px 20px;
+    position: relative; overflow: hidden;
+  }
+  .stat::before{
+    content:''; position:absolute; top:-30px; right:-30px; width:90px; height:90px; border-radius:50%;
+    background: radial-gradient(circle, rgba(155,92,255,0.25), transparent 70%);
+  }
+  .stat .label{ font-family:'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-faint); margin-bottom: 8px; }
+  .stat .value{ font-family:'Anton', sans-serif; font-weight: 400; font-size: 30px; color: var(--ink); }
+  .stat .value.accent{ color: var(--cube-purple); }
+  .stat .value.gold{ color: var(--cube-gold); }
+  .stat .value.cyan{ color: var(--cube-cyan); }
+  .stat .sub2{ font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+  section.block{ margin-bottom: 34px; }
+  .block h2{
+    font-family: 'Anton', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .3px;
+    margin: 0 0 4px; color: var(--ink);
+  }
+  .block .desc{ color: var(--ink-faint); font-size: 13px; margin-bottom: 16px; }
+
+  .card{
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line-soft); border-radius: 16px; padding: 22px;
+  }
+
+  .chart-wrap{ position: relative; height: 340px; }
+  .chart-wrap.short{ height: 220px; }
+
+  table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
+  th{
+    text-align:left; font-family:'JetBrains Mono', monospace; font-size: 10.5px; text-transform:uppercase;
+    letter-spacing: 1px; color: var(--ink-faint); font-weight:500; padding: 10px 12px; border-bottom: 1px solid var(--line-soft);
+  }
+  td{ padding: 10px 12px; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background: rgba(155,92,255,0.05); }
+  .pill{ display:inline-block; padding: 2px 9px; border-radius: 100px; font-size: 11px; font-family:'JetBrains Mono',monospace; }
+  .pill.leader{ background: rgba(255,178,62,0.15); color: var(--cube-gold); }
+  .pill.officer{ background: rgba(155,92,255,0.18); color: var(--cube-purple); }
+  .pill.member{ background: rgba(157,146,194,0.12); color: var(--ink-dim); }
+  .num{ font-family:'JetBrains Mono', monospace; color: var(--ink-dim); }
+  .name-cell{ font-weight:600; }
+
+  .rarity-bar{ display:flex; height: 10px; border-radius: 6px; overflow:hidden; margin: 14px 0 10px; border:1px solid var(--line-soft); }
+  .rarity-legend{ display:flex; flex-wrap:wrap; gap: 14px; font-size: 12px; color: var(--ink-dim); }
+  .rarity-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .rarity-legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; }
+  .deck-item{
+    background: var(--void-2); border:1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px;
+  }
+  .deck-item .dname{ font-weight:600; font-size:13.5px; margin-bottom:2px; }
+  .deck-item .ddate{ font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-faint); }
+  .fav{ color: var(--cube-gold); margin-left: 4px; }
+
+  .two-col{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+  @media (max-width: 820px){ .two-col{ grid-template-columns: 1fr; } }
+
+
+  .filters{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+  .filters label{ display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); }
+  .filters select,.filters input{ background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; border-radius:9px; outline:none; min-width:130px; }
+  .filters select:focus,.filters input:focus{ border-color:var(--cube-purple); }
+  .sync-row{ margin-bottom:12px; } .sync-row label{ display:block; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); margin-bottom:6px; }
+  .sync-row input{ width:100%; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:10px 14px; border-radius:9px; outline:none; }
+  .sync-btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; background:linear-gradient(120deg,var(--cube-purple),var(--cube-purple-2)); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; }
+  .sync-btn:disabled{ opacity:.6; } .sync-status{ margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink-faint); } .sync-status.ok{ color:var(--cube-cyan);} .sync-status.err{ color:var(--cube-red);}
+  .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
+  .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
+  .kv dd{ margin:0; color: var(--ink); }
+
+  /* ---------- Raw JSON viewer ---------- */
+  .raw-file-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 18px; }
+  .raw-btn{
+    font-family:'JetBrains Mono', monospace; font-size:12px; background: var(--panel-2);
+    border:1px solid var(--line-soft); color: var(--ink-dim); padding:7px 13px; border-radius:9px; cursor:pointer;
+  }
+  .raw-btn.active{ color: var(--void); background: var(--cube-purple); border-color: var(--cube-purple); font-weight:600; }
+  .jt{ font-family:'JetBrains Mono', monospace; font-size: 12.5px; line-height:1.7; }
+  .jt-row{ white-space: pre; }
+  .jt-toggle{ cursor:pointer; color: var(--ink-faint); display:inline-block; width:14px; user-select:none; }
+  .jt-key{ color: var(--cube-cyan); }
+  .jt-str{ color: var(--cube-gold); }
+  .jt-num{ color: var(--cube-magenta); }
+  .jt-bool{ color: var(--rare-rare); }
+  .jt-null{ color: var(--ink-faint); font-style: italic; }
+  .jt-punct{ color: var(--ink-faint); }
+  .jt-children{ margin-left: 18px; border-left: 1px solid var(--line-soft); padding-left: 10px; }
+  .jt-count{ color: var(--ink-faint); font-size: 11px; }
+  .jt-wrap{ max-height: 640px; overflow:auto; background: var(--void-2); border-radius: 12px; padding: 16px 18px; border:1px solid var(--line-soft); }
+  .jt-search{
+    width:100%; margin-bottom: 12px; background: var(--void-2); border:1px solid var(--line-soft); color: var(--ink);
+    font-family:'JetBrains Mono', monospace; font-size: 13px; padding: 10px 14px; border-radius: 9px; outline:none;
+  }
+  .jt-search:focus{ border-color: var(--cube-purple); }
+  .jt-empty{ color: var(--ink-faint); text-align:center; padding: 30px; font-family:'JetBrains Mono', monospace; font-size: 13px; }
+
+  .empty-state{ text-align:center; padding: 50px 20px; color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 13px; }
+
+  footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
 </style>
 </head>
 <body>
+<div class="stars"></div>
 <div class="wrap">
 
-  <div class="hero">
-    <div class="eyebrow">Community Toolkit</div>
-    <div class="logo-big">SNAP HUB</div>
-    <div class="logo-sub">Marvel Snap Forum — игры, генераторы и утилиты в одном месте</div>
-    <div class="pip-row" aria-hidden="true">
-      <span class="pip"></span><span class="pip"></span><span class="pip"></span>
-      <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+  <header>
+    <div class="eyebrow">Cube Log · offline · local save reader</div>
+    <h1>Snap Save Viewer</h1>
+    <p class="sub">Загрузи все файлы из своей папки с сохранением <b>Marvel Snap</b> (обычно 26 файлов вида <code>*State.json</code>) — соберу профиль, коллекцию, мастерство героев, клан и остальное в одну красивую панель. Всё происходит прямо в браузере, файлы никуда не отправляются.</p>
+
+    <div id="dropzone">
+      <div class="dz-icon">◆</div>
+      <div class="dz-title">Перетащи сюда файлы, или <span>выбери вручную</span></div>
+      <div class="dz-hint">поддерживается множественный выбор · .json</div>
+      <input id="fileInput" type="file" multiple accept=".json,application/json">
     </div>
+    <div id="fileChips"></div>
+    <div id="status"></div>
+    <button id="showBtn" style="display:none;">Показать дашборд</button>
+    <div id="logBox" style="display:none;"></div>
+  </header>
+
+  <div id="app">
+    <nav class="tabs" id="tabs"></nav>
+    <div id="panels"></div>
   </div>
 
-  <div class="group-label">Играть</div>
-  <div class="grid">
-    <a class="tool" style="--accent:var(--gold)" href="snap-final.html">
-      <div class="tool-cost">6</div>
-      <div class="tool-name">Card Battle</div>
-      <div class="tool-desc">Полноценный онлайн-дуэль по правилам Snap: лобби по коду, редактор колоды, реалтайм через Supabase.</div>
-      <div class="tool-tag">Мультиплеер</div>
-    </a>
-    <a class="tool" style="--accent:var(--red)" href="blackjack.html">
-      <div class="tool-cost">3</div>
-      <div class="tool-name">Блэкджек</div>
-      <div class="tool-desc">Карточный блэкджек в стилистике Snap — быстрая мини-игра на пару минут.</div>
-      <div class="tool-tag">Мини-игра</div>
-    </a>
-    <a class="tool" style="--accent:var(--purple)" href="slot/slot.html">
-      <div class="tool-cost">2</div>
-      <div class="tool-name">Слот-машина у Баки</div>
-      <div class="tool-desc">Крутите барабан с картами и коллекционируйте комбинации.</div>
-      <div class="tool-tag">Мини-игра</div>
-    </a>
-  </div>
-
-  <div class="group-label">Генераторы</div>
-  <div class="grid">
-    <a class="tool" style="--accent:var(--blue)" href="DeckGenerator/Generate/index.html">
-      <div class="tool-cost">4</div>
-      <div class="tool-name">Deck Generator</div>
-      <div class="tool-desc">Соберите колоду коллажем или вручную из полной базы карт и выгрузите картинку или код.</div>
-      <div class="tool-tag">Инструмент</div>
-    </a>
-    <a class="tool" style="--accent:var(--green)" href="VariantGenerator/index.html">
-      <div class="tool-cost">3</div>
-      <div class="tool-name">Variant Generator</div>
-      <div class="tool-desc">Создавайте собственные визуальные варианты карт для превью и обсуждений.</div>
-      <div class="tool-tag">Инструмент</div>
-    </a>
-    <a class="tool" style="--accent:var(--orange)" href="VariantGenerator/BundleGenerator.html">
-      <div class="tool-cost">3</div>
-      <div class="tool-name">Bundle Generator</div>
-      <div class="tool-desc">Собирайте превью магазинных бандлов: карта, титул, спрей и цена.</div>
-      <div class="tool-tag">Инструмент</div>
-    </a>
-  </div>
-
-  <div class="group-label">Аналитика</div>
-  <div class="grid">
-    <a class="tool" style="--accent:#38e8e0" href="jSONindex.html">
-      <div class="tool-cost">1</div>
-      <div class="tool-name">Snap Save Viewer</div>
-      <div class="tool-desc">Загрузите файлы сохранения — коллекция, колоды, мастерство героев и клан в наглядных графиках.</div>
-      <div class="tool-tag">Cube Log</div>
-    </a>
-  </div>
-
-  <footer>
-    tgmarvelsnap.ru · сделано фанатами для фанатов Marvel Snap
-  </footer>
+  <footer>Данные читаются локально в вашем браузере и никуда не передаются.</footer>
 </div>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------------- *
+ *  File intake
+ * ---------------------------------------------------------------- */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileChips = document.getElementById('fileChips');
+const statusEl = document.getElementById('status');
+const appEl = document.getElementById('app');
+const tabsEl = document.getElementById('tabs');
+const panelsEl = document.getElementById('panels');
+const showBtn = document.getElementById('showBtn');
+const logBox = document.getElementById('logBox');
+
+function log(msg, kind){
+  logBox.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = 'line' + (kind ? ' ' + kind : '');
+  const time = new Date().toLocaleTimeString('ru-RU');
+  line.innerHTML = `<span class="t">${time}</span>${esc(String(msg))}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Catch absolutely any uncaught error anywhere on the page and surface it,
+// instead of letting the page silently stay blank.
+window.addEventListener('error', e => {
+  log('Необработанная ошибка: ' + (e.message || e), 'err');
+});
+window.addEventListener('unhandledrejection', e => {
+  log('Необработанная ошибка (promise): ' + (e.reason && e.reason.message ? e.reason.message : e.reason), 'err');
+});
+
+showBtn.addEventListener('click', () => {
+  log('Ручной запуск построения дашборда…');
+  runBuildApp();
+});
+
+const KNOWN_FILES = [
+  'AccountState','AnalyticState','AssetCacheState','AudioState','BattlePassClientState',
+  'BrazeSdkManagerState','CacheGenerationState','CharacterMasteryState','ChatState','ClanState',
+  'CollectionState','ConquestClientState','CustomGameManagerState','FirstLaunchState','GameState',
+  'HighStakesTablesManagerState','InboxClientState','LocalizationState','MinigameEventState',
+  'PlayState','ProfileClientState','RenderingState','RewardClientState','SchemaState',
+  'ShopClientState','TimeClientState'
+];
+
+let store = {}; // filename (without .json) -> parsed object
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.json'));
+  if(!files.length){ statusEl.textContent = 'Не найдено .json файлов среди выбранных.'; log('Выбраны файлы без расширения .json — пропущены.', 'err'); return; }
+  statusEl.textContent = 'Читаю файлы…';
+  log(`Начинаю чтение ${files.length} файлов…`);
+  fileChips.innerHTML = '';
+  showBtn.style.display = 'none';
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const key = file.name.replace(/\.json$/i,'');
+      try{
+        let text = reader.result;
+        if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
+        const data = JSON.parse(text);
+        store[key] = data;
+        addChip(key, true);
+      }catch(err){
+        addChip(key, false);
+        log(`Не удалось разобрать ${file.name}: ${err.message}`, 'err');
+      }
+      loaded++;
+      if(loaded === files.length){
+        statusEl.textContent = `Загружено файлов: ${Object.keys(store).length}`;
+        log(`Готово: разобрано ${Object.keys(store).length} файлов. Строю дашборд…`, 'ok');
+        showBtn.style.display = 'inline-block';
+        runBuildApp();
+      }
+    };
+    reader.onerror = () => {
+      log(`Браузер не смог прочитать файл ${file.name}: ${reader.error}`, 'err');
+      loaded++;
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+// Wraps buildApp() with logging + error surfacing, so a failure never just
+// leaves the page blank with no explanation.
+function runBuildApp(){
+  try{
+    buildApp();
+    log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
+    if(typeof Chart === 'undefined'){
+      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Графики будут заменены текстовой заметкой, остальные данные доступны как обычно.', 'err');
+    }
+  }catch(err){
+    log('Не удалось построить дашборд: ' + err.message, 'err');
+    console.error(err);
+    appEl.classList.add('show');
+    appEl.style.display = 'block';
+    panelsEl.innerHTML = `<div class="empty-state">Произошла ошибка при построении дашборда: ${esc(err.message)}<br>Подробности — в логе выше. Нажмите «Показать дашборд», чтобы попробовать снова.</div>`;
+  }
+}
+
+function addChip(key, ok){
+  const chip = document.createElement('div');
+  chip.className = 'chip ' + (ok ? (KNOWN_FILES.includes(key) ? 'ok' : 'unknown') : '');
+  chip.innerHTML = `<span class="dot"></span>${key}${ok ? '' : ' — ошибка чтения'}`;
+  fileChips.appendChild(chip);
+}
+
+/* ---------------------------------------------------------------- *
+ *  Helpers
+ * ---------------------------------------------------------------- */
+function get(obj, path, fallback){
+  try{
+    const parts = path.split('.');
+    let cur = obj;
+    for(const p of parts){
+      if(cur == null) return fallback;
+      cur = cur[p];
+    }
+    return cur === undefined ? fallback : cur;
+  }catch(e){ return fallback; }
+}
+function fmtNum(n){ if(n==null || isNaN(n)) return '—'; return Number(n).toLocaleString('ru-RU'); }
+function fmtDate(s){
+  if(!s) return '—';
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short', year:'numeric'});
+}
+function daysAgo(s){
+  if(!s) return null;
+  const d = new Date(s);
+  if(isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime())/86400000);
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function stripType(k){ return k === '$type' || k === '$id'; }
+
+const RARITY_COLORS = {
+  Common: 'var(--rare-common)', Uncommon: 'var(--rare-uncommon)', Rare: 'var(--rare-rare)',
+  Epic: 'var(--rare-epic)', Legendary: 'var(--rare-legendary)', Ultra: '#ff5470', Infinity: '#ffffff'
+};
+
+/* ---------------------------------------------------------------- *
+ *  App build
+ * ---------------------------------------------------------------- */
+let charts = [];
+function buildApp(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const tabs = [];
+
+  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
+  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
+  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
+  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+
+  tabsEl.innerHTML = '';
+  panelsEl.innerHTML = '';
+  tabs.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i===0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => switchTab(t.id);
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel' + (i===0 ? ' active' : '');
+    panel.id = 'panel-' + t.id;
+    panelsEl.appendChild(panel);
+    t.render(panel);
+  });
+
+  appEl.classList.add('show');
+  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.textContent === document.querySelector(`#panel-${id}`) ? true : b.classList.contains('active')));
+  document.querySelectorAll('.tabs .tab').forEach((b,i) => {
+    b.classList.toggle('active', b.getAttribute('data-id') === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+}
+// rewire tab buttons with data-id (simpler + reliable)
+function switchTabFix(){}
+
+/* ---------------------------------------------------------------- *
+ *  OVERVIEW
+ * ---------------------------------------------------------------- */
+function renderOverview(root){
+  const acc = store.AccountState;
+  const col = store.CollectionState;
+  const clan = store.ClanState;
+  const bp = store.BattlePassClientState;
+
+  const appVersion = get(acc,'ApplicationVersion') || get(col,'ApplicationVersion') || '—';
+  const region = get(acc,'ServerState.Account.AppRegion','—');
+  const regLoc = get(acc,'ServerState.Account.RegistrationLocation','—');
+  const created = get(acc,'ServerState.Account.TimeCreated');
+  const lastLogin = get(acc,'ClientState.LastLoginTime');
+  const ageDays = daysAgo(created);
+
+  const cards = get(col,'ServerState.Cards',[]);
+  const decks = get(col,'ServerState.Decks',[]);
+  const collScore = get(col,'ServerState.CollectionScore.Amount');
+  const clanName = get(clan,'ServerState.State.Identity.Name');
+  const clanTag = get(clan,'ServerState.State.Identity.Tag');
+  const season = get(bp,'LastSeenBattlePassDefId');
+
+  let html = '<div class="grid">';
+  html += stat('Версия клиента', appVersion, 'accent');
+  html += stat('Аккаунт создан', fmtDate(created), null, ageDays!=null ? `${fmtNum(ageDays)} дн. назад` : '');
+  html += stat('Регион', region, null, regLoc && regLoc !== region ? `регистрация: ${regLoc}` : '');
+  html += stat('Последний вход', fmtDate(lastLogin), 'cyan');
+  if(col) html += stat('Очки коллекции', fmtNum(collScore), 'gold');
+  if(col) html += stat('Карт в коллекции', fmtNum(cards.length), 'accent', `${fmtNum(new Set(cards.map(c=>c.CardDefId)).size)} героев`);
+  if(col) html += stat('Колод сохранено', fmtNum(decks.length));
+  if(clan) html += stat('Клан', clanTag ? `[${clanTag}] ${clanName}` : (clanName||'—'), 'cyan');
+  if(season) html += stat('Текущий сезон', season.replace(/^Season\d+/,''), null, season);
+  html += '</div>';
+
+  html += `<div class="block"><h2>Загруженные файлы</h2><p class="desc">Распознано ${Object.keys(store).length} из 26 стандартных файлов сохранения.</p>`;
+  html += '<div class="deck-grid">';
+  KNOWN_FILES.forEach(name => {
+    const present = !!store[name];
+    html += `<div class="deck-item" style="opacity:${present?1:0.35}">
+      <div class="dname">${present ? '●' : '○'} ${name}</div>
+      <div class="ddate">${present ? 'загружен' : 'отсутствует'}</div>
+    </div>`;
+  });
+  const extras = Object.keys(store).filter(k => !KNOWN_FILES.includes(k));
+  extras.forEach(name => {
+    html += `<div class="deck-item"><div class="dname">● ${name}</div><div class="ddate">доп. файл</div></div>`;
+  });
+  html += '</div></div>';
+
+  root.innerHTML = html;
+}
+
+function stat(label, value, cls, sub){
+  return `<div class="stat">
+    <div class="label">${esc(label)}</div>
+    <div class="value ${cls||''}">${value==null||value==='' ? '—' : esc(value)}</div>
+    ${sub ? `<div class="sub2">${esc(sub)}</div>` : ''}
+  </div>`;
+}
+
+/* ---------------------------------------------------------------- *
+ *  COLLECTION
+ * ---------------------------------------------------------------- */
+function renderCollection(root){
+  const col = store.CollectionState;
+  const cards = get(col,'ServerState.Cards',[]);
+  const decks = get(col,'ServerState.Decks',[]);
+  const cardBacks = get(col,'ServerState.CardBacks',[]);
+  const avatars = get(col,'ServerState.AvatarInventory.OwnedAvatars',[]);
+  const titles = get(col,'ServerState.TitleInventory.OwnedTitles',[]);
+
+  const rarityCounts = {};
+  cards.forEach(c => { const r = c.RarityDefId || 'Unknown'; rarityCounts[r] = (rarityCounts[r]||0)+1; });
+  const order = ['Common','Uncommon','Rare','Epic','Legendary','Ultra','Infinity'];
+  const rarityKeys = Object.keys(rarityCounts).sort((a,b) => order.indexOf(a)-order.indexOf(b));
+  const total = cards.length || 1;
+
+  let html = '<div class="block"><h2>Коллекция карт</h2><p class="desc">Всего вариантов карт в инвентаре, по редкости.</p><div class="card">';
+  html += '<div class="rarity-bar">';
+  rarityKeys.forEach(r => {
+    const pct = (rarityCounts[r]/total*100).toFixed(1);
+    html += `<div style="width:${pct}%; background:${RARITY_COLORS[r] || '#555'}"></div>`;
+  });
+  html += '</div><div class="rarity-legend">';
+  rarityKeys.forEach(r => {
+    html += `<span><i style="background:${RARITY_COLORS[r]||'#555'}"></i>${r}: ${fmtNum(rarityCounts[r])}</span>`;
+  });
+  html += '</div></div></div>';
+
+  html += '<div class="grid">';
+  html += stat('Уникальных героев', fmtNum(new Set(cards.map(c=>c.CardDefId)).size),'accent');
+  html += stat('Вариантов оформления', fmtNum(cards.filter(c=>c.ArtVariantDefId).length),'cyan');
+  html += stat('Рубашек карт', fmtNum(cardBacks.length));
+  html += stat('Аватаров', fmtNum(avatars.length));
+  html += stat('Титулов', fmtNum(titles.length));
+  html += '</div>';
+
+  html += `<div class="block"><h2>Сохранённые колоды</h2><p class="desc">${fmtNum(decks.length)} колод в профиле.</p><div class="deck-grid">`;
+  decks.slice().sort((a,b)=> (b.CardBack&&b.CardBack.TimeUpdated||'').localeCompare(a.CardBack&&a.CardBack.TimeUpdated||'')).forEach(d => {
+    const fav = get(d,'CardBack.Favorite', false);
+    html += `<div class="deck-item"><div class="dname">${esc(d.Name||'Без названия')}${fav?' <span class="fav">★</span>':''}</div><div class="ddate">рубашка: ${esc(get(d,'CardBack.CardBackDefId','—'))}</div></div>`;
+  });
+  html += '</div></div>';
+  html += `<div class="block"><h2>Герои в коллекции</h2>
+    <div class="filters"><label>Герой<input id="cQ" placeholder="поиск"></label>
+    <label>Редкость<select id="cR"><option value="">Все</option>${rarityKeys.map(r=>`<option>${r}</option>`).join('')}</select></label>
+    <label>Колода<input id="dQ" placeholder="поиск по колодам"></label></div>
+    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Редкость</th><th>Вариантов</th></tr></thead><tbody id="cBody"></tbody></table></div></div>`;
+  root.innerHTML = html;
+  const byHero = {}; cards.forEach(c=>{ const h=byHero[c.CardDefId]||(byHero[c.CardDefId]={name:c.CardDefId,rarity:c.RarityDefId||'?',n:0}); h.n++; });
+  const heroes = Object.values(byHero).sort((a,b)=>a.name.localeCompare(b.name));
+  const cUpdate = () => {
+    const q=root.querySelector('#cQ').value.toLowerCase(), r=root.querySelector('#cR').value, dq=root.querySelector('#dQ').value.toLowerCase();
+    const l = heroes.filter(h=>h.name.toLowerCase().includes(q)&&(!r||h.rarity===r));
+    root.querySelector('#cBody').innerHTML = l.map(h=>`<tr><td class="name-cell">${esc(h.name)}</td><td>${esc(h.rarity)}</td><td class="num">${h.n}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
+    root.querySelectorAll('.deck-item').forEach(d=>{ d.style.display = d.textContent.toLowerCase().includes(dq)?'':'none'; });
+  };
+  ['cQ','cR','dQ'].forEach(id=>root.querySelector('#'+id).addEventListener('input',cUpdate)); cUpdate();
+}
+
+/* ---------------------------------------------------------------- *
+ *  MASTERY
+ * ---------------------------------------------------------------- */
+function renderMastery(root){
+  const cm = store.CharacterMasteryState;
+  const dataDict = get(cm,'ServerState.CharacterMasteryProgress.CharacterProgressData',{});
+  const entries = Object.keys(dataDict).filter(k => k!=='$type').map(k => {
+    const v = dataDict[k];
+    return {
+      name: k,
+      level: parseInt(v.LastClaimedLevel,10) || 0,
+      cap: parseInt(v.LevelCap,10) || 30,
+      exp: v.Experience || 0
+    };
+  });
+  entries.sort((a,b) => b.level - a.level || b.exp - a.exp);
+
+  const totalExp = entries.reduce((s,e)=>s+e.exp,0);
+  const maxed = entries.filter(e => e.level >= e.cap).length;
+  const avgLevel = entries.length ? (entries.reduce((s,e)=>s+e.level,0)/entries.length) : 0;
+
+  let html = '<div class="grid">';
+  html += stat('Героев прокачивается', fmtNum(entries.length),'accent');
+  html += stat('Максимальный уровень', fmtNum(maxed), 'gold', `из ${fmtNum(entries.length)}`);
+  html += stat('Средний уровень', avgLevel.toFixed(1),'cyan');
+  html += stat('Суммарный опыт', fmtNum(totalExp));
+  html += '</div>';
+
+  html += '<div class="two-col">';
+  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div class="chart-wrap"><canvas id="masteryChart"></canvas></div></div></div>';
+
+  html += `<div class="block"><h2>Все герои</h2>
+    <div class="filters"><label>Герой<input id="mQ" placeholder="поиск"></label>
+    <label>Уровень<select id="mL"><option value="">Все</option><option value="max">Максимальный</option><option value="part">Не максимальный</option><option value="zero">Нулевой</option></select></label>
+    <label>Сортировка<select id="mS"><option value="level">По уровню</option><option value="exp">По опыту</option><option value="name">По имени</option></select></label></div>
+    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody id="mBody"></tbody></table></div></div>`;
+  html += '</div>';
+
+  root.innerHTML = html;
+  const mUpdate = () => {
+    const q=root.querySelector('#mQ').value.toLowerCase(), l=root.querySelector('#mL').value, so=root.querySelector('#mS').value;
+    const list = entries.filter(e => e.name.toLowerCase().includes(q) && (!l || (l==='max'?e.level>=e.cap : l==='zero'?e.level===0 : e.level<e.cap)))
+      .sort((a,b)=> so==='name'?a.name.localeCompare(b.name) : so==='exp'?b.exp-a.exp : b.level-a.level||b.exp-a.exp);
+    root.querySelector('#mBody').innerHTML = list.map(e=>`<tr><td class="name-cell">${esc(e.name)}</td><td class="num">${e.level}/${e.cap}</td><td class="num">${fmtNum(e.exp)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
+  };
+  ['mQ','mL','mS'].forEach(id=>root.querySelector('#'+id).addEventListener('input',mUpdate)); mUpdate();
+
+  const top = entries.slice(0,20);
+  safeChart('masteryChart', {
+    type: 'bar',
+    data: {
+      labels: top.map(e=>e.name),
+      datasets: [{
+        label: 'Уровень мастерства',
+        data: top.map(e=>e.level),
+        backgroundColor: top.map((e,i) => `rgba(${155-i*3},${92+i*4},255,0.85)`),
+        borderRadius: 5,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Уровень ${c.raw}` } } },
+      scales:{
+        x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} }, max: 30 },
+        y:{ grid:{ display:false }, ticks:{ color:'#ece7fb', font:{family:'Space Grotesk', size:11.5} } }
+      }
+    }
+  }, root.querySelector('.card'));
+}
+
+/* ---------------------------------------------------------------- *
+ *  CLAN
+ * ---------------------------------------------------------------- */
+function weekLabel(k){ const [y,m,d]=k.split('-'); return `${d}.${m}`; }
+function weekTitle(k){ const [y,m,d]=k.split('-'); return `Неделя от ${d}.${m}.${y}`; }
+
+function renderClan(root){
+  const clan = store.ClanState;
+  const identity = get(clan,'ServerState.State.Identity',{});
+  identity.Id = identity.Id || get(clan,'ServerState.State.Id','');
+  const members = get(clan,'ServerState.Members',[]);
+  const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
+
+  const data = members.map(m => {
+    const weeks = {};
+    get(m,'TimePeriodState.TimePeriodList',[]).forEach(p => {
+      if(p.BountyPoints!=null || p.CubePoints!=null) weeks[p.Key] = {bounty:p.BountyPoints||0, cube:p.CubePoints||0};
+    });
+    return { id:get(m,'PlayerInfo.Id',''), name:get(m,'PlayerInfo.Name','—'), role:m.Role||'Member',
+             score:get(m,'PlayerInfo.CollectionScore',0), weeks };
+  });
+  const keys = [...new Set(data.flatMap(d => Object.keys(d.weeks)))].sort();
+  const current = keys[keys.length-1] || '';
+  const roles = [...new Set(data.map(d=>d.role))];
+  const optW = keys.map(k => `<option value="${k}">${weekLabel(k)}${k===current?' (текущая, неполная)':''}</option>`).join('');
+
+  root.innerHTML = `
+  <div class="grid">
+    ${stat('Клан', `[${identity.Tag||''}] ${identity.Name||''}`, 'cyan')}
+    ${stat('Участников', fmtNum(memberCount), 'accent')}
+    ${stat('Недель в файле', fmtNum(keys.length), 'gold', keys.length ? `${weekLabel(keys[0])} – ${weekLabel(current)}` : '')}
+  </div>
+  <div class="block"><h2>Динамика клана по неделям</h2><p class="desc">Суммарные Bounty / Cube всех текущих участников. Подписи — дата начала недели.</p>
+    <div class="card"><div class="chart-wrap short"><canvas id="clanWeeks"></canvas></div></div></div>
+  <div class="block"><h2>Состав и очки</h2>
+    <div class="filters">
+      <label>Неделя<select id="fWeek">${optW}</select></label>
+      <label>Вид<select id="fView"><option value="week">Выбранная неделя</option><option value="bounty">Все недели · Bounty</option><option value="cube">Все недели · Cube</option></select></label>
+      <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
+      <label>Игрок<input id="fName" placeholder="поиск по нику"></label>
+      <label>Bounty от<input id="fMin" type="number" min="0" placeholder="0"></label>
+    </div>
+    <div class="card" style="padding:0; max-height:480px; overflow:auto;"><table id="clanTable"></table></div>
+    <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
+  </div>
+  <div class="block"><h2>Синхронизация с Google Таблицей</h2>
+    <p class="desc">Отправит все ${keys.length} недель по каждому участнику. Уже записанные завершённые недели скрипт пропустит, текущую — обновит.</p>
+    <div class="card">
+      <div class="sync-row"><label>URL веб-приложения Apps Script</label><input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      <div class="sync-row"><label>Секретный код клана</label><input type="password" id="sheetSecret"></div>
+      <button id="syncBtn" class="sync-btn">Отправить все недели в таблицу</button>
+      <div id="syncStatus" class="sync-status"></div>
+    </div></div>`;
+
+  const $ = id => root.querySelector('#'+id);
+  $('fWeek').value = current;
+  try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){}
+
+  let topChart = null;
+  function update(){
+    const wk = $('fWeek').value, view = $('fView').value, role = $('fRole').value;
+    const q = $('fName').value.trim().toLowerCase(), min = Number($('fMin').value)||0;
+    const val = d => (d.weeks[wk]||{}).bounty||0;
+    const rows = data.filter(d => (!role||d.role===role) && (!q||d.name.toLowerCase().includes(q)) && val(d)>=min)
+                     .sort((a,b)=> view==='week' ? val(b)-val(a) : sumW(b,view)-sumW(a,view));
+    function sumW(d,f){ return keys.reduce((s,k)=>s+((d.weeks[k]||{})[f]||0),0); }
+    let h;
+    if(view==='week'){
+      h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>' +
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td></tr>`).join('');
+    } else {
+      h = '<thead><tr><th>Игрок</th>' + keys.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
+    }
+    $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
+    if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
+    const top = rows.slice(0,15);
+    topChart = safeChart('clanTop', { type:'bar', data:{ labels: top.map(d=>d.name), datasets:[
+      {label:'Bounty · '+weekLabel(wk), data: top.map(val), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4},
+      {label:'Cube', data: top.map(d=>(d.weeks[wk]||{}).cube||0), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
+        scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
+  }
+  ['fWeek','fView','fRole','fName','fMin'].forEach(id => $(id).addEventListener('input', update));
+  update();
+
+  const tot = f => keys.map(k => data.reduce((s,d)=>s+((d.weeks[k]||{})[f]||0),0));
+  safeChart('clanWeeks', { type:'bar', data:{ labels: keys.map(k=>weekLabel(k)+(k===current?'*':'')), datasets:[
+    {label:'Bounty', data:tot('bounty'), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4, yAxisID:'y'},
+    {label:'Cube', data:tot('cube'), type:'line', borderColor:'#38e8e0', backgroundColor:'#38e8e0', yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}},tooltip:{callbacks:{title:i=>weekTitle(keys[i[0].dataIndex])}}},
+      scales:{x:{ticks:{color:'#9d92c2'}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},y1:{position:'right',grid:{display:false},ticks:{color:'#38e8e0'}}}} }, $('clanWeeks').parentNode);
+
+  $('syncBtn').addEventListener('click', () => {
+    const url = $('sheetUrl').value.trim(), st = $('syncStatus'), btn = $('syncBtn');
+    if(!url){ st.textContent='Вставь URL веб-приложения Apps Script.'; st.className='sync-status err'; return; }
+    try{ localStorage.setItem('snapClanSheetUrl',url); localStorage.setItem('snapClanSheetSecret',$('sheetSecret').value.trim()); }catch(e){}
+    const payload = { secret:$('sheetSecret').value.trim(), clanId:identity.Id||'', clanName:identity.Name||'', syncedAt:new Date().toISOString(),
+      currentWeek: current,
+      members: data.map(d=>({id:d.id,name:d.name,role:d.role,collectionScore:d.score,
+        weeks: keys.filter(k=>d.weeks[k]).map(k=>({weekKey:k,bounty:d.weeks[k].bounty,cube:d.weeks[k].cube}))})) };
+    btn.disabled=true; st.className='sync-status'; st.textContent='Отправляю…';
+    // text/plain body keeps this a CORS "simple request" (Apps Script can't answer preflight)
+    fetch(url,{method:'POST',body:JSON.stringify(payload)}).then(r=>r.json()).then(res=>{
+      btn.disabled=false;
+      if(res.ok){ st.textContent=`Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено (уже есть) ${res.skipped}. Новых участников: ${res.joined}, ушли: ${res.left}.`; st.className='sync-status ok'; }
+      else { st.textContent='Ошибка таблицы: '+res.error; st.className='sync-status err'; }
+    }).catch(e=>{ btn.disabled=false; st.textContent='Не удалось отправить: '+e.message; st.className='sync-status err'; });
+  });
+}
+
+/* ---------------------------------------------------------------- *
+ *  SHOP / BATTLE PASS / EVENTS
+ * ---------------------------------------------------------------- */
+function renderEvents(root){
+  const shop = store.ShopClientState;
+  const bp = store.BattlePassClientState;
+  const hst = store.HighStakesTablesManagerState;
+
+  let html = '<div class="grid">';
+  if(bp){
+    html += stat('Сезон баттлпасса', get(bp,'LastSeenBattlePassDefId','—'),'accent');
+    html += stat('Начало сезона для игрока', fmtDate(get(bp,'FirstPlayDateAfterSeasonStart')));
+  }
+  if(shop){
+    const seen = get(shop,'CardShopNewCardSeenList',[]);
+    html += stat('Просмотрено в магазине', fmtNum(seen.length),'cyan');
+  }
+  html += '</div>';
+
+  if(shop){
+    const seen = get(shop,'CardShopNewCardSeenList',[]);
+    const byTag = {};
+    seen.forEach(s => { const t = s.Tag || 'Без тега'; byTag[t] = (byTag[t]||0)+1; });
+    const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]).filter(e=>true);
+    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div class="chart-wrap"><canvas id="shopChart"></canvas></div></div></div>';
+    root.innerHTML = html;
+    safeChart('shopChart', {
+      type:'bar',
+      data:{
+        labels: tagEntries.map(e=>e[0]),
+        datasets:[{ data: tagEntries.map(e=>e[1]), backgroundColor:'rgba(255,79,216,0.8)', borderRadius:5, maxBarThickness:26 }]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{size:10} } },
+          y:{ grid:{display:false}, ticks:{ color:'#ece7fb', font:{size:11} } }
+        }
+      }
+    }, root.querySelector('.card'));
+  } else {
+    root.innerHTML = html;
+  }
+
+  if(hst){
+    const pastEvents = get(hst,'ServerState.PastEvents',[]);
+    const div = document.createElement('div');
+    div.className = 'block';
+    div.innerHTML = `<h2>High Stakes — события</h2><p class="desc">Завершённых событий: ${fmtNum(pastEvents.length)}</p>`;
+    root.appendChild(div);
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ *  RAW JSON VIEWER
+ * ---------------------------------------------------------------- */
+function renderRaw(root){
+  const keys = Object.keys(store);
+  let html = '<div class="block"><h2>Все загруженные данные</h2><p class="desc">Полное дерево каждого файла — как в оригинальном JSON. Клик по стрелке разворачивает узел.</p>';
+  html += '<div class="raw-file-list">';
+  keys.forEach((k,i) => {
+    html += `<button class="raw-btn ${i===0?'active':''}" data-key="${esc(k)}">${esc(k)}</button>`;
+  });
+  html += '</div>';
+  html += '<input class="jt-search" id="jtSearch" placeholder="Поиск по ключам и значениям… (например: CardDefId, Legendary)">';
+  html += '<div class="jt-wrap"><div class="jt" id="jtRoot"></div></div></div>';
+  root.innerHTML = html;
+
+  let currentKey = keys[0];
+  const jtRoot = root.querySelector('#jtRoot');
+  const search = root.querySelector('#jtSearch');
+
+  function draw(){
+    jtRoot.innerHTML = '';
+    const q = search.value.trim().toLowerCase();
+    jtRoot.appendChild(buildNode(currentKey, store[currentKey], 0, q));
+  }
+
+  root.querySelectorAll('.raw-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      root.querySelectorAll('.raw-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentKey = btn.getAttribute('data-key');
+      draw();
+    });
+  });
+  search.addEventListener('input', () => draw());
+  draw();
+}
+
+// Recursive JSON tree builder. q = lowercase search filter (matches key or primitive value).
+function buildNode(key, value, depth, q){
+  const row = document.createElement('div');
+
+  const isObj = value !== null && typeof value === 'object' && !Array.isArray(value);
+  const isArr = Array.isArray(value);
+
+  if(isObj || isArr){
+    const rawKeys = isArr ? value.map((_,i)=>i) : Object.keys(value).filter(k=>!stripType(k));
+    let childKeys = rawKeys;
+    if(q){
+      childKeys = rawKeys.filter(ck => {
+        const cv = value[ck];
+        if(String(ck).toLowerCase().includes(q)) return true;
+        if(cv !== null && typeof cv === 'object') return JSON.stringify(cv).toLowerCase().includes(q);
+        return String(cv).toLowerCase().includes(q);
+      });
+      if(!childKeys.length && !String(key).toLowerCase().includes(q)) {
+        row.style.display = 'none';
+      }
+    }
+
+    const header = document.createElement('div');
+    header.className = 'jt-row';
+    const count = rawKeys.length;
+    const collapsedDefault = depth >= 2 && !q;
+    const toggle = document.createElement('span');
+    toggle.className = 'jt-toggle';
+    toggle.textContent = collapsedDefault ? '▸' : '▾';
+    header.appendChild(toggle);
+
+    const keySpan = document.createElement('span');
+    keySpan.className = 'jt-key';
+    keySpan.textContent = (key === '' ? '' : key + ': ');
+    header.appendChild(keySpan);
+
+    const punct = document.createElement('span');
+    punct.className = 'jt-punct';
+    punct.textContent = (isArr ? '[' : '{') + `  ` ;
+    header.appendChild(punct);
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'jt-count';
+    countSpan.textContent = `${count} ${isArr ? (count===1?'элемент':'элементов') : (count===1?'поле':'полей')}`;
+    header.appendChild(countSpan);
+
+    row.appendChild(header);
+
+    const childrenWrap = document.createElement('div');
+    childrenWrap.className = 'jt-children';
+    childrenWrap.style.display = collapsedDefault ? 'none' : 'block';
+    childKeys.forEach(ck => {
+      childrenWrap.appendChild(buildNode(ck, value[ck], depth+1, q));
+    });
+    row.appendChild(childrenWrap);
+
+    toggle.addEventListener('click', () => {
+      const open = childrenWrap.style.display !== 'none';
+      childrenWrap.style.display = open ? 'none' : 'block';
+      toggle.textContent = open ? '▸' : '▾';
+    });
+  } else {
+    if(q && !String(key).toLowerCase().includes(q) && !String(value).toLowerCase().includes(q)){
+      row.style.display = 'none';
+    }
+    const line = document.createElement('div');
+    line.className = 'jt-row';
+    line.style.marginLeft = '14px';
+    let valSpan;
+    if(value === null){ valSpan = `<span class="jt-null">null</span>`; }
+    else if(typeof value === 'number'){ valSpan = `<span class="jt-num">${value}</span>`; }
+    else if(typeof value === 'boolean'){ valSpan = `<span class="jt-bool">${value}</span>`; }
+    else { valSpan = `<span class="jt-str">"${esc(value)}"</span>`; }
+    line.innerHTML = `<span class="jt-key">${esc(key)}</span><span class="jt-punct">: </span>${valSpan}`;
+    row.appendChild(line);
+  }
+
+  return row;
+}
+
+/* ---------------------------------------------------------------- *
+ *  Tab wiring fix (use data-id properly)
+ * ---------------------------------------------------------------- */
+const origBuildApp = buildApp;
+buildApp = function(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const tabs = [];
+  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
+  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
+  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
+  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+
+  tabsEl.innerHTML = '';
+  panelsEl.innerHTML = '';
+  tabs.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i===0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.setAttribute('data-id', t.id);
+    btn.onclick = () => {
+      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.toggle('active', b===btn));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.id));
+    };
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.className = 'panel' + (i===0 ? ' active' : '');
+    panel.id = 'panel-' + t.id;
+    panelsEl.appendChild(panel);
+    try{
+      t.render(panel);
+    }catch(err){
+      console.error('Ошибка при отрисовке вкладки', t.id, err);
+      panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${t.label}»: ${esc(err.message)}</div>`;
+    }
+  });
+
+  appEl.classList.add('show');
+  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+// Small helper: draws a chart if Chart.js loaded successfully, otherwise
+// leaves a quiet fallback note instead of throwing and blanking the page.
+function safeChart(canvasId, config, fallbackParent){
+  if(typeof Chart === 'undefined'){
+    if(fallbackParent){
+      const note = document.createElement('div');
+      note.className = 'empty-state';
+      note.textContent = 'График недоступен (не удалось загрузить библиотеку графиков). Данные всё равно доступны в таблице ниже.';
+      fallbackParent.appendChild(note);
+    }
+    return null;
+  }
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return null;
+  const c = new Chart(ctx, config);
+  charts.push(c);
+  return c;
+}
+
+})();
+</script>
 </body>
 </html>
