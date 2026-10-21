@@ -6,6 +6,7 @@
 <title>Cube Log — Snap Save Viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
   :root{
     --void: #0a0713;
@@ -225,6 +226,15 @@
   .two-col{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
   @media (max-width: 820px){ .two-col{ grid-template-columns: 1fr; } }
 
+
+  .filters{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+  .filters label{ display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); }
+  .filters select,.filters input{ background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; border-radius:9px; outline:none; min-width:130px; }
+  .filters select:focus,.filters input:focus{ border-color:var(--cube-purple); }
+  .sync-row{ margin-bottom:12px; } .sync-row label{ display:block; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); margin-bottom:6px; }
+  .sync-row input{ width:100%; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:10px 14px; border-radius:9px; outline:none; }
+  .sync-btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; background:linear-gradient(120deg,var(--cube-purple),var(--cube-purple-2)); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; }
+  .sync-btn:disabled{ opacity:.6; } .sync-status{ margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink-faint); } .sync-status.ok{ color:var(--cube-cyan);} .sync-status.err{ color:var(--cube-red);}
   .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
   .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
   .kv dd{ margin:0; color: var(--ink); }
@@ -256,36 +266,6 @@
   .jt-empty{ color: var(--ink-faint); text-align:center; padding: 30px; font-family:'JetBrains Mono', monospace; font-size: 13px; }
 
   .empty-state{ text-align:center; padding: 50px 20px; color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 13px; }
-
-  .save-btn{
-    margin-top: 14px; font-family:'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600;
-    background: linear-gradient(120deg, var(--cube-cyan), #2bb3ac); color: #05231f; border: none;
-    padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  }
-  .save-btn:hover{ filter: brightness(1.08); }
-  .save-btn:disabled{ opacity: 0.6; cursor: default; }
-  .save-status{ margin-top: 8px; font-family:'JetBrains Mono', monospace; font-size: 12px; min-height: 16px; color: var(--ink-faint); }
-  .save-status.ok{ color: var(--cube-cyan); }
-  .save-status.err{ color: var(--cube-red); }
-  .norm-ok{ color: var(--cube-cyan) !important; font-weight: 600; }
-  .norm-fail{ color: var(--cube-red) !important; font-weight: 600; }
-
-  /* ---------- Vanilla charts (no external libs) ---------- */
-  .hbar-chart{ display:flex; flex-direction:column; gap:10px; }
-  .hbar-row{ display:grid; grid-template-columns: 140px 1fr 56px; align-items:center; gap:10px; }
-  .hbar-label{ font-size:12.5px; color: var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .hbar-track{ background: var(--void-2); border-radius:6px; height:14px; overflow:hidden; border:1px solid var(--line-soft); }
-  .hbar-fill{ height:100%; border-radius:6px; transition: width .4s ease; }
-  .hbar-value{ font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--ink-dim); text-align:right; }
-
-  .vbar-legend{ display:flex; gap:16px; margin-bottom:14px; font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--ink-dim); }
-  .vbar-legend-item{ display:inline-flex; align-items:center; gap:6px; }
-  .vbar-legend-item i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
-  .vbar-chart{ display:flex; align-items:flex-end; gap:10px; overflow-x:auto; padding-bottom:4px; }
-  .vbar-group{ display:flex; flex-direction:column; align-items:center; min-width:34px; height:100%; }
-  .vbar-bars{ display:flex; align-items:flex-end; gap:3px; height:calc(100% - 20px); }
-  .vbar-bar{ width:11px; border-radius:3px 3px 0 0; min-height:2px; transition: height .4s ease; }
-  .vbar-glabel{ margin-top:6px; font-size:10px; color: var(--ink-faint); writing-mode:vertical-rl; transform:rotate(180deg); max-height:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
 </style>
@@ -370,94 +350,6 @@ const KNOWN_FILES = [
 
 let store = {}; // filename (without .json) -> parsed object
 
-/* ---------------------------------------------------------------- *
- *  Google Sheets backend (Apps Script Web App)
- * ---------------------------------------------------------------- */
-const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzm_ZhPJWggyYFG2oIO7GXit8RhjFXmSIsCX5l_y8a-GwuV1ymlIgg-oQJVJK2tsNfT5g/exec';
-const BOUNTY_NORM = 2670;
-const CLAN_CAPACITY = 30; // стандартный лимит участников клана — используется для "X из 30", если в файле нет своего значения
-
-function sheetsConfigured(){
-  return SHEETS_API_URL && !SHEETS_API_URL.includes('ВСТАВЬ_СЮДА');
-}
-
-// TimePeriodList entries don't have a guaranteed field name across save versions,
-// so we probe a list of likely date/id fields and fall back to the array position
-// (periods are stored oldest→newest, so position is stable within one file at least).
-const PERIOD_KEY_FIELDS = [
-  'PeriodId','Id','WeekId','SeasonId','WeekNumber','Number',
-  'StartDate','StartTime','PeriodStart','WeekStart','Start',
-  'EndDate','EndTime','PeriodEnd','WeekEnd','End','Date','Timestamp'
-];
-
-function extractPeriodKey(period, orderIndex){
-  for(const f of PERIOD_KEY_FIELDS){
-    if(period[f] !== undefined && period[f] !== null && period[f] !== ''){
-      return { key: `${f}:${period[f]}`, label: String(period[f]), order: orderIndex, sourceField: f };
-    }
-  }
-  return { key: `idx:${orderIndex}`, label: `Период #${orderIndex+1}`, order: orderIndex, sourceField: null };
-}
-
-// Pulls EVERY week found in ClanState (not just the latest) for every member,
-// grouped by period. Also logs what field it used to identify weeks, so we can
-// verify/adjust if the save format doesn't match our guesses.
-function extractAllWeeksFromClan(clan){
-  const members = get(clan,'ServerState.Members',[]);
-  const weeksMap = {}; // periodKey -> { periodKey, weekLabel, order, members: [] }
-  let loggedSample = false;
-
-  members.forEach(m => {
-    const periods = get(m,'TimePeriodState.TimePeriodList',[]);
-    const name = get(m,'PlayerInfo.Name','—');
-    const role = m.Role || 'Member';
-    const score = get(m,'PlayerInfo.CollectionScore',0);
-
-    if(!loggedSample && periods.length){
-      log(`Пример полей одного периода (TimePeriodList[0]) у игрока ${name}: ${Object.keys(periods[0]).join(', ')}`, 'ok');
-      loggedSample = true;
-    }
-
-    periods.forEach((p, i) => {
-      if(p.BountyPoints == null && p.CubePoints == null) return; // пустой/нерелевантный период
-      const pk = extractPeriodKey(p, i);
-      if(!weeksMap[pk.key]) weeksMap[pk.key] = { periodKey: pk.key, weekLabel: pk.label, order: pk.order, members: [] };
-      weeksMap[pk.key].members.push({ name, role, score, bounty: p.BountyPoints || 0, cube: p.CubePoints || 0 });
-    });
-  });
-
-  return Object.values(weeksMap).sort((a,b) => a.order - b.order);
-}
-
-// Sends every detected week (with its full member list) to the Apps Script backend
-// in one request. The backend upserts by (clan, player, periodKey) instead of
-// blindly appending, so re-saving the same week updates it rather than duplicating it.
-async function saveSnapshotToSheet(clanName, weeks){
-  if(!sheetsConfigured()){
-    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код.');
-  }
-  const payload = { clanName: clanName || '', weeks };
-  const res = await fetch(SHEETS_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || 'Неизвестная ошибка при сохранении.');
-  return data;
-}
-
-// Reads back every previously saved snapshot from the sheet.
-async function fetchHistory(){
-  if(!sheetsConfigured()){
-    throw new Error('SHEETS_API_URL не настроен — вставьте URL Apps Script в код.');
-  }
-  const res = await fetch(SHEETS_API_URL, { method: 'GET' });
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || 'Неизвестная ошибка при чтении.');
-  return data.rows; // [{PeriodKey, WeekLabel, Order, ClanName, Player, Role, CollectionScore, BountyPoints, CubePoints, UploadedAt}, ...]
-}
-
 dropzone.addEventListener('click', () => fileInput.click());
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
 dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
@@ -511,6 +403,9 @@ function runBuildApp(){
   try{
     buildApp();
     log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
+    if(typeof Chart === 'undefined'){
+      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Графики будут заменены текстовой заметкой, остальные данные доступны как обычно.', 'err');
+    }
   }catch(err){
     log('Не удалось построить дашборд: ' + err.message, 'err');
     console.error(err);
@@ -711,8 +606,21 @@ function renderCollection(root){
     html += `<div class="deck-item"><div class="dname">${esc(d.Name||'Без названия')}${fav?' <span class="fav">★</span>':''}</div><div class="ddate">рубашка: ${esc(get(d,'CardBack.CardBackDefId','—'))}</div></div>`;
   });
   html += '</div></div>';
-
+  html += `<div class="block"><h2>Герои в коллекции</h2>
+    <div class="filters"><label>Герой<input id="cQ" placeholder="поиск"></label>
+    <label>Редкость<select id="cR"><option value="">Все</option>${rarityKeys.map(r=>`<option>${r}</option>`).join('')}</select></label>
+    <label>Колода<input id="dQ" placeholder="поиск по колодам"></label></div>
+    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Редкость</th><th>Вариантов</th></tr></thead><tbody id="cBody"></tbody></table></div></div>`;
   root.innerHTML = html;
+  const byHero = {}; cards.forEach(c=>{ const h=byHero[c.CardDefId]||(byHero[c.CardDefId]={name:c.CardDefId,rarity:c.RarityDefId||'?',n:0}); h.n++; });
+  const heroes = Object.values(byHero).sort((a,b)=>a.name.localeCompare(b.name));
+  const cUpdate = () => {
+    const q=root.querySelector('#cQ').value.toLowerCase(), r=root.querySelector('#cR').value, dq=root.querySelector('#dQ').value.toLowerCase();
+    const l = heroes.filter(h=>h.name.toLowerCase().includes(q)&&(!r||h.rarity===r));
+    root.querySelector('#cBody').innerHTML = l.map(h=>`<tr><td class="name-cell">${esc(h.name)}</td><td>${esc(h.rarity)}</td><td class="num">${h.n}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
+    root.querySelectorAll('.deck-item').forEach(d=>{ d.style.display = d.textContent.toLowerCase().includes(dq)?'':'none'; });
+  };
+  ['cQ','cR','dQ'].forEach(id=>root.querySelector('#'+id).addEventListener('input',cUpdate)); cUpdate();
 }
 
 /* ---------------------------------------------------------------- *
@@ -744,168 +652,160 @@ function renderMastery(root){
   html += '</div>';
 
   html += '<div class="two-col">';
-  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div id="masteryChart"></div></div></div>';
+  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div class="chart-wrap"><canvas id="masteryChart"></canvas></div></div></div>';
 
-  html += '<div class="block"><h2>Все герои</h2><div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody>';
-  entries.forEach(e => {
-    html += `<tr><td class="name-cell">${esc(e.name)}</td><td class="num">${e.level}/${e.cap}</td><td class="num">${fmtNum(e.exp)}</td></tr>`;
-  });
-  html += '</tbody></table></div></div>';
+  html += `<div class="block"><h2>Все герои</h2>
+    <div class="filters"><label>Герой<input id="mQ" placeholder="поиск"></label>
+    <label>Уровень<select id="mL"><option value="">Все</option><option value="max">Максимальный</option><option value="part">Не максимальный</option><option value="zero">Нулевой</option></select></label>
+    <label>Сортировка<select id="mS"><option value="level">По уровню</option><option value="exp">По опыту</option><option value="name">По имени</option></select></label></div>
+    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody id="mBody"></tbody></table></div></div>`;
   html += '</div>';
 
   root.innerHTML = html;
+  const mUpdate = () => {
+    const q=root.querySelector('#mQ').value.toLowerCase(), l=root.querySelector('#mL').value, so=root.querySelector('#mS').value;
+    const list = entries.filter(e => e.name.toLowerCase().includes(q) && (!l || (l==='max'?e.level>=e.cap : l==='zero'?e.level===0 : e.level<e.cap)))
+      .sort((a,b)=> so==='name'?a.name.localeCompare(b.name) : so==='exp'?b.exp-a.exp : b.level-a.level||b.exp-a.exp);
+    root.querySelector('#mBody').innerHTML = list.map(e=>`<tr><td class="name-cell">${esc(e.name)}</td><td class="num">${e.level}/${e.cap}</td><td class="num">${fmtNum(e.exp)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
+  };
+  ['mQ','mL','mS'].forEach(id=>root.querySelector('#'+id).addEventListener('input',mUpdate)); mUpdate();
 
   const top = entries.slice(0,20);
-  renderHBarChart('masteryChart', top.map(e => ({ label: e.name, value: e.level })), { max: 30, color: 'var(--cube-purple)' });
+  safeChart('masteryChart', {
+    type: 'bar',
+    data: {
+      labels: top.map(e=>e.name),
+      datasets: [{
+        label: 'Уровень мастерства',
+        data: top.map(e=>e.level),
+        backgroundColor: top.map((e,i) => `rgba(${155-i*3},${92+i*4},255,0.85)`),
+        borderRadius: 5,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Уровень ${c.raw}` } } },
+      scales:{
+        x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} }, max: 30 },
+        y:{ grid:{ display:false }, ticks:{ color:'#ece7fb', font:{family:'Space Grotesk', size:11.5} } }
+      }
+    }
+  }, root.querySelector('.card'));
 }
 
 /* ---------------------------------------------------------------- *
  *  CLAN
  * ---------------------------------------------------------------- */
+function weekLabel(k){ const [y,m,d]=k.split('-'); return `${d}.${m}`; }
+function weekTitle(k){ const [y,m,d]=k.split('-'); return `Неделя от ${d}.${m}.${y}`; }
+
 function renderClan(root){
   const clan = store.ClanState;
   const identity = get(clan,'ServerState.State.Identity',{});
+  identity.Id = identity.Id || get(clan,'ServerState.State.Id','');
   const members = get(clan,'ServerState.Members',[]);
-  const desc = get(clan,'ServerState.State.Description','');
   const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
-  const capacity = get(clan,'ServerState.State.MaxMemberCount', get(clan,'ServerState.State.MemberCapacity', CLAN_CAPACITY));
 
-  let html = '<div class="two-col">';
-  html += `<div class="block"><h2>[${esc(identity.Tag||'')}] ${esc(identity.Name||'Клан')}</h2>
-    <div class="card">
-      <dl class="kv">
-        <dt>Участников</dt><dd>${fmtNum(memberCount)} из ${fmtNum(capacity)}</dd>
-        <dt>Регион</dt><dd>${esc(identity.Region||'—')}</dd>
-        <dt>Приватность</dt><dd>${esc(get(clan,'ServerState.State.PrivacyType','—'))}</dd>
-        <dt>Язык</dt><dd>${esc(get(clan,'ServerState.State.Language','—'))}</dd>
-      </dl>
-      ${desc ? `<p style="margin-top:14px; color:var(--ink-dim); font-size:13.5px; border-top:1px solid var(--line-soft); padding-top:14px;">${esc(desc)}</p>` : ''}
-    </div>
-  </div>`;
-
-  // Текущая неделя, отсортирована по возрастанию Bounty (как просили).
-  const rows = members.map(m => {
-    const periods = get(m,'TimePeriodState.TimePeriodList',[]);
-    const latest = periods.slice().reverse().find(p => p.BountyPoints!=null || p.CubePoints!=null) || {};
-    return {
-      name: get(m,'PlayerInfo.Name','—'),
-      role: m.Role || 'Member',
-      score: get(m,'PlayerInfo.CollectionScore',0),
-      bounty: latest.BountyPoints || 0,
-      cube: latest.CubePoints || 0
-    };
-  }).sort((a,b) => a.bounty - b.bounty);
-
-  html += '<div class="block"><h2>Очки за неделю</h2><div class="card"><div id="clanChart"></div>'
-    + '<button id="saveSnapshotBtn" class="save-btn">💾 Сохранить все недели в таблицу</button>'
-    + '<div id="saveSnapshotStatus" class="save-status"></div>'
-    + '</div></div>';
-  html += '</div>';
-
-  html += `<div class="block"><h2>Состав клана</h2><p class="desc">${fmtNum(memberCount)} из ${fmtNum(capacity)} участников · отсортировано по Bounty за текущую неделю (по возрастанию).</p><div class="card" style="padding:0; max-height:460px; overflow:auto;">`;
-  html += '<table><thead><tr><th>#</th><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th></tr></thead><tbody>';
-  rows.forEach((r,i) => {
-    const roleClass = /leader/i.test(r.role) ? 'leader' : /officer/i.test(r.role) ? 'officer' : 'member';
-    html += `<tr><td class="num">${i+1}</td><td class="name-cell">${esc(r.name)}</td><td><span class="pill ${roleClass}">${esc(r.role)}</span></td><td class="num">${fmtNum(r.score)}</td><td class="num">${fmtNum(r.bounty)}</td><td class="num">${fmtNum(r.cube)}</td></tr>`;
-  });
-  html += '</tbody></table></div></div>';
-
-  root.innerHTML = html;
-
-  const chartRows = rows.slice(-15); // 15 наибольших, слева направо по возрастанию
-  renderGroupedBarChart('clanChart', chartRows.map(r=>r.name), [
-    { label:'Bounty', data: chartRows.map(r=>r.bounty), color:'#ffb23e' },
-    { label:'Cube', data: chartRows.map(r=>r.cube), color:'#38e8e0' }
-  ], { height: 200 });
-
-  const saveBtn = root.querySelector('#saveSnapshotBtn');
-  const saveStatus = root.querySelector('#saveSnapshotStatus');
-  saveBtn.addEventListener('click', async () => {
-    saveBtn.disabled = true;
-    saveStatus.className = 'save-status';
-    saveStatus.textContent = 'Извлекаю недели из файла…';
-    try{
-      const clanName = identity.Name || '';
-      const weeks = extractAllWeeksFromClan(clan);
-      if(!weeks.length) throw new Error('В файле не нашлось ни одного периода с Bounty/Cube — нечего сохранять.');
-      saveStatus.textContent = `Отправляю ${weeks.length} недель(и) в таблицу…`;
-      const res = await saveSnapshotToSheet(clanName, weeks);
-      saveStatus.textContent = `Готово: недель ${weeks.length}, новых строк ${res.added}, обновлено ${res.updated}.`;
-      saveStatus.classList.add('ok');
-      log(`Сохранено в таблицу: недель — ${weeks.length}, новых строк — ${res.added}, обновлено — ${res.updated}.`, 'ok');
-    }catch(err){
-      saveStatus.textContent = 'Ошибка: ' + err.message;
-      saveStatus.classList.add('err');
-      log('Не удалось сохранить снимок: ' + err.message, 'err');
-    }finally{
-      saveBtn.disabled = false;
-    }
-  });
-}
-
-/* ---------------------------------------------------------------- *
- *  HISTORY / WEEKLY BOUNTY NORM (from Google Sheet)
- * ---------------------------------------------------------------- */
-async function renderHistory(root){
-  root.innerHTML = `<div class="block"><h2>Норма Bounty ${BOUNTY_NORM} по неделям</h2>
-    <p class="desc">Данные берутся из Google Таблицы. Нажмите «Сохранить все недели в таблицу» на вкладке «Клан», чтобы обновить.</p>
-    <div class="card" id="historyCard"><div class="empty-state">Загружаю историю…</div></div></div>`;
-  const card = root.querySelector('#historyCard');
-
-  if(!sheetsConfigured()){
-    card.innerHTML = '<div class="empty-state">SHEETS_API_URL не настроен в коде страницы.</div>';
-    return;
-  }
-
-  let rowsRaw;
-  try{
-    rowsRaw = await fetchHistory();
-  }catch(err){
-    card.innerHTML = `<div class="empty-state">Не удалось загрузить историю: ${esc(err.message)}</div>`;
-    log('Не удалось загрузить историю из таблицы: ' + err.message, 'err');
-    return;
-  }
-
-  if(!rowsRaw || !rowsRaw.length){
-    card.innerHTML = '<div class="empty-state">В таблице пока нет ни одного снимка. Сохраните первый на вкладке «Клан».</div>';
-    return;
-  }
-
-  // Недели идентифицируются по PeriodKey (стабильно при повторном сохранении),
-  // подписываются WeekLabel и сортируются по Order (по возрастанию — старые слева).
-  const weekByKey = {};
-  rowsRaw.forEach(r => {
-    if(!weekByKey[r.PeriodKey]) weekByKey[r.PeriodKey] = { key: r.PeriodKey, label: r.WeekLabel || r.PeriodKey, order: Number(r.Order) || 0 };
-  });
-  const weeks = Object.values(weekByKey).sort((a,b) => a.order - b.order);
-
-  const players = [...new Set(rowsRaw.map(r => r.Player))].sort((a,b)=>a.localeCompare(b));
-
-  // Кто состоит в клане ПРЯМО СЕЙЧАС — по текущей загруженной вкладке "Клан",
-  // чтобы отметить игроков, которых в истории видно, а в текущем составе уже нет.
-  const currentMembers = new Set(get(store.ClanState,'ServerState.Members',[]).map(m => get(m,'PlayerInfo.Name','—')));
-  const knowCurrentRoster = currentMembers.size > 0;
-
-  const byWeekPlayer = {};
-  rowsRaw.forEach(r => { byWeekPlayer[r.PeriodKey + '|' + r.Player] = r; });
-
-  let html = '<div style="overflow:auto;"><table><thead><tr><th>#</th><th>Игрок</th>';
-  weeks.forEach(w => { html += `<th>${esc(w.label)}</th>`; });
-  html += '</tr></thead><tbody>';
-  players.forEach((p,i) => {
-    const isFormer = knowCurrentRoster && !currentMembers.has(p);
-    html += `<tr${isFormer ? ' style="opacity:.55"' : ''}><td class="num">${i+1}</td><td class="name-cell">${esc(p)}${isFormer ? ' <span class="pill member" style="color:var(--cube-red); border:1px solid rgba(255,84,112,0.35)">не в клане</span>' : ''}</td>`;
-    weeks.forEach(w => {
-      const cell = byWeekPlayer[w.key + '|' + p];
-      if(!cell){ html += '<td class="num" style="color:var(--ink-faint)">—</td>'; return; }
-      const bounty = Number(cell.BountyPoints) || 0;
-      const ok = bounty >= BOUNTY_NORM;
-      html += `<td class="num ${ok ? 'norm-ok' : 'norm-fail'}">${fmtNum(bounty)}</td>`;
+  const data = members.map(m => {
+    const weeks = {};
+    get(m,'TimePeriodState.TimePeriodList',[]).forEach(p => {
+      if(p.BountyPoints!=null || p.CubePoints!=null) weeks[p.Key] = {bounty:p.BountyPoints||0, cube:p.CubePoints||0};
     });
-    html += '</tr>';
+    return { id:get(m,'PlayerInfo.Id',''), name:get(m,'PlayerInfo.Name','—'), role:m.Role||'Member',
+             score:get(m,'PlayerInfo.CollectionScore',0), weeks };
   });
-  html += '</tbody></table></div>';
-  card.innerHTML = html;
+  const keys = [...new Set(data.flatMap(d => Object.keys(d.weeks)))].sort();
+  const current = keys[keys.length-1] || '';
+  const roles = [...new Set(data.map(d=>d.role))];
+  const optW = keys.map(k => `<option value="${k}">${weekLabel(k)}${k===current?' (текущая, неполная)':''}</option>`).join('');
+
+  root.innerHTML = `
+  <div class="grid">
+    ${stat('Клан', `[${identity.Tag||''}] ${identity.Name||''}`, 'cyan')}
+    ${stat('Участников', fmtNum(memberCount), 'accent')}
+    ${stat('Недель в файле', fmtNum(keys.length), 'gold', keys.length ? `${weekLabel(keys[0])} – ${weekLabel(current)}` : '')}
+  </div>
+  <div class="block"><h2>Динамика клана по неделям</h2><p class="desc">Суммарные Bounty / Cube всех текущих участников. Подписи — дата начала недели.</p>
+    <div class="card"><div class="chart-wrap short"><canvas id="clanWeeks"></canvas></div></div></div>
+  <div class="block"><h2>Состав и очки</h2>
+    <div class="filters">
+      <label>Неделя<select id="fWeek">${optW}</select></label>
+      <label>Вид<select id="fView"><option value="week">Выбранная неделя</option><option value="bounty">Все недели · Bounty</option><option value="cube">Все недели · Cube</option></select></label>
+      <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
+      <label>Игрок<input id="fName" placeholder="поиск по нику"></label>
+      <label>Bounty от<input id="fMin" type="number" min="0" placeholder="0"></label>
+      <label>Норма Bounty<input id="fNorm" type="number" min="0" value="2670"></label>
+      <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили</option><option value="low">Не выполнили</option></select></label>
+    </div>
+    <div class="card" style="padding:0; max-height:480px; overflow:auto;"><table id="clanTable"></table></div>
+    <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
+  </div>
+  <div class="block"><h2>Синхронизация с Google Таблицей</h2>
+    <p class="desc">Отправит все ${keys.length} недель по каждому участнику. Уже записанные завершённые недели скрипт пропустит, текущую — обновит.</p>
+    <div class="card">
+      <div class="sync-row"><label>URL веб-приложения Apps Script</label><input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      <div class="sync-row"><label>Секретный код клана</label><input type="password" id="sheetSecret"></div>
+      <button id="syncBtn" class="sync-btn">Отправить все недели в таблицу</button>
+      <div id="syncStatus" class="sync-status"></div>
+    </div></div>`;
+
+  const $ = id => root.querySelector('#'+id);
+  $('fWeek').value = current;
+  try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){}
+
+  let topChart = null;
+  function update(){
+    const wk = $('fWeek').value, view = $('fView').value, role = $('fRole').value;
+    const q = $('fName').value.trim().toLowerCase(), min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0, ok = $('fOk').value;
+    const val = d => (d.weeks[wk]||{}).bounty||0;
+    const rows = data.filter(d => (!role||d.role===role) && (!q||d.name.toLowerCase().includes(q)) && val(d)>=min && (!ok || (ok==='ok') === (val(d)>=norm)))
+                     .sort((a,b)=> view==='week' ? val(b)-val(a) : sumW(b,view)-sumW(a,view));
+    function sumW(d,f){ return keys.reduce((s,k)=>s+((d.weeks[k]||{})[f]||0),0); }
+    let h;
+    if(view==='week'){
+      h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th><th>Норма</th></tr></thead><tbody>' +
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${val(d)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-val(d))+'</span>'}</td></tr>`).join('');
+    } else {
+      h = '<thead><tr><th>Игрок</th>' + keys.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
+        rows.map(d=>`<tr><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num" style="${view==='bounty'&&(!d.weeks[k]||d.weeks[k].bounty<norm)?'color:var(--cube-red)':''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
+    }
+    $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
+    if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
+    const top = rows.slice(0,15);
+    topChart = safeChart('clanTop', { type:'bar', data:{ labels: top.map(d=>d.name), datasets:[
+      {label:'Bounty · '+weekLabel(wk), data: top.map(val), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4},
+      {label:'Cube', data: top.map(d=>(d.weeks[wk]||{}).cube||0), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
+        scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
+  }
+  ['fWeek','fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
+  update();
+
+  const tot = f => keys.map(k => data.reduce((s,d)=>s+((d.weeks[k]||{})[f]||0),0));
+  safeChart('clanWeeks', { type:'bar', data:{ labels: keys.map(k=>weekLabel(k)+(k===current?'*':'')), datasets:[
+    {label:'Bounty', data:tot('bounty'), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4, yAxisID:'y'},
+    {label:'Cube', data:tot('cube'), type:'line', borderColor:'#38e8e0', backgroundColor:'#38e8e0', yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}},tooltip:{callbacks:{title:i=>weekTitle(keys[i[0].dataIndex])}}},
+      scales:{x:{ticks:{color:'#9d92c2'}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},y1:{position:'right',grid:{display:false},ticks:{color:'#38e8e0'}}}} }, $('clanWeeks').parentNode);
+
+  $('syncBtn').addEventListener('click', () => {
+    const url = $('sheetUrl').value.trim(), st = $('syncStatus'), btn = $('syncBtn');
+    if(!url){ st.textContent='Вставь URL веб-приложения Apps Script.'; st.className='sync-status err'; return; }
+    try{ localStorage.setItem('snapClanSheetUrl',url); localStorage.setItem('snapClanSheetSecret',$('sheetSecret').value.trim()); }catch(e){}
+    const payload = { secret:$('sheetSecret').value.trim(), clanId:identity.Id||'', clanName:identity.Name||'', syncedAt:new Date().toISOString(),
+      currentWeek: current,
+      members: data.map(d=>({id:d.id,name:d.name,role:d.role,collectionScore:d.score,
+        weeks: keys.filter(k=>d.weeks[k]).map(k=>({weekKey:k,bounty:d.weeks[k].bounty,cube:d.weeks[k].cube}))})) };
+    btn.disabled=true; st.className='sync-status'; st.textContent='Отправляю…';
+    // text/plain body keeps this a CORS "simple request" (Apps Script can't answer preflight)
+    fetch(url,{method:'POST',body:JSON.stringify(payload)}).then(r=>r.json()).then(res=>{
+      btn.disabled=false;
+      if(res.ok){ st.textContent=`Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено (уже есть) ${res.skipped}. Новых участников: ${res.joined}, ушли: ${res.left}.`; st.className='sync-status ok'; }
+      else { st.textContent='Ошибка таблицы: '+res.error; st.className='sync-status err'; }
+    }).catch(e=>{ btn.disabled=false; st.textContent='Не удалось отправить: '+e.message; st.className='sync-status err'; });
+  });
 }
 
 /* ---------------------------------------------------------------- *
@@ -931,10 +831,24 @@ function renderEvents(root){
     const seen = get(shop,'CardShopNewCardSeenList',[]);
     const byTag = {};
     seen.forEach(s => { const t = s.Tag || 'Без тега'; byTag[t] = (byTag[t]||0)+1; });
-    const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]);
-    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div id="shopChart"></div></div></div>';
+    const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]).filter(e=>true);
+    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div class="chart-wrap"><canvas id="shopChart"></canvas></div></div></div>';
     root.innerHTML = html;
-    renderHBarChart('shopChart', tagEntries.map(e => ({ label: e[0], value: e[1] })), { color: 'var(--cube-magenta)' });
+    safeChart('shopChart', {
+      type:'bar',
+      data:{
+        labels: tagEntries.map(e=>e[0]),
+        datasets:[{ data: tagEntries.map(e=>e[1]), backgroundColor:'rgba(255,79,216,0.8)', borderRadius:5, maxBarThickness:26 }]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{size:10} } },
+          y:{ grid:{display:false}, ticks:{ color:'#ece7fb', font:{size:11} } }
+        }
+      }
+    }, root.querySelector('.card'));
   } else {
     root.innerHTML = html;
   }
@@ -1076,7 +990,6 @@ buildApp = function(){
   if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
   if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
   if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
-  if(store.ClanState) tabs.push({ id:'history', label:'Норма 3500', render: renderHistory });
   if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
   tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
 
@@ -1098,13 +1011,7 @@ buildApp = function(){
     panel.id = 'panel-' + t.id;
     panelsEl.appendChild(panel);
     try{
-      const result = t.render(panel);
-      if(result && typeof result.catch === 'function'){
-        result.catch(err => {
-          console.error('Ошибка при отрисовке вкладки', t.id, err);
-          panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${esc(t.label)}»: ${esc(err.message)}</div>`;
-        });
-      }
+      t.render(panel);
     }catch(err){
       console.error('Ошибка при отрисовке вкладки', t.id, err);
       panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${t.label}»: ${esc(err.message)}</div>`;
@@ -1115,54 +1022,23 @@ buildApp = function(){
   appEl.scrollIntoView({behavior:'smooth', block:'start'});
 };
 
-// Horizontal bar list — no external chart library, pure HTML/CSS.
-// items: [{label, value, color?}]
-function renderHBarChart(containerId, items, opts){
-  const el = document.getElementById(containerId);
-  if(!el) return;
-  opts = opts || {};
-  const color = opts.color || 'var(--cube-purple)';
-  const valueFmt = opts.valueFmt || fmtNum;
-  const max = opts.max || Math.max(1, ...items.map(it => it.value));
-  let html = '<div class="hbar-chart">';
-  items.forEach(it => {
-    const pct = Math.max(2, Math.round((it.value / max) * 100));
-    html += `<div class="hbar-row">
-      <div class="hbar-label" title="${esc(it.label)}">${esc(it.label)}</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${it.color || color}"></div></div>
-      <div class="hbar-value">${valueFmt(it.value)}</div>
-    </div>`;
-  });
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-// Grouped vertical bars (e.g. Bounty vs Cube per player) — no external chart library.
-// series: [{label, data:[...], color}], labels: [...] (same length as each data array)
-function renderGroupedBarChart(containerId, labels, series, opts){
-  const el = document.getElementById(containerId);
-  if(!el) return;
-  opts = opts || {};
-  const valueFmt = opts.valueFmt || fmtNum;
-  const max = opts.max || Math.max(1, ...series.flatMap(s => s.data));
-  let html = '<div class="vbar-legend">';
-  series.forEach(s => { html += `<span class="vbar-legend-item"><i style="background:${s.color}"></i>${esc(s.label)}</span>`; });
-  html += '</div>';
-  html += `<div class="vbar-chart" style="height:${opts.height || 220}px">`;
-  labels.forEach((lab, i) => {
-    html += `<div class="vbar-group">`;
-    html += '<div class="vbar-bars">';
-    series.forEach(s => {
-      const v = s.data[i] || 0;
-      const pct = Math.max(2, Math.round((v / max) * 100));
-      html += `<div class="vbar-bar" style="height:${pct}%; background:${s.color}" title="${esc(lab)} — ${esc(s.label)}: ${valueFmt(v)}"></div>`;
-    });
-    html += '</div>';
-    html += `<div class="vbar-glabel" title="${esc(lab)}">${esc(lab)}</div>`;
-    html += '</div>';
-  });
-  html += '</div>';
-  el.innerHTML = html;
+// Small helper: draws a chart if Chart.js loaded successfully, otherwise
+// leaves a quiet fallback note instead of throwing and blanking the page.
+function safeChart(canvasId, config, fallbackParent){
+  if(typeof Chart === 'undefined'){
+    if(fallbackParent){
+      const note = document.createElement('div');
+      note.className = 'empty-state';
+      note.textContent = 'График недоступен (не удалось загрузить библиотеку графиков). Данные всё равно доступны в таблице ниже.';
+      fallbackParent.appendChild(note);
+    }
+    return null;
+  }
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return null;
+  const c = new Chart(ctx, config);
+  charts.push(c);
+  return c;
 }
 
 })();
