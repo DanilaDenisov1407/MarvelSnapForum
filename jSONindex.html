@@ -245,6 +245,15 @@
   .modal-box{ background:var(--panel); border:1px solid var(--line); border-radius:18px; width:100%; max-width:820px; padding:26px; position:relative; box-shadow:var(--shadow-glow); }
   .modal-x{ position:absolute; top:14px; right:16px; background:none; border:none; color:var(--ink-dim); font-size:22px; cursor:pointer; }
   .modal-box h2{ font-family:'Anton',sans-serif; font-weight:400; font-size:30px; margin:0 0 4px; }
+  .filters .fg{ display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); position:relative; }
+  details.multi summary{ list-style:none; cursor:pointer; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-size:13px; text-transform:none; letter-spacing:0; padding:8px 12px; border-radius:9px; min-width:170px; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  details.multi summary::-webkit-details-marker{ display:none; } details.multi summary::after{ content:' ▾'; color:var(--ink-faint); }
+  details.multi[open] summary{ border-color:var(--cube-purple); }
+  .multi-list{ position:absolute; top:100%; left:0; margin-top:4px; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:8px; min-width:200px; z-index:20; box-shadow:0 12px 30px rgba(0,0,0,.5); }
+  .multi-btns{ display:flex; gap:6px; margin-bottom:6px; } .multi-btns button{ flex:1; font-family:inherit; font-size:11px; background:var(--void-2); color:var(--ink-dim); border:1px solid var(--line-soft); border-radius:7px; padding:5px; cursor:pointer; }
+  .filters .wopt{ flex-direction:row; align-items:center; gap:8px; text-transform:none; letter-spacing:0; font-size:13px; color:var(--ink); padding:5px 6px; border-radius:6px; cursor:pointer; }
+  .wopt-all{ border-bottom:1px solid var(--line-soft); border-radius:6px 6px 0 0 !important; margin-bottom:4px; }
+  .filters .wopt:hover{ background:rgba(155,92,255,.12); } .wopt input{ min-width:0; width:auto; accent-color:#9b5cff; }
   .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
   .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
   .kv dd{ margin:0; color: var(--ink); }
@@ -741,14 +750,18 @@ function renderClan(root){
     <div class="card"><div class="chart-wrap short"><canvas id="clanWeeks"></canvas></div></div></div>
   <div class="block"><h2>Состав и очки</h2>
     <div class="filters">
-      <label>Неделя<select id="fWeek">${optW}</select></label>
+      <div class="fg">Недели<details class="multi"><summary id="wSum"></summary><div class="multi-list">
+        <label class="wopt wopt-all"><input type="checkbox" id="wAllChk"> <b>Все недели</b></label>
+        ${keys.map(k=>`<label class="wopt"><input type="checkbox" class="wk" value="${k}" ${k===current?'checked':''}> ${weekLabel(k)}${k===current?' (текущая)':''}</label>`).join('')}
+      </div></details></div>
       <label>Вид<select id="fView"><option value="week">Выбранная неделя</option><option value="bounty">Все недели · Bounty</option><option value="cube">Все недели · Cube</option></select></label>
       <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
-      <label>Игрок<input id="fName" placeholder="поиск по нику"></label>
+      <label>Игроки (через запятую)<input id="fName" placeholder="ник1, ник2, ник3" style="min-width:240px"></label>
       <label>Bounty от<input id="fMin" type="number" min="0" placeholder="0"></label>
       <label>Норма Bounty<input id="fNorm" type="number" min="0" value="2670"></label>
-      <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили</option><option value="low">Не выполнили</option></select></label>
+      <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили (во всех выбранных неделях)</option><option value="low">Не выполнили (хотя бы в одной)</option></select></label>
     </div>
+    <p class="desc">Несколько ников — через запятую. При нескольких неделях «Bounty от» и «По норме» проверяются в каждой выбранной неделе.</p>
     <div class="card" style="padding:0; max-height:72vh; overflow:auto;"><table id="clanTable"></table></div>
     <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
   </div>
@@ -762,35 +775,55 @@ function renderClan(root){
     </div></div>`;
 
   const $ = id => root.querySelector('#'+id);
-  $('fWeek').value = current;
   try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){}
 
   let topChart = null;
+  const selWeeks = () => { const w = keys.filter(k => root.querySelector(`.wk[value="${k}"]`).checked); return w.length ? w : [current]; };
   function update(){
-    const wk = $('fWeek').value, view = $('fView').value, role = $('fRole').value;
-    const q = $('fName').value.trim().toLowerCase(), min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0, ok = $('fOk').value;
-    const val = d => (d.weeks[wk]||{}).bounty||0;
-    const rows = data.filter(d => (!role||d.role===role) && (!q||d.name.toLowerCase().includes(q)) && val(d)>=min && (!ok || (ok==='ok') === (val(d)>=norm)))
-                     .sort((a,b)=> view==='week' ? val(b)-val(a) : sumW(b,view)-sumW(a,view));
-    function sumW(d,f){ return keys.reduce((s,k)=>s+((d.weeks[k]||{})[f]||0),0); }
+    const sw = selWeeks(), view = $('fView').value, role = $('fRole').value, ok = $('fOk').value;
+    const qs = $('fName').value.toLowerCase().split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+    const min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0;
+    $('wSum').textContent = sw.length===keys.length ? 'Все недели' : sw.map(weekLabel).join(', ');
+    const bnt = (d,k) => (d.weeks[k]||{}).bounty||0;
+    const val = d => Math.min(...sw.map(k=>bnt(d,k)));
+    const sum = (d,f) => sw.reduce((t,k)=>t+((d.weeks[k]||{})[f]||0),0);
+    const f2 = view==='cube' ? 'cube' : 'bounty';
+    const rows = data.filter(d => (!role||d.role===role) && (!qs.length||qs.some(q=>d.name.toLowerCase().includes(q))) && val(d)>=min && (!ok || (ok==='ok')===(val(d)>=norm)))
+                     .sort((x,y)=> sum(y,f2)-sum(x,f2));
+    const tr = d => `<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td>`;
+    const red = 'color:var(--cube-red)';
     let h;
-    if(view==='week'){
+    if(view==='week' && sw.length===1){
+      const wk = sw[0];
       h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th><th>Норма</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td><td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${val(d)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-val(d))+'</span>'}</td></tr>`).join('');
+        rows.map(d=>tr(d)+`<td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td>${bnt(d,wk)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-bnt(d,wk))+'</span>'}</td></tr>`).join('');
+    } else if(view==='week'){
+      h = '<thead><tr><th>Игрок</th><th>Роль</th>' + sw.map(k=>`<th title="${weekTitle(k)} · Bounty · Cube">${weekLabel(k)}</th>`).join('') + '<th>Норма</th></tr></thead><tbody>' +
+        rows.map(d=>tr(d)+`<td>${esc(d.role)}</td>${sw.map(k=>`<td class="num" style="${bnt(d,k)<norm?red:''}">${d.weeks[k]?fmtNum(d.weeks[k].bounty)+' · '+fmtNum(d.weeks[k].cube):'—'}</td>`).join('')}<td class="num">${sw.filter(k=>bnt(d,k)>=norm).length}/${sw.length}</td></tr>`).join('');
     } else {
-      h = '<thead><tr><th>Игрок</th>' + keys.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
-        rows.map(d=>`<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td>${keys.map(k=>`<td class="num" style="${view==='bounty'&&(!d.weeks[k]||d.weeks[k].bounty<norm)?'color:var(--cube-red)':''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sumW(d,view))}</b></td></tr>`).join('');
+      h = '<thead><tr><th>Игрок</th>' + sw.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
+        rows.map(d=>tr(d)+`${sw.map(k=>`<td class="num" style="${view==='bounty'&&bnt(d,k)<norm?red:''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sum(d,view))}</b></td></tr>`).join('');
     }
     $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
     if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
-    const top = rows.slice(0,15);
+    const top = rows.slice(0,15), tl = sw.length>1 ? 'сумма за '+sw.length+' нед.' : weekLabel(sw[0]);
     topChart = safeChart('clanTop', { type:'bar', data:{ labels: top.map(d=>d.name), datasets:[
-      {label:'Bounty · '+weekLabel(wk), data: top.map(val), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4},
-      {label:'Cube', data: top.map(d=>(d.weeks[wk]||{}).cube||0), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4}]},
+      {label:'Bounty · '+tl, data: top.map(d=>sum(d,'bounty')), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4},
+      {label:'Cube', data: top.map(d=>sum(d,'cube')), backgroundColor:'rgba(56,232,224,0.85)', borderRadius:4}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
         scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
   }
-  ['fWeek','fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
+  ['fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
+  root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', update));
+  const syncAll = () => { $('wAllChk').checked = [...root.querySelectorAll('.wk')].every(c=>c.checked); };
+  root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', syncAll));
+  $('wAllChk').addEventListener('change', e => {
+    // "Все недели" on -> отметить все; off -> оставить только текущую неделю
+    root.querySelectorAll('.wk').forEach(c => c.checked = e.target.checked || c.value===current);
+    update();
+  });
+  document.addEventListener('click', e => { const dt = root.querySelector('details.multi'); if(dt && dt.open && !dt.contains(e.target)) dt.open = false; });
+  syncAll();
   update();
 
   function openPlayer(id){
