@@ -3,1150 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cube Log — Snap Save Viewer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<title>Snap Clan Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --void: #0a0713;
-    --void-2: #120c22;
-    --panel: #16102a;
-    --panel-2: #1c1436;
-    --line: #2c2148;
-    --line-soft: #221a3a;
-    --ink: #ece7fb;
-    --ink-dim: #9d92c2;
-    --ink-faint: #6b6091;
-    --cube-purple: #9b5cff;
-    --cube-purple-2: #6f2dff;
-    --cube-magenta: #ff4fd8;
-    --cube-cyan: #38e8e0;
-    --cube-gold: #ffb23e;
-    --cube-red: #ff5470;
-    --rare-common: #8a94a8;
-    --rare-uncommon: #4fd1c5;
-    --rare-rare: #5b8def;
-    --rare-epic: #b45cff;
-    --rare-legendary: #ffb23e;
-    --shadow-glow: 0 0 60px -15px rgba(155, 92, 255, 0.55);
-  }
-
-  * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
-
-  body{
-    background:
-      radial-gradient(ellipse 900px 500px at 12% -10%, rgba(155,92,255,0.20), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(56,232,224,0.10), transparent 55%),
-      var(--void);
-    color: var(--ink);
-    font-family: 'Space Grotesk', sans-serif;
-    min-height: 100vh;
-    line-height: 1.5;
-  }
-
-  .stars{
-    position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
-    background-image:
-      radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,0.55), transparent),
-      radial-gradient(1px 1px at 140px 90px, rgba(255,255,255,0.4), transparent),
-      radial-gradient(1.5px 1.5px at 260px 40px, rgba(255,255,255,0.5), transparent),
-      radial-gradient(1px 1px at 340px 160px, rgba(255,255,255,0.35), transparent),
-      radial-gradient(1.5px 1.5px at 420px 70px, rgba(255,255,255,0.45), transparent),
-      radial-gradient(1px 1px at 60px 200px, rgba(255,255,255,0.3), transparent);
-    background-repeat: repeat;
-    background-size: 480px 260px;
-  }
-
-  .wrap{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 40px 24px 100px; }
-
-  /* ---------- Header ---------- */
-  header{ margin-bottom: 34px; }
-  .eyebrow{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--cube-cyan); display:flex; align-items:center; gap:10px; margin-bottom: 14px;
-  }
-  .eyebrow::before{ content:''; width:26px; height:1px; background: var(--cube-cyan); display:inline-block; }
-  h1{
-    font-family: 'Anton', sans-serif;
-    font-weight: 400;
-    font-size: clamp(38px, 6vw, 64px);
-    letter-spacing: 0.5px;
-    margin: 0 0 10px;
-    line-height: 0.98;
-    background: linear-gradient(120deg, #fff 10%, var(--cube-purple) 55%, var(--cube-magenta) 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .sub{ color: var(--ink-dim); font-size: 16px; max-width: 620px; }
-  .sub b{ color: var(--ink); font-weight: 600; }
-
-  /* ---------- Drop zone ---------- */
-  #dropzone{
-    margin-top: 28px;
-    border: 1.5px dashed var(--line);
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(155,92,255,0.06), rgba(155,92,255,0.02));
-    padding: 40px 28px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s ease, background .2s ease, transform .15s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  #dropzone::after{
-    content:''; position:absolute; inset:0; border-radius: 18px; padding:1px;
-    background: linear-gradient(120deg, transparent, rgba(155,92,255,0.4), transparent);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity .3s;
-  }
-  #dropzone:hover, #dropzone.drag{ border-color: var(--cube-purple); background: linear-gradient(180deg, rgba(155,92,255,0.12), rgba(155,92,255,0.04)); }
-  #dropzone:hover::after, #dropzone.drag::after{ opacity: 1; }
-  #dropzone.drag{ transform: scale(1.005); }
-  .dz-icon{ font-size: 34px; margin-bottom: 12px; filter: drop-shadow(0 0 18px rgba(155,92,255,0.6)); }
-  .dz-title{ font-weight: 600; font-size: 17px; margin-bottom: 6px; }
-  .dz-title span{ color: var(--cube-purple); text-decoration: underline; text-underline-offset: 3px; }
-  .dz-hint{ color: var(--ink-faint); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
-  #fileInput{ display: none; }
-
-  #fileChips{ display:flex; flex-wrap:wrap; gap: 8px; margin-top: 18px; }
-  .chip{
-    font-family: 'JetBrains Mono', monospace; font-size: 12px;
-    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-dim);
-    padding: 6px 12px; border-radius: 100px; display:flex; align-items:center; gap:7px;
-  }
-  .chip.ok{ color: var(--cube-cyan); border-color: rgba(56,232,224,0.35); }
-  .chip.unknown{ color: var(--ink-faint); }
-  .chip .dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
-
-  #status{ margin-top:14px; font-family:'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-faint); min-height: 18px; }
-
-  #showBtn{
-    margin-top: 16px; font-family:'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
-    background: linear-gradient(120deg, var(--cube-purple), var(--cube-purple-2));
-    color: #fff; border: none; padding: 12px 22px; border-radius: 10px; cursor: pointer;
-    box-shadow: 0 8px 24px -8px rgba(155,92,255,0.6);
-  }
-  #showBtn:hover{ filter: brightness(1.1); }
-
-  #logBox{
-    margin-top: 18px; background: var(--void-2); border: 1px solid var(--line-soft); border-radius: 12px;
-    padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-dim);
-    max-height: 220px; overflow-y: auto;
-  }
-  #logBox .line{ padding: 2px 0; white-space: pre-wrap; word-break: break-word; }
-  #logBox .line.err{ color: var(--cube-red); }
-  #logBox .line.ok{ color: var(--cube-cyan); }
-  #logBox .line .t{ color: var(--ink-faint); margin-right: 8px; }
-
-  /* ---------- Nav tabs ---------- */
-  #app{ display:none; margin-top: 46px; }
-  #app.show{ display:block; }
-
-  .tabs{
-    display:flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line-soft);
-    margin-bottom: 30px; padding-bottom: 0;
-  }
-  .tab{
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.5px;
-    color: var(--ink-faint); background: none; border: none; cursor: pointer;
-    padding: 12px 16px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
-    text-transform: uppercase;
-  }
-  .tab:hover{ color: var(--ink); }
-  .tab.active{ color: var(--cube-purple); border-bottom-color: var(--cube-purple); }
-
-  .panel{ display:none; animation: fadeIn .35s ease; }
-  .panel.active{ display:block; }
-  @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
-
-  /* ---------- Stat grid ---------- */
-  .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 26px; }
-  .stat{
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px 20px;
-    position: relative; overflow: hidden;
-  }
-  .stat::before{
-    content:''; position:absolute; top:-30px; right:-30px; width:90px; height:90px; border-radius:50%;
-    background: radial-gradient(circle, rgba(155,92,255,0.25), transparent 70%);
-  }
-  .stat .label{ font-family:'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink-faint); margin-bottom: 8px; }
-  .stat .value{ font-family:'Anton', sans-serif; font-weight: 400; font-size: 30px; color: var(--ink); }
-  .stat .value.accent{ color: var(--cube-purple); }
-  .stat .value.gold{ color: var(--cube-gold); }
-  .stat .value.cyan{ color: var(--cube-cyan); }
-  .stat .sub2{ font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
-
-  section.block{ margin-bottom: 34px; }
-  .block h2{
-    font-family: 'Anton', sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .3px;
-    margin: 0 0 4px; color: var(--ink);
-  }
-  .block .desc{ color: var(--ink-faint); font-size: 13px; margin-bottom: 16px; }
-
-  .card{
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--line-soft); border-radius: 16px; padding: 22px;
-  }
-
-  .chart-wrap{ position: relative; height: 340px; }
-  .chart-wrap.short{ height: 220px; }
-  .chart-wrap:has(.mini-chart){ height:auto; }
-
-  table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
-  th{
-    text-align:left; font-family:'JetBrains Mono', monospace; font-size: 10.5px; text-transform:uppercase;
-    letter-spacing: 1px; color: var(--ink-faint); font-weight:500; padding: 10px 12px; border-bottom: 1px solid var(--line-soft);
-  }
-  td{ padding: 10px 12px; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
-  tr:last-child td{ border-bottom:none; }
-  tr:hover td{ background: rgba(155,92,255,0.05); }
-  .pill{ display:inline-block; padding: 2px 9px; border-radius: 100px; font-size: 11px; font-family:'JetBrains Mono',monospace; }
-  .pill.leader{ background: rgba(255,178,62,0.15); color: var(--cube-gold); }
-  .pill.officer{ background: rgba(155,92,255,0.18); color: var(--cube-purple); }
-  .pill.member{ background: rgba(157,146,194,0.12); color: var(--ink-dim); }
-  .num{ font-family:'JetBrains Mono', monospace; color: var(--ink-dim); }
-  .name-cell{ font-weight:600; }
-
-  .rarity-bar{ display:flex; height: 10px; border-radius: 6px; overflow:hidden; margin: 14px 0 10px; border:1px solid var(--line-soft); }
-  .rarity-legend{ display:flex; flex-wrap:wrap; gap: 14px; font-size: 12px; color: var(--ink-dim); }
-  .rarity-legend span{ display:inline-flex; align-items:center; gap:6px; }
-  .rarity-legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
-
-  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; }
-  .deck-item{
-    background: var(--void-2); border:1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px;
-  }
-  .deck-item .dname{ font-weight:600; font-size:13.5px; margin-bottom:2px; }
-  .deck-item .ddate{ font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-faint); }
-  .fav{ color: var(--cube-gold); margin-left: 4px; }
-
-  .two-col{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
-  @media (max-width: 820px){ .two-col{ grid-template-columns: 1fr; } }
-
-
-  .filters{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
-  .filters label{ display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); }
-  .filters select,.filters input{ background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; border-radius:9px; outline:none; min-width:130px; }
-  .filters select:focus,.filters input:focus{ border-color:var(--cube-purple); }
-  .sync-row{ margin-bottom:12px; } .sync-row label{ display:block; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); margin-bottom:6px; }
-  .sync-row input{ width:100%; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-family:'JetBrains Mono',monospace; font-size:13px; padding:10px 14px; border-radius:9px; outline:none; }
-  .sync-btn{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; background:linear-gradient(120deg,var(--cube-purple),var(--cube-purple-2)); color:#fff; border:none; padding:11px 20px; border-radius:10px; cursor:pointer; }
-  .sync-btn:disabled{ opacity:.6; } .sync-status{ margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink-faint); } .sync-status.ok{ color:var(--cube-cyan);} .sync-status.err{ color:var(--cube-red);}
-  .card table thead th{ position:sticky; top:0; background:var(--panel-2); z-index:2; }
-  #clanTable th:first-child,#clanTable td:first-child{ position:sticky; left:0; background:var(--panel); z-index:1; white-space:nowrap; }
-  #clanTable thead th:first-child{ z-index:3; background:var(--panel-2); }
-  #clanTable tr.clickable{ cursor:pointer; } #clanTable tr.clickable:hover td{ background:#1d1536; }
-  #clanTable tr.clickable:hover td:first-child{ background:#1d1536; color:var(--cube-purple); }
-  .modal{ position:fixed; inset:0; background:rgba(5,3,12,.8); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto; }
-  .modal-box{ background:var(--panel); border:1px solid var(--line); border-radius:18px; width:100%; max-width:820px; padding:26px; position:relative; box-shadow:var(--shadow-glow); }
-  .modal-x{ position:absolute; top:14px; right:16px; background:none; border:none; color:var(--ink-dim); font-size:22px; cursor:pointer; }
-  .modal-box h2{ font-family:'Anton',sans-serif; font-weight:400; font-size:30px; margin:0 0 4px; }
-  .filters .fg{ display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); position:relative; }
-  details.multi summary{ list-style:none; cursor:pointer; background:var(--void-2); border:1px solid var(--line-soft); color:var(--ink); font-size:13px; text-transform:none; letter-spacing:0; padding:8px 12px; border-radius:9px; min-width:170px; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  details.multi summary::-webkit-details-marker{ display:none; } details.multi summary::after{ content:' ▾'; color:var(--ink-faint); }
-  details.multi[open] summary{ border-color:var(--cube-purple); }
-  .multi-list{ position:absolute; top:100%; left:0; margin-top:4px; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:8px; min-width:200px; z-index:20; box-shadow:0 12px 30px rgba(0,0,0,.5); }
-  .multi-btns{ display:flex; gap:6px; margin-bottom:6px; } .multi-btns button{ flex:1; font-family:inherit; font-size:11px; background:var(--void-2); color:var(--ink-dim); border:1px solid var(--line-soft); border-radius:7px; padding:5px; cursor:pointer; }
-  .filters .wopt{ flex-direction:row; align-items:center; gap:8px; text-transform:none; letter-spacing:0; font-size:13px; color:var(--ink); padding:5px 6px; border-radius:6px; cursor:pointer; }
-  .wopt-all{ border-bottom:1px solid var(--line-soft); border-radius:6px 6px 0 0 !important; margin-bottom:4px; }
-  .filters .wopt:hover{ background:rgba(155,92,255,.12); } .wopt input{ min-width:0; width:auto; accent-color:#9b5cff; }
-  .sub-n{ font-size:10.5px; color:var(--ink-faint); font-weight:400; }
-  .kv{ display:grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13.5px; }
-  .kv dt{ color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 12px; }
-  .kv dd{ margin:0; color: var(--ink); }
-
-  /* ---------- Raw JSON viewer ---------- */
-  .raw-file-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 18px; }
-  .raw-btn{
-    font-family:'JetBrains Mono', monospace; font-size:12px; background: var(--panel-2);
-    border:1px solid var(--line-soft); color: var(--ink-dim); padding:7px 13px; border-radius:9px; cursor:pointer;
-  }
-  .raw-btn.active{ color: var(--void); background: var(--cube-purple); border-color: var(--cube-purple); font-weight:600; }
-  .jt{ font-family:'JetBrains Mono', monospace; font-size: 12.5px; line-height:1.7; }
-  .jt-row{ white-space: pre; }
-  .jt-toggle{ cursor:pointer; color: var(--ink-faint); display:inline-block; width:14px; user-select:none; }
-  .jt-key{ color: var(--cube-cyan); }
-  .jt-str{ color: var(--cube-gold); }
-  .jt-num{ color: var(--cube-magenta); }
-  .jt-bool{ color: var(--rare-rare); }
-  .jt-null{ color: var(--ink-faint); font-style: italic; }
-  .jt-punct{ color: var(--ink-faint); }
-  .jt-children{ margin-left: 18px; border-left: 1px solid var(--line-soft); padding-left: 10px; }
-  .jt-count{ color: var(--ink-faint); font-size: 11px; }
-  .jt-wrap{ max-height: 640px; overflow:auto; background: var(--void-2); border-radius: 12px; padding: 16px 18px; border:1px solid var(--line-soft); }
-  .jt-search{
-    width:100%; margin-bottom: 12px; background: var(--void-2); border:1px solid var(--line-soft); color: var(--ink);
-    font-family:'JetBrains Mono', monospace; font-size: 13px; padding: 10px 14px; border-radius: 9px; outline:none;
-  }
-  .jt-search:focus{ border-color: var(--cube-purple); }
-  .jt-empty{ color: var(--ink-faint); text-align:center; padding: 30px; font-family:'JetBrains Mono', monospace; font-size: 13px; }
-
-  .empty-state{ text-align:center; padding: 50px 20px; color: var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size: 13px; }
-
-  footer{ margin-top: 60px; text-align:center; color: var(--ink-faint); font-size: 12px; font-family:'JetBrains Mono', monospace; }
+:root{--bg:#0a0713;--panel:#16102a;--panel2:#1c1436;--line:#2c2148;--ink:#ece7fb;--dim:#9d92c2;--faint:#6b6091;--purple:#9b5cff;--cyan:#38e8e0;--gold:#ffb23e;--red:#ff5470}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse 900px 500px at 12% -10%,rgba(155,92,255,.2),transparent 60%),var(--bg);color:var(--ink);font-family:'Space Grotesk',sans-serif;min-height:100vh;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+.eyebrow{font:12px 'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-bottom:12px}
+h1{font:400 clamp(36px,6vw,60px)/1 'Anton',sans-serif;margin:0 0 10px;background:linear-gradient(120deg,#fff 10%,var(--purple) 60%,#ff4fd8);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font:400 22px 'Anton',sans-serif;margin:0 0 4px}
+.desc{color:var(--faint);font-size:13px;margin:0 0 14px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:22px}
+#drop{border:1.5px dashed var(--line);border-radius:18px;padding:34px;text-align:center;cursor:pointer;margin-top:24px;background:rgba(155,92,255,.05)}
+#drop:hover,#drop.drag{border-color:var(--purple)}
+#drop b{color:var(--purple)}
+.mono,label,button,input,select,th,small{font-family:'JetBrains Mono',monospace}
+#status{margin-top:10px;font-size:13px;color:var(--faint);font-family:'JetBrains Mono',monospace}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:5px;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--faint)}
+label.full{flex:1 1 100%}
+input,select{background:#120c22;border:1px solid var(--line);color:var(--ink);font-size:13px;padding:9px 12px;border-radius:9px;outline:none;min-width:130px}
+input:focus,select:focus{border-color:var(--purple)}
+label.full input{width:100%}
+button{font-size:13px;font-weight:700;background:linear-gradient(120deg,var(--purple),#6f2dff);color:#fff;border:none;padding:11px 20px;border-radius:10px;cursor:pointer}
+button:disabled{opacity:.6}
+.st{margin-top:10px;font:12.5px 'JetBrains Mono',monospace;color:var(--faint)}.st.ok{color:var(--cyan)}.st.err{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips label{flex-direction:row;align-items:center;gap:6px;background:#120c22;border:1px solid var(--line);border-radius:100px;padding:5px 11px;color:var(--dim);font-size:12px;text-transform:none;letter-spacing:0;cursor:pointer}
+.chips input{min-width:0;accent-color:#9b5cff}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:12px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{position:sticky;top:0;background:var(--panel2);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);padding:10px 12px;border-bottom:1px solid var(--line);z-index:2;font-weight:400}
+td{padding:9px 12px;border-bottom:1px solid #221a3a}
+td.nm{font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--panel)}
+td.nm i{font-size:11px;color:var(--faint);font-weight:400}
+td small{display:block;font-size:10.5px;color:var(--faint)}
+.num{font-family:'JetBrains Mono',monospace;color:var(--dim)}
+.num b{color:var(--ink)}
+tbody tr[data-id]{cursor:pointer}tbody tr[data-id]:hover td{background:#1d1536}
+.empty{text-align:center;color:var(--faint);padding:30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:22px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.stat .l{font:11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1.5px;color:var(--faint);margin-bottom:6px}
+.stat .v{font:400 26px 'Anton',sans-serif}
+#app{display:none}#app.show{display:block}
+.modal{position:fixed;inset:0;background:rgba(5,3,12,.8);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:100%;max-width:900px;padding:26px;position:relative}
+.mx{position:absolute;top:12px;right:14px;background:none;padding:4px 10px;font-size:20px;color:var(--dim)}
 </style>
 </head>
 <body>
-<div class="stars"></div>
 <div class="wrap">
+  <div class="eyebrow">Snap Clan Tracker</div>
+  <h1>Клан · история очков</h1>
+  <p style="color:var(--dim);max-width:640px;margin:0">Смотри историю клана из Google Таблицы по тегу или загрузи файл <b>ClanState.json</b> из сохранения Marvel Snap, чтобы увидеть текущие данные и отправить их в историю. Файлы читаются в браузере.</p>
 
-  <header>
-    <div class="eyebrow">Cube Log · offline · local save reader</div>
-    <h1>Snap Save Viewer</h1>
-    <p class="sub">Загрузи все файлы из своей папки с сохранением <b>Marvel Snap</b> (обычно 26 файлов вида <code>*State.json</code>) — соберу профиль, коллекцию, мастерство героев, клан и остальное в одну красивую панель. Всё происходит прямо в браузере, файлы никуда не отправляются.</p>
-
-    <div id="dropzone">
-      <div class="dz-icon">◆</div>
-      <div class="dz-title">Перетащи сюда файлы, или <span>выбери вручную</span></div>
-      <div class="dz-hint">поддерживается множественный выбор · .json</div>
-      <input id="fileInput" type="file" multiple accept=".json,application/json">
+  <section class="card" id="hist">
+    <h2>История клана</h2>
+    <p class="desc">URL веб-приложения, секретный код и тег клана (например MSF). Те же URL и код используются для отправки данных.</p>
+    <div class="row">
+      <label class="full">URL веб-приложения Apps Script<input id="hUrl" placeholder="https://script.google.com/macros/s/…/exec"></label>
+      <label>Секретный код<input id="hSecret" type="password"></label>
+      <label>Клан (тег)<input id="hClan" placeholder="MSF"></label>
+      <label>Игрок<input id="hQ" placeholder="поиск"></label>
+      <label>Норма<input id="hNorm" type="number" min="0" value="2670"></label>
     </div>
-    <div id="fileChips"></div>
-    <div id="status"></div>
-    <button id="showBtn" style="display:none;">Показать дашборд</button>
-    <div id="logBox" style="display:none;"></div>
-  </header>
+    <button id="hBtn">Показать историю</button>
+    <div class="st" id="hSt"></div>
+    <div class="tw" id="hWrap" style="display:none"><table id="hT"></table></div>
+  </section>
 
-  <div id="app">
-    <nav class="tabs" id="tabs"></nav>
-    <div id="panels"></div>
-  </div>
+  <div id="drop"><div style="font-size:30px">◆</div><div>Перетащи сюда <b>ClanState.json</b> или выбери вручную</div>
+    <input id="file" type="file" multiple accept=".json,application/json" style="display:none"></div>
+  <div id="status"></div>
 
-  <footer>Данные читаются локально в вашем браузере и никуда не передаются.</footer>
+  <section id="app">
+    <div class="grid" id="stats"></div>
+    <div class="card">
+      <h2>Текущие данные из файла</h2>
+      <p class="desc">Недели отмечены кнопками. Норма проверяется по сумме Bounty + Cube в каждой выбранной неделе. Клик по строке — карточка игрока.</p>
+      <div class="chips" id="cWeeks"></div>
+      <div class="row">
+        <label>Игроки (через запятую)<input id="cQ" placeholder="ник1, ник2" style="min-width:220px"></label>
+        <label>Всего от<input id="cMin" type="number" min="0" placeholder="0"></label>
+        <label>Норма<input id="cNorm" type="number" min="0" value="2670"></label>
+        <label>По норме<select id="cOk"><option value="">Все</option><option value="ok">Выполнили</option><option value="low">Не выполнили</option></select></label>
+      </div>
+      <div class="tw"><table id="cT"></table></div>
+    </div>
+    <div class="card">
+      <h2>Отправить в историю</h2>
+      <p class="desc">Отправит все недели файла с тегом клана из файла. Завершённые недели, уже записанные в таблице, скрипт пропустит, текущую обновит.</p>
+      <button id="sBtn">Отправить все недели в таблицу</button>
+      <div class="st" id="sSt"></div>
+    </div>
+  </section>
 </div>
 
 <script>
-(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => n == null ? '—' : Number(n).toLocaleString('ru-RU');
+const wl = k => { const a = String(k).split('-'); return a[2] + '.' + a[1]; };
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) { return ''; } };
+const sumT = (p, ks) => ks.reduce((s, k) => s + (p.w[k] ? p.w[k].t : 0), 0);
 
-/* ---------------------------------------------------------------- *
- *  File intake
- * ---------------------------------------------------------------- */
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const fileChips = document.getElementById('fileChips');
-const statusEl = document.getElementById('status');
-const appEl = document.getElementById('app');
-const tabsEl = document.getElementById('tabs');
-const panelsEl = document.getElementById('panels');
-const showBtn = document.getElementById('showBtn');
-const logBox = document.getElementById('logBox');
+$('hUrl').value = ls('snapClanSheetUrl'); $('hSecret').value = ls('snapClanSheetSecret'); $('hClan').value = ls('snapClanTag');
 
-function log(msg, kind){
-  logBox.style.display = 'block';
-  const line = document.createElement('div');
-  line.className = 'line' + (kind ? ' ' + kind : '');
-  const time = new Date().toLocaleTimeString('ru-RU');
-  line.innerHTML = `<span class="t">${time}</span>${esc(String(msg))}`;
-  logBox.appendChild(line);
-  logBox.scrollTop = logBox.scrollHeight;
+/* Общая таблица: P = игроки {id,name,w:{неделя:{b,c,t}},gone}, keys = колонки-недели, cur = текущая (неполная) неделя */
+function table(el, P, keys, cur, norm) {
+  const done = keys.filter(k => k !== cur);
+  el.innerHTML = '<thead><tr><th>Игрок</th>' + keys.map(k => `<th>${wl(k)}${k === cur ? '*' : ''}</th>`).join('') + '<th>Среднее</th><th>Норма</th></tr></thead><tbody>' +
+    P.map(p => {
+      const dv = done.filter(k => p.w[k]).map(k => p.w[k].t);
+      const avg = dv.length ? Math.round(dv.reduce((a, b) => a + b, 0) / dv.length) : null;
+      return `<tr data-id="${esc(p.id)}"><td class="nm">${esc(p.name)}${p.gone ? ' <i>(вышел)</i>' : ''}</td>` +
+        keys.map(k => { const w = p.w[k]; return `<td class="num" style="${w && k !== cur && w.t < norm ? 'color:var(--red)' : ''}">${w ? `<b>${fmt(w.t)}</b><small>${fmt(w.b)} · ${fmt(w.c)}</small>` : '—'}</td>`; }).join('') +
+        `<td class="num">${fmt(avg)}</td><td class="num">${dv.filter(v => v >= norm).length}/${done.length}</td></tr>`;
+    }).join('') + (P.length ? '' : '<tr><td colspan="9" class="empty">Никого не найдено</td></tr>') + '</tbody>';
 }
 
-// Catch absolutely any uncaught error anywhere on the page and surface it,
-// instead of letting the page silently stay blank.
-window.addEventListener('error', e => {
-  log('Необработанная ошибка: ' + (e.message || e), 'err');
-});
-window.addEventListener('unhandledrejection', e => {
-  log('Необработанная ошибка (promise): ' + (e.reason && e.reason.message ? e.reason.message : e.reason), 'err');
-});
-
-showBtn.addEventListener('click', () => {
-  log('Ручной запуск построения дашборда…');
-  runBuildApp();
-});
-
-const KNOWN_FILES = [
-  'AccountState','AnalyticState','AssetCacheState','AudioState','BattlePassClientState',
-  'BrazeSdkManagerState','CacheGenerationState','CharacterMasteryState','ChatState','ClanState',
-  'CollectionState','ConquestClientState','CustomGameManagerState','FirstLaunchState','GameState',
-  'HighStakesTablesManagerState','InboxClientState','LocalizationState','MinigameEventState',
-  'PlayState','ProfileClientState','RenderingState','RewardClientState','SchemaState',
-  'ShopClientState','TimeClientState'
-];
-
-let store = {}; // filename (without .json) -> parsed object
-
-dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
-dropzone.addEventListener('drop', e => {
-  e.preventDefault(); dropzone.classList.remove('drag');
-  handleFiles(e.dataTransfer.files);
-});
-fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-function handleFiles(fileList){
-  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.json'));
-  if(!files.length){ statusEl.textContent = 'Не найдено .json файлов среди выбранных.'; log('Выбраны файлы без расширения .json — пропущены.', 'err'); return; }
-  statusEl.textContent = 'Читаю файлы…';
-  log(`Начинаю чтение ${files.length} файлов…`);
-  fileChips.innerHTML = '';
-  showBtn.style.display = 'none';
-  let loaded = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const key = file.name.replace(/\.json$/i,'');
-      try{
-        let text = reader.result;
-        if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
-        const data = JSON.parse(text);
-        store[key] = data;
-        addChip(key, true);
-      }catch(err){
-        addChip(key, false);
-        log(`Не удалось разобрать ${file.name}: ${err.message}`, 'err');
-      }
-      loaded++;
-      if(loaded === files.length){
-        statusEl.textContent = `Загружено файлов: ${Object.keys(store).length}`;
-        log(`Готово: разобрано ${Object.keys(store).length} файлов. Строю дашборд…`, 'ok');
-        showBtn.style.display = 'inline-block';
-        runBuildApp();
-      }
-    };
-    reader.onerror = () => {
-      log(`Браузер не смог прочитать файл ${file.name}: ${reader.error}`, 'err');
-      loaded++;
-    };
-    reader.readAsText(file, 'utf-8');
-  });
+/* ---------- История из таблицы ---------- */
+let H = null;
+function drawHist() {
+  if (!H) return;
+  const norm = Number($('hNorm').value) || 0, q = $('hQ').value.toLowerCase().trim();
+  const gone = {}; H.roster.forEach(r => gone[r[0]] = r[1] === 'Left');
+  const M = {};
+  H.rows.forEach(r => { const p = M[r[1]] || (M[r[1]] = { id: r[1], name: r[2], w: {}, gone: gone[r[1]] }); p.name = r[2]; p.w[r[0]] = { b: r[4], c: r[5], t: r[6] }; });
+  const keys = [...new Set(H.rows.map(r => r[0]))].sort(), cur = keys[keys.length - 1];
+  const P = Object.values(M).filter(p => !q || p.name.toLowerCase().includes(q)).sort((a, b) => sumT(b, keys) - sumT(a, keys));
+  table($('hT'), P, keys, cur, norm);
+  $('hWrap').style.display = 'block';
 }
-
-// Wraps buildApp() with logging + error surfacing, so a failure never just
-// leaves the page blank with no explanation.
-function runBuildApp(){
-  try{
-    buildApp();
-    log(`Дашборд построен, вкладок: ${document.querySelectorAll('.tabs .tab').length}.`, 'ok');
-    if(typeof Chart === 'undefined'){
-      log('Библиотека графиков (Chart.js) не загрузилась — вероятно, нет доступа к внешней сети. Используются встроенные графики — всё работает без интернета.', 'err');
-    }
-  }catch(err){
-    log('Не удалось построить дашборд: ' + err.message, 'err');
-    console.error(err);
-    appEl.classList.add('show');
-    appEl.style.display = 'block';
-    panelsEl.innerHTML = `<div class="empty-state">Произошла ошибка при построении дашборда: ${esc(err.message)}<br>Подробности — в логе выше. Нажмите «Показать дашборд», чтобы попробовать снова.</div>`;
-  }
-}
-
-function addChip(key, ok){
-  const chip = document.createElement('div');
-  chip.className = 'chip ' + (ok ? (KNOWN_FILES.includes(key) ? 'ok' : 'unknown') : '');
-  chip.innerHTML = `<span class="dot"></span>${key}${ok ? '' : ' — ошибка чтения'}`;
-  fileChips.appendChild(chip);
-}
-
-/* ---------------------------------------------------------------- *
- *  Helpers
- * ---------------------------------------------------------------- */
-function get(obj, path, fallback){
-  try{
-    const parts = path.split('.');
-    let cur = obj;
-    for(const p of parts){
-      if(cur == null) return fallback;
-      cur = cur[p];
-    }
-    return cur === undefined ? fallback : cur;
-  }catch(e){ return fallback; }
-}
-function fmtNum(n){ if(n==null || isNaN(n)) return '—'; return Number(n).toLocaleString('ru-RU'); }
-function fmtDate(s){
-  if(!s) return '—';
-  const d = new Date(s);
-  if(isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short', year:'numeric'});
-}
-function daysAgo(s){
-  if(!s) return null;
-  const d = new Date(s);
-  if(isNaN(d.getTime())) return null;
-  return Math.floor((Date.now() - d.getTime())/86400000);
-}
-function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function stripType(k){ return k === '$type' || k === '$id'; }
-
-const RARITY_COLORS = {
-  Common: 'var(--rare-common)', Uncommon: 'var(--rare-uncommon)', Rare: 'var(--rare-rare)',
-  Epic: 'var(--rare-epic)', Legendary: 'var(--rare-legendary)', Ultra: '#ff5470', Infinity: '#ffffff'
+$('hBtn').onclick = () => {
+  const url = $('hUrl').value.trim(), secret = $('hSecret').value.trim(), clan = $('hClan').value.trim(), st = $('hSt');
+  if (!url || !clan) { st.textContent = 'Нужны URL и тег клана.'; st.className = 'st err'; return; }
+  ls('snapClanSheetUrl', url); ls('snapClanSheetSecret', secret); ls('snapClanTag', clan);
+  st.className = 'st'; st.textContent = 'Загружаю…'; $('hBtn').disabled = true;
+  fetch(url + '?action=history&clan=' + encodeURIComponent(clan) + '&secret=' + encodeURIComponent(secret))
+    .then(r => r.json()).then(res => {
+      $('hBtn').disabled = false;
+      if (!res.ok) { st.textContent = 'Ошибка: ' + res.error; st.className = 'st err'; return; }
+      H = res;
+      st.textContent = res.rows.length ? `Клан ${res.clan}: записей ${res.rows.length}.` : `Для клана ${res.clan} пока нет данных.`;
+      st.className = 'st ok'; drawHist();
+    }).catch(e => { $('hBtn').disabled = false; st.textContent = 'Не удалось загрузить: ' + e.message; st.className = 'st err'; });
 };
+['hQ', 'hNorm'].forEach(id => $(id).addEventListener('input', drawHist));
 
-/* ---------------------------------------------------------------- *
- *  App build
- * ---------------------------------------------------------------- */
-let charts = [];
-function buildApp(){
-  charts.forEach(c => c.destroy()); charts = [];
-  const tabs = [];
+/* ---------- Загрузка ClanState ---------- */
+const drop = $('drop'), fi = $('file');
+drop.onclick = () => fi.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('drag'); };
+drop.ondragleave = () => drop.classList.remove('drag');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('drag'); load(e.dataTransfer.files); };
+fi.onchange = e => load(e.target.files);
 
-  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
-  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
-  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
-  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
-  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
-  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
-
-  tabsEl.innerHTML = '';
-  panelsEl.innerHTML = '';
-  tabs.forEach((t,i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab' + (i===0 ? ' active' : '');
-    btn.textContent = t.label;
-    btn.onclick = () => switchTab(t.id);
-    tabsEl.appendChild(btn);
-
-    const panel = document.createElement('div');
-    panel.className = 'panel' + (i===0 ? ' active' : '');
-    panel.id = 'panel-' + t.id;
-    panelsEl.appendChild(panel);
-    t.render(panel);
-  });
-
-  appEl.classList.add('show');
-  appEl.scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-function switchTab(id){
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.textContent === document.querySelector(`#panel-${id}`) ? true : b.classList.contains('active')));
-  document.querySelectorAll('.tabs .tab').forEach((b,i) => {
-    b.classList.toggle('active', b.getAttribute('data-id') === id);
-  });
-  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
-}
-// rewire tab buttons with data-id (simpler + reliable)
-function switchTabFix(){}
-
-/* ---------------------------------------------------------------- *
- *  OVERVIEW
- * ---------------------------------------------------------------- */
-function renderOverview(root){
-  const acc = store.AccountState;
-  const col = store.CollectionState;
-  const clan = store.ClanState;
-  const bp = store.BattlePassClientState;
-
-  const appVersion = get(acc,'ApplicationVersion') || get(col,'ApplicationVersion') || '—';
-  const region = get(acc,'ServerState.Account.AppRegion','—');
-  const regLoc = get(acc,'ServerState.Account.RegistrationLocation','—');
-  const created = get(acc,'ServerState.Account.TimeCreated');
-  const lastLogin = get(acc,'ClientState.LastLoginTime');
-  const ageDays = daysAgo(created);
-
-  const cards = get(col,'ServerState.Cards',[]);
-  const decks = get(col,'ServerState.Decks',[]);
-  const collScore = get(col,'ServerState.CollectionScore.Amount');
-  const clanName = get(clan,'ServerState.State.Identity.Name');
-  const clanTag = get(clan,'ServerState.State.Identity.Tag');
-  const season = get(bp,'LastSeenBattlePassDefId');
-
-  let html = '<div class="grid">';
-  html += stat('Версия клиента', appVersion, 'accent');
-  html += stat('Аккаунт создан', fmtDate(created), null, ageDays!=null ? `${fmtNum(ageDays)} дн. назад` : '');
-  html += stat('Регион', region, null, regLoc && regLoc !== region ? `регистрация: ${regLoc}` : '');
-  html += stat('Последний вход', fmtDate(lastLogin), 'cyan');
-  if(col) html += stat('Очки коллекции', fmtNum(collScore), 'gold');
-  if(col) html += stat('Карт в коллекции', fmtNum(cards.length), 'accent', `${fmtNum(new Set(cards.map(c=>c.CardDefId)).size)} героев`);
-  if(col) html += stat('Колод сохранено', fmtNum(decks.length));
-  if(clan) html += stat('Клан', clanTag ? `[${clanTag}] ${clanName}` : (clanName||'—'), 'cyan');
-  if(season) html += stat('Текущий сезон', season.replace(/^Season\d+/,''), null, season);
-  html += '</div>';
-
-  html += `<div class="block"><h2>Загруженные файлы</h2><p class="desc">Распознано ${Object.keys(store).length} из 26 стандартных файлов сохранения.</p>`;
-  html += '<div class="deck-grid">';
-  KNOWN_FILES.forEach(name => {
-    const present = !!store[name];
-    html += `<div class="deck-item" style="opacity:${present?1:0.35}">
-      <div class="dname">${present ? '●' : '○'} ${name}</div>
-      <div class="ddate">${present ? 'загружен' : 'отсутствует'}</div>
-    </div>`;
-  });
-  const extras = Object.keys(store).filter(k => !KNOWN_FILES.includes(k));
-  extras.forEach(name => {
-    html += `<div class="deck-item"><div class="dname">● ${name}</div><div class="ddate">доп. файл</div></div>`;
-  });
-  html += '</div></div>';
-
-  root.innerHTML = html;
-}
-
-function stat(label, value, cls, sub){
-  return `<div class="stat">
-    <div class="label">${esc(label)}</div>
-    <div class="value ${cls||''}">${value==null||value==='' ? '—' : esc(value)}</div>
-    ${sub ? `<div class="sub2">${esc(sub)}</div>` : ''}
-  </div>`;
-}
-
-/* ---------------------------------------------------------------- *
- *  COLLECTION
- * ---------------------------------------------------------------- */
-function renderCollection(root){
-  const col = store.CollectionState;
-  const cards = get(col,'ServerState.Cards',[]);
-  const decks = get(col,'ServerState.Decks',[]);
-  const cardBacks = get(col,'ServerState.CardBacks',[]);
-  const avatars = get(col,'ServerState.AvatarInventory.OwnedAvatars',[]);
-  const titles = get(col,'ServerState.TitleInventory.OwnedTitles',[]);
-
-  const rarityCounts = {};
-  cards.forEach(c => { const r = c.RarityDefId || 'Unknown'; rarityCounts[r] = (rarityCounts[r]||0)+1; });
-  const order = ['Common','Uncommon','Rare','Epic','Legendary','Ultra','Infinity'];
-  const rarityKeys = Object.keys(rarityCounts).sort((a,b) => order.indexOf(a)-order.indexOf(b));
-  const total = cards.length || 1;
-
-  let html = '<div class="block"><h2>Коллекция карт</h2><p class="desc">Всего вариантов карт в инвентаре, по редкости.</p><div class="card">';
-  html += '<div class="rarity-bar">';
-  rarityKeys.forEach(r => {
-    const pct = (rarityCounts[r]/total*100).toFixed(1);
-    html += `<div style="width:${pct}%; background:${RARITY_COLORS[r] || '#555'}"></div>`;
-  });
-  html += '</div><div class="rarity-legend">';
-  rarityKeys.forEach(r => {
-    html += `<span><i style="background:${RARITY_COLORS[r]||'#555'}"></i>${r}: ${fmtNum(rarityCounts[r])}</span>`;
-  });
-  html += '</div></div></div>';
-
-  html += '<div class="grid">';
-  html += stat('Уникальных героев', fmtNum(new Set(cards.map(c=>c.CardDefId)).size),'accent');
-  html += stat('Вариантов оформления', fmtNum(cards.filter(c=>c.ArtVariantDefId).length),'cyan');
-  html += stat('Рубашек карт', fmtNum(cardBacks.length));
-  html += stat('Аватаров', fmtNum(avatars.length));
-  html += stat('Титулов', fmtNum(titles.length));
-  html += '</div>';
-
-  html += `<div class="block"><h2>Сохранённые колоды</h2><p class="desc">${fmtNum(decks.length)} колод в профиле.</p><div class="deck-grid">`;
-  decks.slice().sort((a,b)=> (b.CardBack&&b.CardBack.TimeUpdated||'').localeCompare(a.CardBack&&a.CardBack.TimeUpdated||'')).forEach(d => {
-    const fav = get(d,'CardBack.Favorite', false);
-    html += `<div class="deck-item"><div class="dname">${esc(d.Name||'Без названия')}${fav?' <span class="fav">★</span>':''}</div><div class="ddate">рубашка: ${esc(get(d,'CardBack.CardBackDefId','—'))}</div></div>`;
-  });
-  html += '</div></div>';
-  html += `<div class="block"><h2>Герои в коллекции</h2>
-    <div class="filters"><label>Герой<input id="cQ" placeholder="поиск"></label>
-    <label>Редкость<select id="cR"><option value="">Все</option>${rarityKeys.map(r=>`<option>${r}</option>`).join('')}</select></label>
-    <label>Колода<input id="dQ" placeholder="поиск по колодам"></label></div>
-    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Редкость</th><th>Вариантов</th></tr></thead><tbody id="cBody"></tbody></table></div></div>`;
-  root.innerHTML = html;
-  const byHero = {}; cards.forEach(c=>{ const h=byHero[c.CardDefId]||(byHero[c.CardDefId]={name:c.CardDefId,rarity:c.RarityDefId||'?',n:0}); h.n++; });
-  const heroes = Object.values(byHero).sort((a,b)=>a.name.localeCompare(b.name));
-  const cUpdate = () => {
-    const q=root.querySelector('#cQ').value.toLowerCase(), r=root.querySelector('#cR').value, dq=root.querySelector('#dQ').value.toLowerCase();
-    const l = heroes.filter(h=>h.name.toLowerCase().includes(q)&&(!r||h.rarity===r));
-    root.querySelector('#cBody').innerHTML = l.map(h=>`<tr><td class="name-cell">${esc(h.name)}</td><td>${esc(h.rarity)}</td><td class="num">${h.n}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
-    root.querySelectorAll('.deck-item').forEach(d=>{ d.style.display = d.textContent.toLowerCase().includes(dq)?'':'none'; });
+function load(list) {
+  const f = Array.from(list).find(x => /ClanState/i.test(x.name));
+  if (!f) { $('status').textContent = 'Среди выбранных файлов нет ClanState.json.'; return; }
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      let t = r.result; if (t.charCodeAt(0) === 0xFEFF) t = t.slice(1);
+      build(JSON.parse(t)); $('status').textContent = 'Загружен ' + f.name;
+    } catch (e) { $('status').textContent = 'Ошибка чтения: ' + e.message; }
   };
-  ['cQ','cR','dQ'].forEach(id=>root.querySelector('#'+id).addEventListener('input',cUpdate)); cUpdate();
+  r.readAsText(f, 'utf-8');
 }
 
-/* ---------------------------------------------------------------- *
- *  MASTERY
- * ---------------------------------------------------------------- */
-function renderMastery(root){
-  const cm = store.CharacterMasteryState;
-  const dataDict = get(cm,'ServerState.CharacterMasteryProgress.CharacterProgressData',{});
-  const entries = Object.keys(dataDict).filter(k => k!=='$type').map(k => {
-    const v = dataDict[k];
-    return {
-      name: k,
-      level: parseInt(v.LastClaimedLevel,10) || 0,
-      cap: parseInt(v.LevelCap,10) || 30,
-      exp: v.Experience || 0
-    };
+/* ---------- Данные клана из файла ---------- */
+let CL = null;
+function build(clan) {
+  const idn = clan?.ServerState?.State?.Identity || {}, ms = clan?.ServerState?.Members || [];
+  const data = ms.map(m => {
+    const w = {};
+    (m.TimePeriodState?.TimePeriodList || []).forEach(p => {
+      if (p.BountyPoints != null || p.CubePoints != null) w[p.Key] = { b: p.BountyPoints || 0, c: p.CubePoints || 0, t: (p.BountyPoints || 0) + (p.CubePoints || 0) };
+    });
+    return { id: m.PlayerInfo?.Id || '', name: m.PlayerInfo?.Name || '—', role: m.Role || 'Member', score: m.PlayerInfo?.CollectionScore || 0, w };
   });
-  entries.sort((a,b) => b.level - a.level || b.exp - a.exp);
+  const keys = [...new Set(data.flatMap(d => Object.keys(d.w)))].sort(), cur = keys[keys.length - 1] || '';
+  CL = { idn, data, keys, cur };
+  if (idn.Tag && !$('hClan').value) $('hClan').value = idn.Tag;
+  $('stats').innerHTML = [['Клан', `[${idn.Tag || ''}] ${idn.Name || ''}`], ['Участников', ms.length], ['Недель в файле', keys.length]]
+    .map(a => `<div class="stat"><div class="l">${a[0]}</div><div class="v">${esc(a[1])}</div></div>`).join('');
+  $('cWeeks').innerHTML = keys.map(k => `<label><input type="checkbox" value="${k}" checked> ${wl(k)}${k === cur ? ' (текущая)' : ''}</label>`).join('');
+  $('cWeeks').querySelectorAll('input').forEach(c => c.onchange = drawClan);
+  $('app').classList.add('show');
+  drawClan();
+}
 
-  const totalExp = entries.reduce((s,e)=>s+e.exp,0);
-  const maxed = entries.filter(e => e.level >= e.cap).length;
-  const avgLevel = entries.length ? (entries.reduce((s,e)=>s+e.level,0)/entries.length) : 0;
+function drawClan() {
+  if (!CL) return;
+  const { data, keys, cur } = CL;
+  let sw = keys.filter(k => $('cWeeks').querySelector(`input[value="${k}"]`).checked);
+  if (!sw.length) sw = [cur];
+  const qs = $('cQ').value.toLowerCase().split(/[,;\n]+/).map(x => x.trim()).filter(Boolean);
+  const min = Number($('cMin').value) || 0, norm = Number($('cNorm').value) || 0, ok = $('cOk').value;
+  const low = d => Math.min(...sw.map(k => d.w[k] ? d.w[k].t : 0));
+  const rows = data.filter(d => (!qs.length || qs.some(q => d.name.toLowerCase().includes(q))) && low(d) >= min && (!ok || (ok === 'ok') === (low(d) >= norm)))
+    .sort((a, b) => sumT(b, sw) - sumT(a, sw));
+  table($('cT'), rows, sw, cur, norm);
+}
+['cQ', 'cMin', 'cNorm', 'cOk'].forEach(id => $(id).addEventListener('input', drawClan));
 
-  let html = '<div class="grid">';
-  html += stat('Героев прокачивается', fmtNum(entries.length),'accent');
-  html += stat('Максимальный уровень', fmtNum(maxed), 'gold', `из ${fmtNum(entries.length)}`);
-  html += stat('Средний уровень', avgLevel.toFixed(1),'cyan');
-  html += stat('Суммарный опыт', fmtNum(totalExp));
-  html += '</div>';
+$('cT').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]'); if (!tr || !CL) return;
+  const d = CL.data.find(x => x.id === tr.dataset.id); if (!d) return;
+  const m = document.createElement('div'); m.className = 'modal';
+  m.innerHTML = `<div class="mbox"><button class="mx">✕</button><h2>${esc(d.name)}</h2><p class="desc">${esc(d.role)} · счёт коллекции ${fmt(d.score)}</p><div class="tw"><table id="pT"></table></div></div>`;
+  document.body.appendChild(m);
+  table(m.querySelector('#pT'), [d], CL.keys, CL.cur, Number($('cNorm').value) || 0);
+  const close = () => { m.remove(); document.removeEventListener('keydown', kd); };
+  const kd = ev => { if (ev.key === 'Escape') close(); };
+  document.addEventListener('keydown', kd);
+  m.onclick = ev => { if (ev.target === m || ev.target.className === 'mx') close(); };
+});
 
-  html += '<div class="two-col">';
-  html += '<div class="block"><h2>Топ-20 героев по уровню мастерства</h2><div class="card"><div class="chart-wrap"><canvas id="masteryChart"></canvas></div></div></div>';
-
-  html += `<div class="block"><h2>Все герои</h2>
-    <div class="filters"><label>Герой<input id="mQ" placeholder="поиск"></label>
-    <label>Уровень<select id="mL"><option value="">Все</option><option value="max">Максимальный</option><option value="part">Не максимальный</option><option value="zero">Нулевой</option></select></label>
-    <label>Сортировка<select id="mS"><option value="level">По уровню</option><option value="exp">По опыту</option><option value="name">По имени</option></select></label></div>
-    <div class="card" style="max-height:400px; overflow:auto; padding:0;"><table><thead><tr><th>Герой</th><th>Ур.</th><th>Опыт</th></tr></thead><tbody id="mBody"></tbody></table></div></div>`;
-  html += '</div>';
-
-  root.innerHTML = html;
-  const mUpdate = () => {
-    const q=root.querySelector('#mQ').value.toLowerCase(), l=root.querySelector('#mL').value, so=root.querySelector('#mS').value;
-    const list = entries.filter(e => e.name.toLowerCase().includes(q) && (!l || (l==='max'?e.level>=e.cap : l==='zero'?e.level===0 : e.level<e.cap)))
-      .sort((a,b)=> so==='name'?a.name.localeCompare(b.name) : so==='exp'?b.exp-a.exp : b.level-a.level||b.exp-a.exp);
-    root.querySelector('#mBody').innerHTML = list.map(e=>`<tr><td class="name-cell">${esc(e.name)}</td><td class="num">${e.level}/${e.cap}</td><td class="num">${fmtNum(e.exp)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Ничего не найдено</td></tr>';
+/* ---------- Отправка в таблицу ---------- */
+$('sBtn').onclick = () => {
+  if (!CL) return;
+  const url = $('hUrl').value.trim(), secret = $('hSecret').value.trim(), st = $('sSt'), btn = $('sBtn');
+  const tag = CL.idn.Tag || $('hClan').value.trim();
+  if (!url) { st.textContent = 'Вставь URL веб-приложения в блоке «История клана».'; st.className = 'st err'; return; }
+  if (!tag) { st.textContent = 'Не удалось определить тег клана.'; st.className = 'st err'; return; }
+  ls('snapClanSheetUrl', url); ls('snapClanSheetSecret', secret); ls('snapClanTag', tag);
+  const payload = {
+    secret, clan: tag, clanId: CL.idn.Id || '', clanName: CL.idn.Name || '', syncedAt: new Date().toISOString(), currentWeek: CL.cur,
+    members: CL.data.map(d => ({ id: d.id, name: d.name, role: d.role, collectionScore: d.score,
+      weeks: CL.keys.filter(k => d.w[k]).map(k => ({ weekKey: k, bounty: d.w[k].b, cube: d.w[k].c })) }))
   };
-  ['mQ','mL','mS'].forEach(id=>root.querySelector('#'+id).addEventListener('input',mUpdate)); mUpdate();
-
-  const top = entries.slice(0,20);
-  safeChart('masteryChart', {
-    type: 'bar',
-    data: {
-      labels: top.map(e=>e.name),
-      datasets: [{
-        label: 'Уровень мастерства',
-        data: top.map(e=>e.level),
-        backgroundColor: top.map((e,i) => `rgba(${155-i*3},${92+i*4},255,0.85)`),
-        borderRadius: 5,
-        maxBarThickness: 22
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Уровень ${c.raw}` } } },
-      scales:{
-        x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{family:'JetBrains Mono', size:10} }, max: 30 },
-        y:{ grid:{ display:false }, ticks:{ color:'#ece7fb', font:{family:'Space Grotesk', size:11.5} } }
-      }
-    }
-  }, root.querySelector('.card'));
-}
-
-/* ---------------------------------------------------------------- *
- *  CLAN
- * ---------------------------------------------------------------- */
-function weekLabel(k){ const [y,m,d]=k.split('-'); return `${d}.${m}`; }
-function weekTitle(k){ const [y,m,d]=k.split('-'); return `Неделя от ${d}.${m}.${y}`; }
-
-function renderClan(root){
-  const clan = store.ClanState;
-  const identity = get(clan,'ServerState.State.Identity',{});
-  identity.Id = identity.Id || get(clan,'ServerState.State.Id','');
-  const members = get(clan,'ServerState.Members',[]);
-  const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
-
-  const data = members.map(m => {
-    const weeks = {};
-    get(m,'TimePeriodState.TimePeriodList',[]).forEach(p => {
-      if(p.BountyPoints!=null || p.CubePoints!=null) weeks[p.Key] = {bounty:p.BountyPoints||0, cube:p.CubePoints||0, total:(p.BountyPoints||0)+(p.CubePoints||0)};
-    });
-    return { id:get(m,'PlayerInfo.Id',''), name:get(m,'PlayerInfo.Name','—'), role:m.Role||'Member',
-             score:get(m,'PlayerInfo.CollectionScore',0), weeks };
-  });
-  const keys = [...new Set(data.flatMap(d => Object.keys(d.weeks)))].sort();
-  const current = keys[keys.length-1] || '';
-  const roles = [...new Set(data.map(d=>d.role))];
-  const optW = keys.map(k => `<option value="${k}">${weekLabel(k)}${k===current?' (текущая, неполная)':''}</option>`).join('');
-
-  root.innerHTML = `
-  <div class="grid">
-    ${stat('Клан', `[${identity.Tag||''}] ${identity.Name||''}`, 'cyan')}
-    ${stat('Участников', fmtNum(memberCount), 'accent')}
-    ${stat('Недель в файле', fmtNum(keys.length), 'gold', keys.length ? `${weekLabel(keys[0])} – ${weekLabel(current)}` : '')}
-  </div>
-  <div class="block"><h2>Динамика клана по неделям</h2><p class="desc">Суммарные Bounty / Cube всех текущих участников. Подписи — дата начала недели.</p>
-    <div class="card"><div class="chart-wrap short"><canvas id="clanWeeks"></canvas></div></div></div>
-  <div class="block"><h2>Состав и очки</h2>
-    <div class="filters">
-      <div class="fg">Недели<details class="multi"><summary id="wSum"></summary><div class="multi-list">
-        <label class="wopt wopt-all"><input type="checkbox" id="wAllChk"> <b>Все недели</b></label>
-        ${keys.map(k=>`<label class="wopt"><input type="checkbox" class="wk" value="${k}" ${k===current?'checked':''}> ${weekLabel(k)}${k===current?' (текущая)':''}</label>`).join('')}
-      </div></details></div>
-      <label>Вид<select id="fView"><option value="week">Детально (Bounty · Cube)</option><option value="total">Только Всего</option><option value="bounty">Только Bounty</option><option value="cube">Только Cube</option></select></label>
-      <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
-      <label>Игроки (через запятую)<input id="fName" placeholder="ник1, ник2, ник3" style="min-width:240px"></label>
-      <label>Всего от<input id="fMin" type="number" min="0" placeholder="0"></label>
-      <label>Норма (Bounty + Cube)<input id="fNorm" type="number" min="0" value="2670"></label>
-      <label>По норме<select id="fOk"><option value="">Все</option><option value="ok">Выполнили (во всех выбранных неделях)</option><option value="low">Не выполнили (хотя бы в одной)</option></select></label>
-    </div>
-    <p class="desc">Несколько ников — через запятую. Всего = Bounty + Cube, норма считается по нему. При нескольких неделях «Всего от» и «По норме» проверяются в каждой выбранной неделе.</p>
-    <div class="card" style="padding:0; max-height:72vh; overflow:auto;"><table id="clanTable"></table></div>
-    <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
-  </div>
-  <div class="block"><h2>Синхронизация с Google Таблицей</h2>
-    <p class="desc">Отправит все ${keys.length} недель по каждому участнику. Уже записанные завершённые недели скрипт пропустит, текущую — обновит.</p>
-    <div class="card">
-      <div class="sync-row"><label>URL веб-приложения Apps Script</label><input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
-      <div class="sync-row"><label>Секретный код клана</label><input type="password" id="sheetSecret"></div>
-      <button id="syncBtn" class="sync-btn">Отправить все недели в таблицу</button>
-      <div id="syncStatus" class="sync-status"></div>
-    </div></div>`;
-
-  const $ = id => root.querySelector('#'+id);
-  try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){}
-
-  let topChart = null;
-  const selWeeks = () => { const w = keys.filter(k => root.querySelector(`.wk[value="${k}"]`).checked); return w.length ? w : [current]; };
-  function update(){
-    const sw = selWeeks(), view = $('fView').value, role = $('fRole').value, ok = $('fOk').value;
-    const qs = $('fName').value.toLowerCase().split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
-    const min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0;
-    $('wSum').textContent = sw.length===keys.length ? 'Все недели' : sw.map(weekLabel).join(', ');
-    const bnt = (d,k) => (d.weeks[k]||{}).total||0;
-    const val = d => Math.min(...sw.map(k=>bnt(d,k)));
-    const sum = (d,f) => sw.reduce((t,k)=>t+((d.weeks[k]||{})[f]||0),0);
-    const f2 = view==='cube' ? 'cube' : view==='bounty' ? 'bounty' : 'total';
-    const rows = data.filter(d => (!role||d.role===role) && (!qs.length||qs.some(q=>d.name.toLowerCase().includes(q))) && val(d)>=min && (!ok || (ok==='ok')===(val(d)>=norm)))
-                     .sort((x,y)=> sum(y,f2)-sum(x,f2));
-    const tr = d => `<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td>`;
-    const red = 'color:var(--cube-red)';
-    let h;
-    if(view==='week' && sw.length===1){
-      const wk = sw[0];
-      h = '<thead><tr><th>Игрок</th><th>Роль</th><th>Счёт коллекции</th><th>Bounty</th><th>Cube</th><th>Всего</th><th>Норма</th></tr></thead><tbody>' +
-        rows.map(d=>tr(d)+`<td>${esc(d.role)}</td><td class="num">${fmtNum(d.score)}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].bounty):'—'}</td><td class="num">${d.weeks[wk]?fmtNum(d.weeks[wk].cube):'—'}</td><td class="num"><b>${fmtNum(bnt(d,wk))}</b></td><td>${bnt(d,wk)>=norm?'<span class="pill leader">✓</span>':'<span class="pill" style="background:rgba(255,84,112,.15);color:var(--cube-red)">нет · −'+fmtNum(norm-bnt(d,wk))+'</span>'}</td></tr>`).join('');
-    } else if(view==='week'){
-      h = '<thead><tr><th>Игрок</th><th>Роль</th>' + sw.map(k=>`<th title="${weekTitle(k)} · Всего (Bounty · Cube)">${weekLabel(k)}</th>`).join('') + '<th>Норма</th></tr></thead><tbody>' +
-        rows.map(d=>tr(d)+`<td>${esc(d.role)}</td>${sw.map(k=>`<td class="num" style="${bnt(d,k)<norm?red:''}">${d.weeks[k]?`<b>${fmtNum(d.weeks[k].total)}</b><div class="sub-n">${fmtNum(d.weeks[k].bounty)} · ${fmtNum(d.weeks[k].cube)}</div>`:'—'}</td>`).join('')}<td class="num">${sw.filter(k=>bnt(d,k)>=norm).length}/${sw.length}</td></tr>`).join('');
-    } else {
-      h = '<thead><tr><th>Игрок</th>' + sw.map(k=>`<th title="${weekTitle(k)}">${weekLabel(k)}</th>`).join('') + '<th>Всего</th></tr></thead><tbody>' +
-        rows.map(d=>tr(d)+`${sw.map(k=>`<td class="num" style="${view==='total'&&bnt(d,k)<norm?red:''}">${d.weeks[k]?fmtNum(d.weeks[k][view]):'—'}</td>`).join('')}<td class="num"><b>${fmtNum(sum(d,view))}</b></td></tr>`).join('');
-    }
-    $('clanTable').innerHTML = h + (rows.length?'':'<tr><td colspan="9" class="empty-state">Нет участников по фильтрам</td></tr>') + '</tbody>';
-    if(topChart){ topChart.destroy(); charts = charts.filter(c=>c!==topChart); }
-    const top = rows.slice(0,15), tl = sw.length>1 ? 'сумма за '+sw.length+' нед.' : weekLabel(sw[0]);
-    topChart = safeChart('clanTop', { type:'bar', data:{ labels: top.map(d=>d.name), datasets:[
-      {label:'Всего · '+tl, data: top.map(d=>sum(d,'total')), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
-        scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
-  }
-  ['fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
-  root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', update));
-  const syncAll = () => { $('wAllChk').checked = [...root.querySelectorAll('.wk')].every(c=>c.checked); };
-  root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', syncAll));
-  $('wAllChk').addEventListener('change', e => {
-    // "Все недели" on -> отметить все; off -> оставить только текущую неделю
-    root.querySelectorAll('.wk').forEach(c => c.checked = e.target.checked || c.value===current);
-    update();
-  });
-  document.addEventListener('click', e => { const dt = root.querySelector('details.multi'); if(dt && dt.open && !dt.contains(e.target)) dt.open = false; });
-  syncAll();
-  update();
-
-  function openPlayer(id){
-    const d = data.find(x=>x.id===id); if(!d) return;
-    const norm = Number($('fNorm').value)||0;
-    const done = keys.filter(k=>k!==current && d.weeks[k]);
-    const bs = done.map(k=>d.weeks[k].total), sum = a=>a.reduce((x,y)=>x+y,0);
-    const okN = bs.filter(v=>v>=norm).length;
-    const m = document.createElement('div'); m.className='modal';
-    m.innerHTML = `<div class="modal-box"><button class="modal-x">✕</button>
-      <h2>${esc(d.name)}</h2><p class="desc">${esc(d.role)} · счёт коллекции ${fmtNum(d.score)}</p>
-      <div class="grid">${stat('Среднее Всего', bs.length?fmtNum(Math.round(sum(bs)/bs.length)):'—','gold','за завершённые недели')}
-        ${stat('Лучшая неделя', bs.length?fmtNum(Math.max(...bs)):'—','cyan')}
-        ${stat('Норма '+fmtNum(norm), okN+' из '+bs.length,'accent','завершённых недель')}</div>
-      <div class="card"><div class="chart-wrap short"><canvas id="pChart"></canvas></div></div>
-      <div class="card" style="margin-top:14px;padding:0"><table><thead><tr><th>Неделя</th><th>Bounty</th><th>Cube</th><th>Всего</th><th>Норма</th></tr></thead><tbody>
-      ${keys.map(k=>{ const w=d.weeks[k]; return `<tr><td>${weekLabel(k)}${k===current?' (текущая)':''}</td><td class="num">${w?fmtNum(w.bounty):'—'}</td><td class="num">${w?fmtNum(w.cube):'—'}</td><td class="num"><b>${w?fmtNum(w.total):'—'}</b></td><td>${w&&w.total>=norm?'✓':'<span style="color:var(--cube-red)">нет</span>'}</td></tr>`; }).join('')}
-      </tbody></table></div></div>`;
-    document.body.appendChild(m);
-    const close = () => { m.remove(); document.removeEventListener('keydown', esc2); };
-    const esc2 = e => { if(e.key==='Escape') close(); };
-    document.addEventListener('keydown', esc2);
-    m.addEventListener('click', e => { if(e.target===m || e.target.className==='modal-x') close(); });
-    const pc = safeChart('pChart', { type:'bar', data:{ labels: keys.map(weekLabel), datasets:[
-      {label:'Всего (Bounty + Cube)', data: keys.map(k=>(d.weeks[k]||{}).total||0), backgroundColor: keys.map(k=>((d.weeks[k]||{}).total||0)>=norm?'rgba(56,232,224,0.85)':'rgba(255,84,112,0.85)'), borderRadius:4},
-      {label:'Норма', data: keys.map(()=>norm), type:'line', borderColor:'#ff5470', borderDash:[5,4], pointRadius:0, yAxisID:'y'}]},
-      options:{responsive:true,maintainAspectRatio:false,scales:{y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},x:{ticks:{color:'#9d92c2'}}}} });
-    m.addEventListener('click', e => { if(e.target.className==='modal-x'||e.target===m){ if(pc) charts=charts.filter(c=>c!==pc); } });
-  }
-  $('clanTable').addEventListener('click', e => { const tr = e.target.closest('tr.clickable'); if(tr) openPlayer(tr.dataset.id); });
-
-  const tot = f => keys.map(k => data.reduce((s,d)=>s+((d.weeks[k]||{})[f]||0),0));
-  safeChart('clanWeeks', { type:'bar', data:{ labels: keys.map(k=>weekLabel(k)+(k===current?'*':'')), datasets:[
-    {label:'Всего (Bounty + Cube)', data:tot('total'), backgroundColor:'rgba(255,178,62,0.85)', borderRadius:4, yAxisID:'y'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}},tooltip:{callbacks:{title:i=>weekTitle(keys[i[0].dataIndex])}}},
-      scales:{x:{ticks:{color:'#9d92c2'}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},y1:{position:'right',grid:{display:false},ticks:{color:'#38e8e0'}}}} }, $('clanWeeks').parentNode);
-
-  $('syncBtn').addEventListener('click', () => {
-    const url = $('sheetUrl').value.trim(), st = $('syncStatus'), btn = $('syncBtn');
-    if(!url){ st.textContent='Вставь URL веб-приложения Apps Script.'; st.className='sync-status err'; return; }
-    try{ localStorage.setItem('snapClanSheetUrl',url); localStorage.setItem('snapClanSheetSecret',$('sheetSecret').value.trim()); }catch(e){}
-    const payload = { secret:$('sheetSecret').value.trim(), clanId:identity.Id||'', clanName:identity.Name||'', syncedAt:new Date().toISOString(),
-      currentWeek: current,
-      members: data.map(d=>({id:d.id,name:d.name,role:d.role,collectionScore:d.score,
-        weeks: keys.filter(k=>d.weeks[k]).map(k=>({weekKey:k,bounty:d.weeks[k].bounty,cube:d.weeks[k].cube}))})) };
-    btn.disabled=true; st.className='sync-status'; st.textContent='Отправляю…';
-    // text/plain body keeps this a CORS "simple request" (Apps Script can't answer preflight)
-    fetch(url,{method:'POST',body:JSON.stringify(payload)}).then(r=>r.json()).then(res=>{
-      btn.disabled=false;
-      if(res.ok){ st.textContent=`Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено (уже есть) ${res.skipped}. Новых участников: ${res.joined}, ушли: ${res.left}.`; st.className='sync-status ok'; }
-      else { st.textContent='Ошибка таблицы: '+res.error; st.className='sync-status err'; }
-    }).catch(e=>{ btn.disabled=false; st.textContent='Не удалось отправить: '+e.message; st.className='sync-status err'; });
-  });
-}
-
-/* ---------------------------------------------------------------- *
- *  SHOP / BATTLE PASS / EVENTS
- * ---------------------------------------------------------------- */
-function renderEvents(root){
-  const shop = store.ShopClientState;
-  const bp = store.BattlePassClientState;
-  const hst = store.HighStakesTablesManagerState;
-
-  let html = '<div class="grid">';
-  if(bp){
-    html += stat('Сезон баттлпасса', get(bp,'LastSeenBattlePassDefId','—'),'accent');
-    html += stat('Начало сезона для игрока', fmtDate(get(bp,'FirstPlayDateAfterSeasonStart')));
-  }
-  if(shop){
-    const seen = get(shop,'CardShopNewCardSeenList',[]);
-    html += stat('Просмотрено в магазине', fmtNum(seen.length),'cyan');
-  }
-  html += '</div>';
-
-  if(shop){
-    const seen = get(shop,'CardShopNewCardSeenList',[]);
-    const byTag = {};
-    seen.forEach(s => { const t = s.Tag || 'Без тега'; byTag[t] = (byTag[t]||0)+1; });
-    const tagEntries = Object.entries(byTag).sort((a,b)=>b[1]-a[1]).filter(e=>true);
-    html += '<div class="block"><h2>Магазин — карты по акциям/паку</h2><div class="card"><div class="chart-wrap"><canvas id="shopChart"></canvas></div></div></div>';
-    root.innerHTML = html;
-    safeChart('shopChart', {
-      type:'bar',
-      data:{
-        labels: tagEntries.map(e=>e[0]),
-        datasets:[{ data: tagEntries.map(e=>e[1]), backgroundColor:'rgba(255,79,216,0.8)', borderRadius:5, maxBarThickness:26 }]
-      },
-      options:{
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          x:{ grid:{ color:'#221a3a' }, ticks:{ color:'#9d92c2', font:{size:10} } },
-          y:{ grid:{display:false}, ticks:{ color:'#ece7fb', font:{size:11} } }
-        }
-      }
-    }, root.querySelector('.card'));
-  } else {
-    root.innerHTML = html;
-  }
-
-  if(hst){
-    const pastEvents = get(hst,'ServerState.PastEvents',[]);
-    const div = document.createElement('div');
-    div.className = 'block';
-    div.innerHTML = `<h2>High Stakes — события</h2><p class="desc">Завершённых событий: ${fmtNum(pastEvents.length)}</p>`;
-    root.appendChild(div);
-  }
-}
-
-/* ---------------------------------------------------------------- *
- *  RAW JSON VIEWER
- * ---------------------------------------------------------------- */
-function renderRaw(root){
-  const keys = Object.keys(store);
-  let html = '<div class="block"><h2>Все загруженные данные</h2><p class="desc">Полное дерево каждого файла — как в оригинальном JSON. Клик по стрелке разворачивает узел.</p>';
-  html += '<div class="raw-file-list">';
-  keys.forEach((k,i) => {
-    html += `<button class="raw-btn ${i===0?'active':''}" data-key="${esc(k)}">${esc(k)}</button>`;
-  });
-  html += '</div>';
-  html += '<input class="jt-search" id="jtSearch" placeholder="Поиск по ключам и значениям… (например: CardDefId, Legendary)">';
-  html += '<div class="jt-wrap"><div class="jt" id="jtRoot"></div></div></div>';
-  root.innerHTML = html;
-
-  let currentKey = keys[0];
-  const jtRoot = root.querySelector('#jtRoot');
-  const search = root.querySelector('#jtSearch');
-
-  function draw(){
-    jtRoot.innerHTML = '';
-    const q = search.value.trim().toLowerCase();
-    jtRoot.appendChild(buildNode(currentKey, store[currentKey], 0, q));
-  }
-
-  root.querySelectorAll('.raw-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      root.querySelectorAll('.raw-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentKey = btn.getAttribute('data-key');
-      draw();
-    });
-  });
-  search.addEventListener('input', () => draw());
-  draw();
-}
-
-// Recursive JSON tree builder. q = lowercase search filter (matches key or primitive value).
-function buildNode(key, value, depth, q){
-  const row = document.createElement('div');
-
-  const isObj = value !== null && typeof value === 'object' && !Array.isArray(value);
-  const isArr = Array.isArray(value);
-
-  if(isObj || isArr){
-    const rawKeys = isArr ? value.map((_,i)=>i) : Object.keys(value).filter(k=>!stripType(k));
-    let childKeys = rawKeys;
-    if(q){
-      childKeys = rawKeys.filter(ck => {
-        const cv = value[ck];
-        if(String(ck).toLowerCase().includes(q)) return true;
-        if(cv !== null && typeof cv === 'object') return JSON.stringify(cv).toLowerCase().includes(q);
-        return String(cv).toLowerCase().includes(q);
-      });
-      if(!childKeys.length && !String(key).toLowerCase().includes(q)) {
-        row.style.display = 'none';
-      }
-    }
-
-    const header = document.createElement('div');
-    header.className = 'jt-row';
-    const count = rawKeys.length;
-    const collapsedDefault = depth >= 2 && !q;
-    const toggle = document.createElement('span');
-    toggle.className = 'jt-toggle';
-    toggle.textContent = collapsedDefault ? '▸' : '▾';
-    header.appendChild(toggle);
-
-    const keySpan = document.createElement('span');
-    keySpan.className = 'jt-key';
-    keySpan.textContent = (key === '' ? '' : key + ': ');
-    header.appendChild(keySpan);
-
-    const punct = document.createElement('span');
-    punct.className = 'jt-punct';
-    punct.textContent = (isArr ? '[' : '{') + `  ` ;
-    header.appendChild(punct);
-
-    const countSpan = document.createElement('span');
-    countSpan.className = 'jt-count';
-    countSpan.textContent = `${count} ${isArr ? (count===1?'элемент':'элементов') : (count===1?'поле':'полей')}`;
-    header.appendChild(countSpan);
-
-    row.appendChild(header);
-
-    const childrenWrap = document.createElement('div');
-    childrenWrap.className = 'jt-children';
-    childrenWrap.style.display = collapsedDefault ? 'none' : 'block';
-    childKeys.forEach(ck => {
-      childrenWrap.appendChild(buildNode(ck, value[ck], depth+1, q));
-    });
-    row.appendChild(childrenWrap);
-
-    toggle.addEventListener('click', () => {
-      const open = childrenWrap.style.display !== 'none';
-      childrenWrap.style.display = open ? 'none' : 'block';
-      toggle.textContent = open ? '▸' : '▾';
-    });
-  } else {
-    if(q && !String(key).toLowerCase().includes(q) && !String(value).toLowerCase().includes(q)){
-      row.style.display = 'none';
-    }
-    const line = document.createElement('div');
-    line.className = 'jt-row';
-    line.style.marginLeft = '14px';
-    let valSpan;
-    if(value === null){ valSpan = `<span class="jt-null">null</span>`; }
-    else if(typeof value === 'number'){ valSpan = `<span class="jt-num">${value}</span>`; }
-    else if(typeof value === 'boolean'){ valSpan = `<span class="jt-bool">${value}</span>`; }
-    else { valSpan = `<span class="jt-str">"${esc(value)}"</span>`; }
-    line.innerHTML = `<span class="jt-key">${esc(key)}</span><span class="jt-punct">: </span>${valSpan}`;
-    row.appendChild(line);
-  }
-
-  return row;
-}
-
-/* ---------------------------------------------------------------- *
- *  Tab wiring fix (use data-id properly)
- * ---------------------------------------------------------------- */
-const origBuildApp = buildApp;
-buildApp = function(){
-  charts.forEach(c => c.destroy()); charts = [];
-  const tabs = [];
-  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
-  if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
-  if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
-  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
-  if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
-  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
-
-  tabsEl.innerHTML = '';
-  panelsEl.innerHTML = '';
-  tabs.forEach((t,i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab' + (i===0 ? ' active' : '');
-    btn.textContent = t.label;
-    btn.setAttribute('data-id', t.id);
-    btn.onclick = () => {
-      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.toggle('active', b===btn));
-      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.id));
-    };
-    tabsEl.appendChild(btn);
-
-    const panel = document.createElement('div');
-    panel.className = 'panel' + (i===0 ? ' active' : '');
-    panel.id = 'panel-' + t.id;
-    panelsEl.appendChild(panel);
-    try{
-      t.render(panel);
-    }catch(err){
-      console.error('Ошибка при отрисовке вкладки', t.id, err);
-      panel.innerHTML = `<div class="empty-state">Не удалось построить вкладку «${t.label}»: ${esc(err.message)}</div>`;
-    }
-  });
-
-  appEl.classList.add('show');
-  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+  btn.disabled = true; st.className = 'st'; st.textContent = 'Отправляю…';
+  // text/plain body: простой CORS-запрос (Apps Script не отвечает на preflight)
+  fetch(url, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json()).then(res => {
+    btn.disabled = false;
+    if (res.ok) { st.textContent = `Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено ${res.skipped}. Новых: ${res.joined}, ушли: ${res.left}.`; st.className = 'st ok'; }
+    else { st.textContent = 'Ошибка таблицы: ' + res.error; st.className = 'st err'; }
+  }).catch(e => { btn.disabled = false; st.textContent = 'Не удалось отправить: ' + e.message; st.className = 'st err'; });
 };
-
-// Small helper: draws a chart if Chart.js loaded successfully, otherwise
-// leaves a quiet fallback note instead of throwing and blanking the page.
-/* Встроенные SVG-графики: работают без интернета, если Chart.js недоступен */
-function miniChart(canvas, cfg){
-  const labels=cfg.data.labels, ds=cfg.data.datasets, o=cfg.options||{}, horiz=o.indexAxis==='y';
-  const bars=ds.filter(d=>d.type!=='line'), lines=ds.filter(d=>d.type==='line');
-  const sec=lines.some(d=>d.yAxisID==='y1');
-  const col=(d,i)=>Array.isArray(d.backgroundColor)?d.backgroundColor[i]:d.backgroundColor;
-  const nice=v=>{v=Math.max(1,v);const p=Math.pow(10,Math.floor(Math.log10(v))),m=v/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;};
-  const mx=a=>nice(Math.max(1,...a.flatMap(d=>d.data)));
-  const fmt=v=>v>=1000?(v/1000).toFixed(v%1000?1:0)+'k':String(Math.round(v));
-  const cap=((o.scales||{})[horiz?'x':'y']||{}).max;
-  const max1=cap||mx(ds.filter(d=>d.yAxisID!=='y1')), max2=sec?mx(lines.filter(d=>d.yAxisID==='y1')):1;
-  const W=760, T=30; let H, s='', L, R;
-  const legend = !(o.plugins&&o.plugins.legend&&o.plugins.legend.display===false) && ds.length>1;
-  if(!horiz){
-    L=46; R=sec?46:12; const B=labels.length>8?70:34; H=330;
-    const pw=W-L-R, ph=H-T-B, gw=pw/labels.length, bw=Math.min(28,gw*0.7/Math.max(1,bars.length));
-    for(let t=0;t<=4;t++){ const y=T+ph-ph*t/4;
-      s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#221a3a"/><text x="${L-6}" y="${y+4}" text-anchor="end" fill="#9d92c2" font-size="10">${fmt(max1*t/4)}</text>`;
-      if(sec) s+=`<text x="${W-R+6}" y="${y+4}" fill="#38e8e0" font-size="10">${fmt(max2*t/4)}</text>`; }
-    labels.forEach((lb,i)=>{ const cx=L+gw*(i+.5), ty=T+ph+14;
-      bars.forEach((d,j)=>{ const v=d.data[i]||0, h=ph*v/max1, x=cx-bw*bars.length/2+bw*j;
-        s+=`<rect x="${x}" y="${T+ph-h}" width="${bw-1}" height="${h}" rx="3" fill="${col(d,i)}"><title>${esc(lb)} · ${esc(d.label||'')}: ${fmtNum(v)}</title></rect>`; });
-      s+= labels.length>8 ? `<text transform="translate(${cx},${ty}) rotate(-45)" text-anchor="end" fill="#9d92c2" font-size="10">${esc(String(lb).slice(0,12))}</text>`
-                          : `<text x="${cx}" y="${ty}" text-anchor="middle" fill="#9d92c2" font-size="11">${esc(lb)}</text>`; });
-    lines.forEach(d=>{ const m=d.yAxisID==='y1'?max2:max1, pts=d.data.map((v,i)=>[L+gw*(i+.5),T+ph-ph*v/m]);
-      s+=`<polyline fill="none" stroke="${d.borderColor}" stroke-width="2" ${d.borderDash?'stroke-dasharray="5 4"':''} points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
-      if(!d.borderDash) s+=pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${d.borderColor}"><title>${esc(d.label||'')}: ${fmtNum(d.data[i])}</title></circle>`).join(''); });
-  } else {
-    L=120; R=44; const rh=10*bars.length+10, B=20; H=T+B+labels.length*rh; const pw=W-L-R;
-    for(let t=0;t<=4;t++){ const x=L+pw*t/4; s+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${H-B}" stroke="#221a3a"/><text x="${x}" y="${H-6}" text-anchor="middle" fill="#9d92c2" font-size="10">${fmt(max1*t/4)}</text>`; }
-    labels.forEach((lb,i)=>{ const y=T+i*rh;
-      s+=`<text x="${L-8}" y="${y+rh/2+4}" text-anchor="end" fill="#ece7fb" font-size="11">${esc(String(lb).slice(0,18))}</text>`;
-      bars.forEach((d,j)=>{ const v=d.data[i]||0, w=pw*v/max1;
-        s+=`<rect x="${L}" y="${y+4+j*10}" width="${w}" height="9" rx="3" fill="${col(d,i)}"><title>${esc(lb)}: ${fmtNum(v)}</title></rect><text x="${L+w+5}" y="${y+12+j*10}" fill="#9d92c2" font-size="10">${fmtNum(v)}</text>`; }); });
-  }
-  if(legend) s+=ds.map((d,i)=>`<rect x="${L+i*130}" y="8" width="10" height="10" rx="2" fill="${d.borderColor||col(d,0)}"/><text x="${L+i*130+15}" y="17" fill="#9d92c2" font-size="11">${esc(d.label||'')}</text>`).join('');
-  const box=document.createElement('div'); box.className='mini-chart';
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-family:'JetBrains Mono',monospace">${s}</svg>`;
-  canvas.style.display='none'; canvas.parentNode.appendChild(box);
-  return { destroy(){ box.remove(); canvas.style.display=''; } };
-}
-
-function safeChart(canvasId, config, fallbackParent){
-  const ctx = document.getElementById(canvasId);
-  if(!ctx) return null;
-  if(typeof Chart === 'undefined'){ const m = miniChart(ctx, config); charts.push(m); return m; }
-  const c = new Chart(ctx, config);
-  charts.push(c);
-  return c;
-}
-
-})();
 </script>
 </body>
 </html>
