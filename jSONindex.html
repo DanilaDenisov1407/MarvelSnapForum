@@ -371,7 +371,7 @@ const KNOWN_FILES = [
 let store = {}; // filename (without .json) -> parsed object
 
 /* ---- История из Google Таблицы (чтение открытое, код не нужен) ---- */
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwdvDMu0kMCZ9swqIdxPSbDOhEcS4EHfQqgHtEYZObF5ZBdl5J4zJ0wx4ml_aKf8kbcew/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyOEWp-rV9cznhfFPBzfBYqCjb-LgBa2VfnWqH4alteTxG2AzA83wKkI1UxkVHsYnz8/exec';
 let SHEET = null; // { rows, roster, tag }
 function loadSheet(){
   statusEl.textContent = 'Загружаю историю клана из таблицы…';
