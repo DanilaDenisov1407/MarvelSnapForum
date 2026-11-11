@@ -297,7 +297,7 @@
   <header>
     <div class="eyebrow">Cube Log · offline · local save reader</div>
     <h1>Snap Save Viewer</h1>
-    <p class="sub">Загрузи все файлы из своей папки с сохранением <b>Marvel Snap</b> (обычно 26 файлов вида <code>*State.json</code>) — соберу профиль, коллекцию, мастерство героев, клан и остальное в одну красивую панель. Всё происходит прямо в браузере, файлы никуда не отправляются.</p>
+    <p class="sub">История клана подтягивается из Google Таблицы автоматически — ввод кода не нужен. Чтобы добавить свежие данные, загрузи файлы из папки сохранения <b>Marvel Snap</b> (достаточно <code>ClanState.json</code>; остальные файлы дадут вкладки профиля и коллекции) и отправь клан в таблицу. Файлы читаются локально в браузере.</p>
 
     <div id="dropzone">
       <div class="dz-icon">◆</div>
@@ -316,7 +316,7 @@
     <div id="panels"></div>
   </div>
 
-  <footer>Данные читаются локально в вашем браузере и никуда не передаются.</footer>
+  <footer>Файлы читаются локально в браузере. В таблицу уходят только данные клана и только по кнопке «Отправить».</footer>
 </div>
 
 <script>
@@ -369,6 +369,31 @@ const KNOWN_FILES = [
 ];
 
 let store = {}; // filename (without .json) -> parsed object
+
+/* ---- История из Google Таблицы (чтение открытое, код не нужен) ---- */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwdvDMu0kMCZ9swqIdxPSbDOhEcS4EHfQqgHtEYZObF5ZBdl5J4zJ0wx4ml_aKf8kbcew/exec';
+let SHEET = null; // { rows, roster, tag }
+function loadSheet(){
+  statusEl.textContent = 'Загружаю историю клана из таблицы…';
+  fetch(SHEET_URL + '?action=history')
+    .then(r => r.text())
+    .then(t => {
+      let res;
+      try{ res = JSON.parse(t); }
+      catch(e){ throw new Error('сервер вернул не JSON (проверь, что развёртывание обновлено и доступ «Все»)'); }
+      if(!res.ok) throw new Error(res.error || 'ошибка сервера');
+      if(!Array.isArray(res.rows)) throw new Error('в ответе нет данных — обнови скрипт в Apps Script на новую версию (Code.gs v3) и сделай «Новая версия» развёртывания');
+      const tag = (res.rows.find(r => r[8]) || [])[8] || '';
+      SHEET = { rows: res.rows, roster: res.roster || [], tag };
+      statusEl.textContent = `История из таблицы: ${res.rows.length} записей.`;
+      log(`История из таблицы загружена: ${res.rows.length} записей.`, 'ok');
+      runBuildApp();
+    })
+    .catch(e => {
+      statusEl.textContent = 'Не удалось загрузить историю из таблицы: ' + e.message;
+      log('Не удалось загрузить историю из таблицы: ' + e.message, 'err');
+    });
+}
 
 dropzone.addEventListener('click', () => fileInput.click());
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -485,12 +510,12 @@ function buildApp(){
   charts.forEach(c => c.destroy()); charts = [];
   const tabs = [];
 
-  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(Object.keys(store).length) tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
   if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
   if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
-  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ClanState || SHEET) tabs.push({ id:'clan', label:'Клан', render: renderClan });
   if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
-  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+  if(Object.keys(store).length) tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
 
   tabsEl.innerHTML = '';
   panelsEl.innerHTML = '';
@@ -509,7 +534,7 @@ function buildApp(){
   });
 
   appEl.classList.add('show');
-  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+  if(Object.keys(store).length) appEl.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function switchTab(id){
@@ -723,12 +748,14 @@ function weekTitle(k){ const [y,m,d]=k.split('-'); return `Неделя от ${d
 
 function renderClan(root){
   const clan = store.ClanState;
+  const fileLoaded = !!clan;
   const identity = get(clan,'ServerState.State.Identity',{});
   identity.Id = identity.Id || get(clan,'ServerState.State.Id','');
+  const clanTag = identity.Tag || (SHEET && SHEET.tag) || '';
   const members = get(clan,'ServerState.Members',[]);
-  const memberCount = get(clan,'ServerState.State.MemberCount', members.length);
 
-  const data = members.map(m => {
+  // данные из файла (свежие)
+  const fileData = members.map(m => {
     const weeks = {};
     get(m,'TimePeriodState.TimePeriodList',[]).forEach(p => {
       if(p.BountyPoints!=null || p.CubePoints!=null) weeks[p.Key] = {bounty:p.BountyPoints||0, cube:p.CubePoints||0, total:(p.BountyPoints||0)+(p.CubePoints||0)};
@@ -736,6 +763,30 @@ function renderClan(root){
     return { id:get(m,'PlayerInfo.Id',''), name:get(m,'PlayerInfo.Name','—'), role:m.Role||'Member',
              score:get(m,'PlayerInfo.CollectionScore',0), weeks };
   });
+  const fileKeys = [...new Set(fileData.flatMap(d => Object.keys(d.weeks)))].sort();
+  const fileCurrent = fileKeys[fileKeys.length-1] || '';
+
+  // история из таблицы + файл поверх неё (файл свежее)
+  const M = {};
+  if(SHEET){
+    const gone = {}; SHEET.roster.forEach(r => gone[r[0]] = r[1] === 'Left');
+    SHEET.rows.forEach(r => {
+      const k = String(r[0]).slice(0,10);
+      const p = M[r[1]] || (M[r[1]] = { id:r[1], name:r[2], role:r[3], score:0, weeks:{}, gone:!!gone[r[1]] });
+      p.name = r[2]; p.role = r[3]; p.score = r[7] || p.score;
+      p.weeks[k] = { bounty:r[4], cube:r[5], total:r[6] };
+    });
+  }
+  const inFile = {};
+  fileData.forEach(d => {
+    inFile[d.id] = true;
+    const p = M[d.id];
+    if(p){ p.name = d.name; p.role = d.role; p.score = d.score; p.gone = false; Object.assign(p.weeks, d.weeks); }
+    else M[d.id] = Object.assign({ gone:false }, d);
+  });
+  if(fileLoaded) Object.values(M).forEach(p => { if(!inFile[p.id]) p.gone = true; });
+  const data = Object.values(M);
+  const memberCount = fileLoaded ? get(clan,'ServerState.State.MemberCount', members.length) : data.filter(d=>!d.gone).length;
   const keys = [...new Set(data.flatMap(d => Object.keys(d.weeks)))].sort();
   const current = keys[keys.length-1] || '';
   const roles = [...new Set(data.map(d=>d.role))];
@@ -743,11 +794,11 @@ function renderClan(root){
 
   root.innerHTML = `
   <div class="grid">
-    ${stat('Клан', `[${identity.Tag||''}] ${identity.Name||''}`, 'cyan')}
+    ${stat('Клан', `[${clanTag}] ${identity.Name||''}`.trim(), 'cyan')}
     ${stat('Участников', fmtNum(memberCount), 'accent')}
-    ${stat('Недель в файле', fmtNum(keys.length), 'gold', keys.length ? `${weekLabel(keys[0])} – ${weekLabel(current)}` : '')}
+    ${stat('Недель в данных', fmtNum(keys.length), 'gold', keys.length ? `${weekLabel(keys[0])} – ${weekLabel(current)}` : '')}
   </div>
-  <div class="block"><h2>Динамика клана по неделям</h2><p class="desc">Суммарные Bounty / Cube всех текущих участников. Подписи — дата начала недели.</p>
+  <div class="block"><h2>Динамика клана по неделям</h2><p class="desc">Суммарные Bounty + Cube всех игроков в данных. Подписи — дата начала недели.</p>
     <div class="card"><div class="chart-wrap short"><canvas id="clanWeeks"></canvas></div></div></div>
   <div class="block"><h2>Состав и очки</h2>
     <div class="filters">
@@ -756,6 +807,7 @@ function renderClan(root){
         ${keys.map(k=>`<label class="wopt"><input type="checkbox" class="wk" value="${k}" ${k===current?'checked':''}> ${weekLabel(k)}${k===current?' (текущая)':''}</label>`).join('')}
       </div></details></div>
       <label>Вид<select id="fView"><option value="week">Детально (Bounty · Cube)</option><option value="total">Только Всего</option><option value="bounty">Только Bounty</option><option value="cube">Только Cube</option></select></label>
+      <label>Вышедшие<select id="fGone"><option value="">Показывать</option><option value="hide">Скрыть</option></select></label>
       <label>Роль<select id="fRole"><option value="">Все</option>${roles.map(r=>`<option>${esc(r)}</option>`).join('')}</select></label>
       <label>Игроки (через запятую)<input id="fName" placeholder="ник1, ник2, ник3" style="min-width:240px"></label>
       <label>Всего от<input id="fMin" type="number" min="0" placeholder="0"></label>
@@ -766,22 +818,23 @@ function renderClan(root){
     <div class="card" style="padding:0; max-height:72vh; overflow:auto;"><table id="clanTable"></table></div>
     <div class="card" style="margin-top:14px"><div class="chart-wrap"><canvas id="clanTop"></canvas></div></div>
   </div>
-  <div class="block"><h2>Синхронизация с Google Таблицей</h2>
-    <p class="desc">Отправит все ${keys.length} недель по каждому участнику. Уже записанные завершённые недели скрипт пропустит, текущую — обновит.</p>
+  <div class="block"><h2>Добавить данные в таблицу</h2>
+    ${fileLoaded ? `<p class="desc">Отправит ${fileKeys.length} нед. из загруженного файла (клан [${esc(clanTag)}]). Уже записанные завершённые недели скрипт пропустит, текущую — обновит.</p>
     <div class="card">
       <div class="sync-row"><label>URL веб-приложения Apps Script</label><input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
-      <div class="sync-row"><label>Секретный код клана</label><input type="password" id="sheetSecret"></div>
+      <div class="sync-row"><label>Секретный код</label><input type="password" id="sheetSecret"></div>
       <button id="syncBtn" class="sync-btn">Отправить все недели в таблицу</button>
       <div id="syncStatus" class="sync-status"></div>
-    </div></div>`;
+    </div>` : `<p class="desc">Чтобы добавить новые данные, загрузи <b>ClanState.json</b> из папки сохранения (поле загрузки вверху страницы). Тогда здесь появятся поля URL и кода.</p>`}
+  </div>`;
 
   const $ = id => root.querySelector('#'+id);
-  try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){}
+  if(fileLoaded){ try{ $('sheetUrl').value = localStorage.getItem('snapClanSheetUrl')||''; $('sheetSecret').value = localStorage.getItem('snapClanSheetSecret')||''; }catch(e){} }
 
   let topChart = null;
   const selWeeks = () => { const w = keys.filter(k => root.querySelector(`.wk[value="${k}"]`).checked); return w.length ? w : [current]; };
   function update(){
-    const sw = selWeeks(), view = $('fView').value, role = $('fRole').value, ok = $('fOk').value;
+    const sw = selWeeks(), view = $('fView').value, role = $('fRole').value, ok = $('fOk').value, hideGone = $('fGone').value === 'hide';
     const qs = $('fName').value.toLowerCase().split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
     const min = Number($('fMin').value)||0, norm = Number($('fNorm').value)||0;
     $('wSum').textContent = sw.length===keys.length ? 'Все недели' : sw.map(weekLabel).join(', ');
@@ -789,9 +842,9 @@ function renderClan(root){
     const val = d => Math.min(...sw.map(k=>bnt(d,k)));
     const sum = (d,f) => sw.reduce((t,k)=>t+((d.weeks[k]||{})[f]||0),0);
     const f2 = view==='cube' ? 'cube' : view==='bounty' ? 'bounty' : 'total';
-    const rows = data.filter(d => (!role||d.role===role) && (!qs.length||qs.some(q=>d.name.toLowerCase().includes(q))) && val(d)>=min && (!ok || (ok==='ok')===(val(d)>=norm)))
+    const rows = data.filter(d => (!hideGone||!d.gone) && (!role||d.role===role) && (!qs.length||qs.some(q=>d.name.toLowerCase().includes(q))) && val(d)>=min && (!ok || (ok==='ok')===(val(d)>=norm)))
                      .sort((x,y)=> sum(y,f2)-sum(x,f2));
-    const tr = d => `<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}</td>`;
+    const tr = d => `<tr class="clickable" data-id="${esc(d.id)}"><td class="name-cell">${esc(d.name)}${d.gone?' <span class="sub-n">(вышел)</span>':''}</td>`;
     const red = 'color:var(--cube-red)';
     let h;
     if(view==='week' && sw.length===1){
@@ -813,7 +866,7 @@ function renderClan(root){
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}}},
         scales:{x:{ticks:{color:'#9d92c2',maxRotation:60}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}}}} }, $('clanTop').parentNode);
   }
-  ['fView','fRole','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
+  ['fView','fRole','fGone','fName','fMin','fNorm','fOk'].forEach(id => $(id).addEventListener('input', update));
   root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', update));
   const syncAll = () => { $('wAllChk').checked = [...root.querySelectorAll('.wk')].every(c=>c.checked); };
   root.querySelectorAll('.wk').forEach(c => c.addEventListener('change', syncAll));
@@ -861,19 +914,21 @@ function renderClan(root){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9d92c2'}},tooltip:{callbacks:{title:i=>weekTitle(keys[i[0].dataIndex])}}},
       scales:{x:{ticks:{color:'#9d92c2'}},y:{grid:{color:'#221a3a'},ticks:{color:'#9d92c2'}},y1:{position:'right',grid:{display:false},ticks:{color:'#38e8e0'}}}} }, $('clanWeeks').parentNode);
 
-  $('syncBtn').addEventListener('click', () => {
+  if(fileLoaded) $('syncBtn').addEventListener('click', () => {
     const url = $('sheetUrl').value.trim(), st = $('syncStatus'), btn = $('syncBtn');
     if(!url){ st.textContent='Вставь URL веб-приложения Apps Script.'; st.className='sync-status err'; return; }
+    if(!clanTag){ st.textContent='В файле нет тега клана.'; st.className='sync-status err'; return; }
     try{ localStorage.setItem('snapClanSheetUrl',url); localStorage.setItem('snapClanSheetSecret',$('sheetSecret').value.trim()); }catch(e){}
-    const payload = { secret:$('sheetSecret').value.trim(), clanId:identity.Id||'', clanName:identity.Name||'', syncedAt:new Date().toISOString(),
-      currentWeek: current,
-      members: data.map(d=>({id:d.id,name:d.name,role:d.role,collectionScore:d.score,
-        weeks: keys.filter(k=>d.weeks[k]).map(k=>({weekKey:k,bounty:d.weeks[k].bounty,cube:d.weeks[k].cube}))})) };
+    const payload = { secret:$('sheetSecret').value.trim(), clan:clanTag, clanId:identity.Id||'', clanName:identity.Name||'', syncedAt:new Date().toISOString(),
+      currentWeek: fileCurrent,
+      members: fileData.map(d=>({id:d.id,name:d.name,role:d.role,collectionScore:d.score,
+        weeks: fileKeys.filter(k=>d.weeks[k]).map(k=>({weekKey:k,bounty:d.weeks[k].bounty,cube:d.weeks[k].cube}))})) };
     btn.disabled=true; st.className='sync-status'; st.textContent='Отправляю…';
     // text/plain body keeps this a CORS "simple request" (Apps Script can't answer preflight)
-    fetch(url,{method:'POST',body:JSON.stringify(payload)}).then(r=>r.json()).then(res=>{
+    fetch(url,{method:'POST',body:JSON.stringify(payload)}).then(r=>r.text()).then(t=>{
+      let res; try{ res = JSON.parse(t); }catch(e){ throw new Error('сервер вернул не JSON — проверь URL развёртывания и доступ «Все»'); }
       btn.disabled=false;
-      if(res.ok){ st.textContent=`Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено (уже есть) ${res.skipped}. Новых участников: ${res.joined}, ушли: ${res.left}.`; st.className='sync-status ok'; }
+      if(res.ok){ st.textContent=`Готово: добавлено ${res.added}, обновлено ${res.updated}, пропущено (уже есть) ${res.skipped}. Новых участников: ${res.joined}, ушли: ${res.left}. Обнови страницу, чтобы увидеть историю из таблицы.`; st.className='sync-status ok'; }
       else { st.textContent='Ошибка таблицы: '+res.error; st.className='sync-status err'; }
     }).catch(e=>{ btn.disabled=false; st.textContent='Не удалось отправить: '+e.message; st.className='sync-status err'; });
   });
@@ -1057,12 +1112,12 @@ const origBuildApp = buildApp;
 buildApp = function(){
   charts.forEach(c => c.destroy()); charts = [];
   const tabs = [];
-  tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
+  if(Object.keys(store).length) tabs.push({ id:'overview', label:'Обзор', render: renderOverview });
   if(store.CollectionState) tabs.push({ id:'collection', label:'Коллекция', render: renderCollection });
   if(store.CharacterMasteryState) tabs.push({ id:'mastery', label:'Мастерство', render: renderMastery });
-  if(store.ClanState) tabs.push({ id:'clan', label:'Клан', render: renderClan });
+  if(store.ClanState || SHEET) tabs.push({ id:'clan', label:'Клан', render: renderClan });
   if(store.ShopClientState || store.BattlePassClientState || store.HighStakesTablesManagerState) tabs.push({ id:'events', label:'Магазин и события', render: renderEvents });
-  tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
+  if(Object.keys(store).length) tabs.push({ id:'raw', label:'Все данные', render: renderRaw });
 
   tabsEl.innerHTML = '';
   panelsEl.innerHTML = '';
@@ -1090,7 +1145,7 @@ buildApp = function(){
   });
 
   appEl.classList.add('show');
-  appEl.scrollIntoView({behavior:'smooth', block:'start'});
+  if(Object.keys(store).length) appEl.scrollIntoView({behavior:'smooth', block:'start'});
 };
 
 // Small helper: draws a chart if Chart.js loaded successfully, otherwise
@@ -1145,6 +1200,8 @@ function safeChart(canvasId, config, fallbackParent){
   charts.push(c);
   return c;
 }
+
+loadSheet();
 
 })();
 </script>
